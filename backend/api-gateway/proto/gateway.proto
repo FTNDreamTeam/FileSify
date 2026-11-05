@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package gateway.v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "github.com/FTNDreamTeam/FileSify/backend/api-gateway/proto/gateway;gateway";
+
+service GatewayService {
+  rpc GetUser(GetUserRequest) returns (GetUserResponse) {
+    option (google.api.http) = {get: "/api/users"};
+  }
+}
+
+message GetUserRequest {}
+
+message GetUserResponse {
+  string users = 1;
+}

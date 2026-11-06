@@ -240,4 +240,49 @@
 
         updatePasswordUI();
     })();
+
+    // ============================================================
+// LOGOUT CONFIRMATION DIALOG (dashboard only)
+// ============================================================
+    (function initLogoutDialog() {
+        const trigger = document.getElementById('logoutTrigger');
+        const dialog  = document.getElementById('logoutDialog');
+        if (!trigger || !dialog) return;
+
+        const confirmBtn = document.getElementById('logoutConfirm');
+
+        // Open
+        trigger.addEventListener('click', (e) => {
+            e.preventDefault();
+            dialog.showModal();
+        });
+
+        // Cancel via the X button and the Cancel button
+        dialog.querySelectorAll('[data-dialog-close]').forEach((btn) => {
+            btn.addEventListener('click', () => dialog.close('cancel'));
+        });
+
+        // Backdrop click — native <dialog> reports the backdrop click with
+        // the dialog as target; only treat it as a cancel if the coordinates
+        // fall outside the dialog rectangle.
+        dialog.addEventListener('click', (e) => {
+            const r = dialog.getBoundingClientRect();
+            const outside =
+                e.clientX < r.left || e.clientX > r.right ||
+                e.clientY < r.top  || e.clientY > r.bottom;
+            if (outside) dialog.close('cancel');
+        });
+
+        // Confirm
+        confirmBtn.addEventListener('click', () => dialog.close('confirm'));
+
+        // Fire the actual redirect only on confirm.
+        // Escape key and Cancel set returnValue to 'cancel' (or ''), so they
+        // do nothing here.
+        dialog.addEventListener('close', () => {
+            if (dialog.returnValue === 'confirm') {
+                window.location.href = 'login.html';
+            }
+        });
+    })();
 })();

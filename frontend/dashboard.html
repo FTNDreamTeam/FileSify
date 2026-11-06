@@ -55,7 +55,7 @@
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item small" href="#"><i class="bi bi-key me-2"></i>Change password</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item small text-danger" href="login.html"><i class="bi bi-box-arrow-right me-2"></i>Sign out</a></li>
+                    <li><a class="dropdown-item small text-danger" href="login.html" id="logoutTrigger"><i class="bi bi-box-arrow-right me-2"></i>Sign out</a></li></li>
                 </ul>
             </div>
         </div>
@@ -249,6 +249,23 @@
         </div>
     </main>
 </div>
+<dialog class="dialog" id="logoutDialog" aria-labelledby="logoutDialogTitle">
+    <div class="dialog-header">
+        <h2 class="dialog-title" id="logoutDialogTitle">Sign out?</h2>
+        <button type="button" class="dialog-close" data-dialog-close aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <div class="dialog-body">
+        You are about to be signed out of FileSify.<br>Are you sure?
+    </div>
+    <div class="dialog-footer">
+        <button type="button" class="btn btn-outline-brand rounded-pill px-3" data-dialog-close>Cancel</button>
+        <button type="button" class="btn btn-brand rounded-pill px-3" id="logoutConfirm">
+            <i class="bi bi-box-arrow-right me-1"></i> Sign out
+        </button>
+    </div>
+</dialog>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="JS/app.js"></script>

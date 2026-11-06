@@ -440,3 +440,62 @@ section{scroll-margin-top:84px}
     letter-spacing:.08em;color:#94a3b8;padding:0 .75rem;margin-bottom:.5rem;
 }
 .offcanvas-sidebar{padding:1.5rem 1rem}
+
+/* Logout dialog */
+.dialog{
+    border:none;
+    border-radius:20px;
+    padding:0;
+    width:calc(100% - 2rem);
+    max-width:420px;
+    background:#fff;
+    color:var(--ink);
+    box-shadow:0 40px 80px -30px rgba(15,23,42,.55);
+    overflow:hidden;
+}
+.dialog::backdrop{
+    background:rgba(15,23,42,.5);
+    backdrop-filter:blur(2px);
+    -webkit-backdrop-filter:blur(2px);
+}
+.dialog-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:1.25rem 1.5rem .5rem;
+}
+.dialog-title{
+    font-size:1.1rem;
+    font-weight:800;
+    letter-spacing:-.015em;
+    margin:0;
+}
+.dialog-close{
+    width:32px;height:32px;
+    border:none;border-radius:8px;
+    background:transparent;color:var(--muted);
+    display:grid;place-items:center;
+    font-size:1rem;cursor:pointer;
+    transition:background .15s ease,color .15s ease;
+}
+.dialog-close:hover,
+.dialog-close:focus{
+    background:var(--brand-soft);
+    color:var(--brand);
+    outline:none;
+}
+.dialog-body{
+    padding:.5rem 1.5rem 1.25rem;
+    font-size:.925rem;
+    color:var(--muted);
+    line-height:1.6;
+    text-align: center;
+}
+.dialog-footer{
+    display:flex;
+    justify-content:flex-end;
+    gap:.5rem;
+    padding:0 1.5rem 1.5rem;
+}
+@media(max-width:575.98px){
+    .dialog-footer{flex-direction:column-reverse}
+    .dialog-footer .btn{width:100%}
+}

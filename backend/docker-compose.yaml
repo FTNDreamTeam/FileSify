@@ -21,8 +21,29 @@ services:
     networks:
       - user-network
 
+  silo:
+    image: docker.io/pgsty/silo:RELEASE.2026-09-16T00-00-00Z
+    container_name: filesify-silo
+    command: server /data --console-adress ":9001"
+
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web Console
+    environment:
+      - MINIO_ROOT_USER:     ${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - silo-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "silo", "healthcheck", "ready"]      
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
 networks:
   user-network: #isolated user network
 
 volumes:
-  user-data:    
+  user-data:
+  silo-data:    

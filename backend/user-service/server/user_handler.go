@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"time"
 
 	db "github.com/FTNDreamTeam/FileSify/backend/user-service/db"
 	userpb "github.com/FTNDreamTeam/FileSify/backend/user-service/proto/user-service-gen"
@@ -10,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/genproto/googleapis/type/date"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -30,7 +32,7 @@ func (s *UserServer) RegisterUser(ctx context.Context, req *userpb.RegisterUserR
 
 	var existingUser db.UserDBModel
 	err := s.dbCollection.FindOne(ctx, bson.M{"email": req.GetEmail()}).Decode(&existingUser)
-	if err != nil {
+	if err == nil {
 		return nil, status.Error(codes.AlreadyExists, "a user with this email already exists")
 	}
 	if !errors.Is(err, mongo.ErrNoDocuments) {
@@ -48,7 +50,7 @@ func (s *UserServer) RegisterUser(ctx context.Context, req *userpb.RegisterUserR
 		Password:       string(hashedPassword),
 		FirstName:      req.GetFirstName(),
 		LastName:       req.GetLastName(),
-		PasswordActive: true,
+		PasswordActive: primitive.NewDateTimeFromTime(time.Now()),
 	}
 
 	_, err = s.dbCollection.InsertOne(ctx, newUser)
@@ -57,11 +59,15 @@ func (s *UserServer) RegisterUser(ctx context.Context, req *userpb.RegisterUserR
 	}
 
 	responseUser := &userpb.UserProfile{
-		Id:            newUser.ID.Hex(), // Converts ObjectID to string
-		Email:         newUser.Email,
-		FirstName:     newUser.FirstName,
-		LastName:      newUser.LastName,
-		PasswordValid: true,
+		Id:        newUser.ID.Hex(), // Converts ObjectID to string
+		Email:     newUser.Email,
+		FirstName: newUser.FirstName,
+		LastName:  newUser.LastName,
+		PasswordValid: &date.Date{
+			Year:  int32(newUser.PasswordActive.Time().Year()),
+			Month: int32(newUser.PasswordActive.Time().Month()),
+			Day:   int32(newUser.PasswordActive.Time().Day()),
+		},
 	}
 
 	return &userpb.RegisterUserResponse{

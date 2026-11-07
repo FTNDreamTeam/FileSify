@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package user_service.v1;
 
+import "google/date.proto";
+
 option go_package = "github.com/FTNDreamTeam/FileSify/backend/user-service/proto/user-service-gen;user_service";
 
 service UserService {
@@ -13,7 +15,7 @@ message UserProfile {
   string email = 2;
   string first_name = 3;
   string last_name = 4;
-  bool password_valid = 5;
+  google.type.Date password_valid = 5;
 }
 
 message RegisterUserRequest {

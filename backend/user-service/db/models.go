@@ -10,5 +10,5 @@ type UserDBModel struct {
 	Password       string             `bson:"password"`
 	FirstName      string             `bson:"first_name"`
 	LastName       string             `bson:"last_name"`
-	PasswordActive bool               `bson:"password_active"`
+	PasswordActive primitive.DateTime `bson:"password_active"` //When the password was created
 }

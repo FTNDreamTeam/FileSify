@@ -7,6 +7,7 @@
 package user_service
 
 import (
+	date "google.golang.org/genproto/googleapis/type/date"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -27,7 +28,7 @@ type UserProfile struct {
 	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
 	FirstName     string                 `protobuf:"bytes,3,opt,name=first_name,json=firstName,proto3" json:"first_name,omitempty"`
 	LastName      string                 `protobuf:"bytes,4,opt,name=last_name,json=lastName,proto3" json:"last_name,omitempty"`
-	PasswordValid bool                   `protobuf:"varint,5,opt,name=password_valid,json=passwordValid,proto3" json:"password_valid,omitempty"`
+	PasswordValid *date.Date             `protobuf:"bytes,5,opt,name=password_valid,json=passwordValid,proto3" json:"password_valid,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -90,11 +91,11 @@ func (x *UserProfile) GetLastName() string {
 	return ""
 }
 
-func (x *UserProfile) GetPasswordValid() bool {
+func (x *UserProfile) GetPasswordValid() *date.Date {
 	if x != nil {
 		return x.PasswordValid
 	}
-	return false
+	return nil
 }
 
 type RegisterUserRequest struct {
@@ -325,14 +326,14 @@ var File_user_service_proto protoreflect.FileDescriptor
 
 const file_user_service_proto_rawDesc = "" +
 	"\n" +
-	"\x12user-service.proto\x12\x0fuser_service.v1\"\x96\x01\n" +
+	"\x12user-service.proto\x12\x0fuser_service.v1\x1a\x11google/date.proto\"\xa9\x01\n" +
 	"\vUserProfile\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1d\n" +
 	"\n" +
 	"first_name\x18\x03 \x01(\tR\tfirstName\x12\x1b\n" +
-	"\tlast_name\x18\x04 \x01(\tR\blastName\x12%\n" +
-	"\x0epassword_valid\x18\x05 \x01(\bR\rpasswordValid\"\x83\x01\n" +
+	"\tlast_name\x18\x04 \x01(\tR\blastName\x128\n" +
+	"\x0epassword_valid\x18\x05 \x01(\v2\x11.google.type.DateR\rpasswordValid\"\x83\x01\n" +
 	"\x13RegisterUserRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\x12\x1d\n" +
@@ -370,17 +371,19 @@ var file_user_service_proto_goTypes = []any{
 	(*RegisterUserResponse)(nil), // 2: user_service.v1.RegisterUserResponse
 	(*LoginUserRequest)(nil),     // 3: user_service.v1.LoginUserRequest
 	(*LoginUserResponse)(nil),    // 4: user_service.v1.LoginUserResponse
+	(*date.Date)(nil),            // 5: google.type.Date
 }
 var file_user_service_proto_depIdxs = []int32{
-	0, // 0: user_service.v1.RegisterUserResponse.user:type_name -> user_service.v1.UserProfile
-	0, // 1: user_service.v1.LoginUserResponse.user:type_name -> user_service.v1.UserProfile
-	1, // 2: user_service.v1.UserService.RegisterUser:input_type -> user_service.v1.RegisterUserRequest
-	2, // 3: user_service.v1.UserService.RegisterUser:output_type -> user_service.v1.RegisterUserResponse
-	3, // [3:4] is the sub-list for method output_type
-	2, // [2:3] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	5, // 0: user_service.v1.UserProfile.password_valid:type_name -> google.type.Date
+	0, // 1: user_service.v1.RegisterUserResponse.user:type_name -> user_service.v1.UserProfile
+	0, // 2: user_service.v1.LoginUserResponse.user:type_name -> user_service.v1.UserProfile
+	1, // 3: user_service.v1.UserService.RegisterUser:input_type -> user_service.v1.RegisterUserRequest
+	2, // 4: user_service.v1.UserService.RegisterUser:output_type -> user_service.v1.RegisterUserResponse
+	4, // [4:5] is the sub-list for method output_type
+	3, // [3:4] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_user_service_proto_init() }

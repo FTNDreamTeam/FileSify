@@ -5,8 +5,9 @@ import (
 	"errors"
 	"time"
 
+	userpb "gen/user-service-gen"
+
 	db "github.com/FTNDreamTeam/FileSify/backend/user-service/db"
-	userpb "github.com/FTNDreamTeam/FileSify/backend/user-service/proto/user-service-gen"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -70,8 +71,12 @@ func (s *UserServer) RegisterUser(ctx context.Context, req *userpb.RegisterUserR
 		},
 	}
 
-	return &userpb.RegisterUserResponse{
+	returnUser := &userpb.RegisterUserResponse{
 		User:    responseUser,
 		Message: "User registration successful",
-	}, nil
+	}
+
+	println(returnUser)
+
+	return returnUser, nil
 }

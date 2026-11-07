@@ -2,10 +2,14 @@ FROM golang:1.27.3-alpine AS builder
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
+COPY ./gen ./gen
+
+COPY ./user-service/go.mod ./user-service/go.sum ./user-service/
+
+WORKDIR /app/user-service
 RUN go mod download
 
-COPY . .
+COPY ./user-service/ .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /user-service .
 

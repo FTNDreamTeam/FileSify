@@ -4,210 +4,29 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>FileSify — File Storage and Sharing Platform</title>
-  <meta name="description" content="FileSify is a file storage and sharing platform: organize content in folders, upload new versions, share with users and groups, and search only what you are allowed to see. Two-factor sign-in, enforced password policy and a default storage quota with admin-approved increases.">
+  <meta name="description" content="FileSify is a file storage and sharing platform: organize content in folders, upload new versions, share with users and groups, and search only what you are allowed to see.">
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <style>
-    :root{
-      --brand:#4f46e5; --brand-dark:#4338ca; --brand-soft:#eef2ff;
-      --ink:#0f172a; --muted:#64748b; --line:#e6e9f2; --radius:16px;
-    }
-    html{scroll-behavior:smooth}
-    body{
-      font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
-      color:var(--ink); background:#fff; -webkit-font-smoothing:antialiased;
-    }
-    h1,h2,h3,h4,h5{font-weight:800;letter-spacing:-.022em}
-    section{scroll-margin-top:84px}
-    .section{padding:5.5rem 0}
-    .text-soft{color:var(--muted)!important}
-    .lead-soft{color:var(--muted);font-size:1.075rem;line-height:1.7}
-
-    /* ---------- Buttons ---------- */
-    .btn{font-weight:600}
-    .btn-brand{
-      background:var(--brand); border:1px solid var(--brand); color:#fff;
-      box-shadow:0 10px 24px -12px rgba(79,70,229,.9);
-    }
-    .btn-brand:hover,.btn-brand:focus{background:var(--brand-dark);border-color:var(--brand-dark);color:#fff}
-    .btn-outline-brand{border:1px solid #d7dbee;color:var(--ink);background:#fff}
-    .btn-outline-brand:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
-
-    /* ---------- Navbar ---------- */
-    .navbar-glass{
-      background:rgba(255,255,255,.82);
-      backdrop-filter:saturate(180%) blur(14px);
-      -webkit-backdrop-filter:saturate(180%) blur(14px);
-      border-bottom:1px solid var(--line);
-    }
-    .navbar .nav-link{color:#334155;font-weight:500}
-    .navbar .nav-link:hover{color:var(--brand)}
-    .brand-mark{
-      width:36px;height:36px;border-radius:10px;display:grid;place-items:center;
-      color:#fff;font-size:1.05rem;
-      background:linear-gradient(135deg,#6366f1,#4f46e5 55%,#0ea5e9);
-      box-shadow:0 8px 18px -8px rgba(79,70,229,.9);
-    }
-
-    /* ---------- Hero ---------- */
-    .hero{
-      padding-top:9rem;padding-bottom:5.5rem;position:relative;overflow:hidden;
-      background:
-        radial-gradient(60% 60% at 88% 8%,rgba(79,70,229,.14),transparent 62%),
-        radial-gradient(55% 55% at 6% 0%,rgba(14,165,233,.12),transparent 62%),#fff;
-    }
-    .pill-badge{
-      display:inline-flex;align-items:center;gap:.5rem;
-      background:var(--brand-soft);color:var(--brand-dark);
-      border:1px solid #dcdcfb;border-radius:999px;
-      padding:.4rem .9rem;font-size:.825rem;font-weight:600;
-    }
-    .hero h1{font-size:clamp(2.1rem,4.6vw,3.6rem);line-height:1.08}
-    .hero-highlight{
-      background:linear-gradient(100deg,#4f46e5,#0ea5e9);
-      -webkit-background-clip:text;background-clip:text;color:transparent;
-    }
-
-    /* ---------- App mock ---------- */
-    .app-mock{
-      border-radius:18px;background:#fff;border:1px solid var(--line);
-      box-shadow:0 40px 80px -40px rgba(15,23,42,.45);overflow:hidden;
-    }
-    .app-mock-bar{
-      display:flex;align-items:center;gap:.4rem;padding:.7rem .95rem;
-      background:#f8fafc;border-bottom:1px solid var(--line);
-    }
-    .app-mock-bar .dot{width:9px;height:9px;border-radius:50%;background:#e2e8f0}
-    .app-mock-body{padding:1.25rem}
-    .file-icon{
-      width:38px;height:38px;border-radius:10px;flex:0 0 38px;
-      display:grid;place-items:center;font-size:1rem;
-    }
-    .file-list li+li{border-top:1px solid var(--line)}
-    .floating-card{
-      position:absolute;background:#fff;border:1px solid var(--line);
-      border-radius:14px;padding:.8rem 1rem;
-      box-shadow:0 24px 40px -24px rgba(15,23,42,.45);display:none;
-    }
-    @media(min-width:992px){.floating-card{display:block}}
-
-    /* ---------- Generic cards ---------- */
-    .feature-card,.role-card,.arch-card{
-      height:100%;padding:1.9rem 1.6rem;background:#fff;
-      border:1px solid var(--line);border-radius:var(--radius);
-      transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease;
-    }
-    .feature-card:hover,.role-card:hover,.arch-card:hover{
-      transform:translateY(-5px);border-color:#d6dbf2;
-      box-shadow:0 24px 44px -26px rgba(15,23,42,.4);
-    }
-    .feature-icon,.role-icon,.arch-icon{
-      width:50px;height:50px;border-radius:13px;margin-bottom:1.1rem;
-      display:grid;place-items:center;font-size:1.3rem;
-      background:var(--brand-soft);color:var(--brand);
-    }
-
-    /* ---------- Check lists ---------- */
-    .check-list{list-style:none;padding:0;margin:0}
-    .check-list li{
-      display:flex;gap:.6rem;padding:.35rem 0;font-size:.92rem;
-      color:#334155;align-items:flex-start;
-    }
-    .check-list li i{color:#16a34a;margin-top:.18rem;flex:0 0 auto}
-    .check-list.small li{font-size:.875rem;line-height:1.55}
-
-    /* ---------- Stats ---------- */
-    .stats-band{
-      background:linear-gradient(135deg,#312e81,#4f46e5 55%,#0ea5e9);
-      color:#fff;border-radius:24px;padding:3rem 1.5rem;
-      position:relative;overflow:hidden;
-    }
-    .stats-band::after{
-      content:"";position:absolute;inset:0;
-      background:radial-gradient(50% 80% at 90% 10%,rgba(255,255,255,.18),transparent 60%);
-    }
-    .stat-number{font-size:2.2rem;font-weight:800;line-height:1}
-    .stat-label{font-size:.875rem;opacity:.82}
-
-    /* ---------- Steps ---------- */
-    .step-num{
-      width:46px;height:46px;border-radius:50%;display:grid;place-items:center;
-      font-weight:800;color:#fff;background:linear-gradient(135deg,#6366f1,#4f46e5);
-      box-shadow:0 10px 22px -12px rgba(79,70,229,.95);
-    }
-
-    /* ---------- Pattern pills ---------- */
-    .pattern-pill{
-      display:inline-flex;align-items:center;gap:.45rem;background:#fff;
-      border:1px solid var(--line);border-radius:999px;
-      padding:.45rem .9rem;font-size:.85rem;font-weight:600;color:#334155;
-    }
-    .pattern-pill i{color:var(--brand)}
-
-    /* ---------- Service meta ---------- */
-    .service-meta{
-      font-size:.78rem;font-weight:600;color:var(--muted);
-      text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem;
-    }
-
-    /* ---------- FAQ ---------- */
-    .accordion-item{
-      border:1px solid var(--line);border-radius:12px!important;
-      margin-bottom:.75rem;overflow:hidden;
-    }
-    .accordion-button{font-weight:600;color:var(--ink);padding:1.05rem 1.25rem}
-    .accordion-button:not(.collapsed){background:var(--brand-soft);color:var(--brand-dark);box-shadow:none}
-    .accordion-button:focus{box-shadow:none;border-color:transparent}
-
-    /* ---------- CTA ---------- */
-    .cta-panel{
-      border-radius:26px;padding:4rem 1.5rem;text-align:center;color:#fff;
-      background:linear-gradient(135deg,#312e81,#4f46e5 58%,#0ea5e9);
-      position:relative;overflow:hidden;
-    }
-    .cta-panel::after{
-      content:"";position:absolute;inset:0;
-      background:radial-gradient(45% 70% at 15% 100%,rgba(255,255,255,.18),transparent 60%);
-    }
-    .cta-panel>*{position:relative;z-index:1}
-
-    /* ---------- Footer ---------- */
-    .footer{background:#0b1120;color:#94a3b8;padding:4rem 0 2rem}
-    .footer a{color:#94a3b8;text-decoration:none;transition:color .2s}
-    .footer a:hover{color:#fff}
-    .footer h6{color:#fff;font-weight:700;letter-spacing:.02em;margin-bottom:1rem}
-    .footer .social a{
-      width:38px;height:38px;border-radius:10px;display:grid;place-items:center;
-      background:rgba(255,255,255,.06);color:#cbd5e1;
-    }
-    .footer .social a:hover{background:var(--brand);color:#fff}
-    .footer-bottom{
-      border-top:1px solid rgba(255,255,255,.08);
-      margin-top:2.5rem;padding-top:1.5rem;font-size:.875rem;
-    }
-  </style>
+  <link rel="stylesheet" href="CSS/styles.css">
 </head>
 <body>
 
-<!-- ================= NAVBAR ================= -->
+<!-- Navbar -->
 <nav class="navbar navbar-expand-lg fixed-top navbar-glass py-2">
   <div class="container">
     <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="index.html">
       <span class="brand-mark"><i class="bi bi-cloud-fill"></i></span>
       <span>FileSify</span>
     </a>
-
     <button class="navbar-toggler border-0 shadow-none" type="button"
             data-bs-toggle="collapse" data-bs-target="#mainNav"
             aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
-
     <div class="collapse navbar-collapse" id="mainNav">
       <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1 mt-3 mt-lg-0">
         <li class="nav-item"><a class="nav-link px-lg-3" href="#roles">Roles</a></li>
@@ -215,7 +34,6 @@
         <li class="nav-item"><a class="nav-link px-lg-3" href="#security">Security</a></li>
         <li class="nav-item"><a class="nav-link px-lg-3" href="#architecture">Architecture</a></li>
         <li class="nav-item"><a class="nav-link px-lg-3" href="#faq">FAQ</a></li>
-
         <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
           <a class="btn btn-outline-brand rounded-pill px-3 d-block d-lg-inline-block" href="login.html">Sign in</a>
         </li>
@@ -227,41 +45,29 @@
   </div>
 </nav>
 
-<!-- ================= HERO ================= -->
+<!-- Hero -->
 <header class="hero" id="top">
   <div class="container">
     <div class="row align-items-center g-5">
       <div class="col-lg-6">
-        <span class="pill-badge mb-3">
-          <i class="bi bi-shield-lock"></i> Two-factor sign-in with a one-time code
-        </span>
-        <h1 class="mb-3">
-          Store, organize and share your files —
-          <span class="hero-highlight">with access you control.</span>
-        </h1>
+        <span class="pill-badge mb-3"><i class="bi bi-shield-lock"></i> Two-factor sign-in with a one-time code</span>
+        <h1 class="mb-3">Store, organize and share your files — <span class="hero-highlight">with access you control.</span></h1>
         <p class="lead-soft mb-4" style="max-width:32rem;">
           FileSify keeps your files in folders, tracks every new version, and lets you share
           with individual users or with groups you manage. Search only returns content you are
           allowed to see, and every sign-in needs a password plus a one-time code sent to your
           email address.
         </p>
-
         <div class="d-flex flex-column flex-sm-row gap-2 mb-4">
-          <a href="register.html" class="btn btn-brand btn-lg rounded-pill px-4">
-            Create your account <i class="bi bi-arrow-right ms-1"></i>
-          </a>
-          <a href="#how" class="btn btn-outline-brand btn-lg rounded-pill px-4">
-            <i class="bi bi-play-circle me-1"></i> How it works
-          </a>
+          <a href="register.html" class="btn btn-brand btn-lg rounded-pill px-4">Create your account <i class="bi bi-arrow-right ms-1"></i></a>
+          <a href="#how" class="btn btn-outline-brand btn-lg rounded-pill px-4"><i class="bi bi-play-circle me-1"></i> How it works</a>
         </div>
-
         <div class="d-flex flex-wrap align-items-center gap-3 text-soft small">
           <span><i class="bi bi-check-circle-fill text-success me-1"></i> Default quota on registration</span>
           <span><i class="bi bi-check-circle-fill text-success me-1"></i> Password policy enforced</span>
           <span><i class="bi bi-check-circle-fill text-success me-1"></i> Access-checked downloads</span>
         </div>
       </div>
-
       <div class="col-lg-6 position-relative">
         <div class="app-mock">
           <div class="app-mock-bar">
@@ -276,52 +82,35 @@
             <div class="progress mb-3" style="height:6px;">
               <div class="progress-bar" style="width:68%;background:linear-gradient(90deg,#4f46e5,#0ea5e9);"></div>
             </div>
-
             <ul class="list-unstyled mb-0 file-list">
               <li class="d-flex align-items-center gap-3 py-2">
                 <span class="file-icon bg-primary-subtle text-primary"><i class="bi bi-folder-fill"></i></span>
-                <div class="flex-grow-1">
-                  <div class="small fw-semibold">Projects</div>
-                  <div class="text-soft" style="font-size:.75rem;">Folder · Shared with 2 groups</div>
-                </div>
+                <div class="flex-grow-1"><div class="small fw-semibold">Projects</div><div class="text-soft" style="font-size:.75rem;">Folder · Shared with 2 groups</div></div>
                 <i class="bi bi-people-fill text-primary" title="Shared"></i>
               </li>
               <li class="d-flex align-items-center gap-3 py-2">
                 <span class="file-icon bg-danger-subtle text-danger"><i class="bi bi-file-earmark-pdf"></i></span>
-                <div class="flex-grow-1">
-                  <div class="small fw-semibold">Quarterly-report.pdf</div>
-                  <div class="text-soft" style="font-size:.75rem;">Modified 2 hours ago · v3</div>
-                </div>
+                <div class="flex-grow-1"><div class="small fw-semibold">Quarterly-report.pdf</div><div class="text-soft" style="font-size:.75rem;">Modified 2 hours ago · v3</div></div>
                 <i class="bi bi-check-circle-fill text-success"></i>
               </li>
               <li class="d-flex align-items-center gap-3 py-2">
                 <span class="file-icon bg-primary-subtle text-primary"><i class="bi bi-file-earmark-image"></i></span>
-                <div class="flex-grow-1">
-                  <div class="small fw-semibold">Team-photo.jpg</div>
-                  <div class="text-soft" style="font-size:.75rem;">Modified yesterday</div>
-                </div>
+                <div class="flex-grow-1"><div class="small fw-semibold">Team-photo.jpg</div><div class="text-soft" style="font-size:.75rem;">Modified yesterday</div></div>
                 <i class="bi bi-check-circle-fill text-success"></i>
               </li>
               <li class="d-flex align-items-center gap-3 py-2">
                 <span class="file-icon bg-success-subtle text-success"><i class="bi bi-file-earmark-text"></i></span>
-                <div class="flex-grow-1">
-                  <div class="small fw-semibold">Notes.txt</div>
-                  <div class="text-soft" style="font-size:.75rem;">Modified 3 days ago</div>
-                </div>
+                <div class="flex-grow-1"><div class="small fw-semibold">Notes.txt</div><div class="text-soft" style="font-size:.75rem;">Modified 3 days ago</div></div>
                 <i class="bi bi-check-circle-fill text-success"></i>
               </li>
               <li class="d-flex align-items-center gap-3 py-2">
                 <span class="file-icon bg-warning-subtle text-warning"><i class="bi bi-file-earmark-zip"></i></span>
-                <div class="flex-grow-1">
-                  <div class="small fw-semibold">Archive.zip</div>
-                  <div class="text-soft" style="font-size:.75rem;">Modified 5 days ago</div>
-                </div>
+                <div class="flex-grow-1"><div class="small fw-semibold">Archive.zip</div><div class="text-soft" style="font-size:.75rem;">Modified 5 days ago</div></div>
                 <i class="bi bi-check-circle-fill text-success"></i>
               </li>
             </ul>
           </div>
         </div>
-
         <div class="floating-card" style="top:-22px;right:-14px;">
           <div class="d-flex align-items-center gap-2">
             <i class="bi bi-envelope-check-fill text-primary fs-5"></i>
@@ -336,46 +125,30 @@
   </div>
 </header>
 
-<!-- ================= SYSTEM FACTS ================= -->
+<!-- Stats -->
 <section class="pb-5">
   <div class="container">
     <div class="stats-band">
       <div class="row text-center g-4">
-        <div class="col-6 col-md-3">
-          <div class="stat-number">5</div>
-          <div class="stat-label">Microservices</div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="stat-number">4</div>
-          <div class="stat-label">NoSQL data stores</div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="stat-number">1</div>
-          <div class="stat-label">REST API gateway</div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="stat-number">1</div>
-          <div class="stat-label">Elasticsearch index</div>
-        </div>
+        <div class="col-6 col-md-3"><div class="stat-number">5</div><div class="stat-label">Microservices</div></div>
+        <div class="col-6 col-md-3"><div class="stat-number">4</div><div class="stat-label">NoSQL data stores</div></div>
+        <div class="col-6 col-md-3"><div class="stat-number">1</div><div class="stat-label">REST API gateway</div></div>
+        <div class="col-6 col-md-3"><div class="stat-number">1</div><div class="stat-label">Elasticsearch index</div></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ================= ROLES ================= -->
+<!-- Roles -->
 <section class="section" id="roles">
   <div class="container">
     <div class="row justify-content-center text-center mb-5">
       <div class="col-lg-7">
         <span class="pill-badge mb-3"><i class="bi bi-person-badge"></i> Roles</span>
         <h2 class="mb-3">Three roles, three sets of permissions</h2>
-        <p class="lead-soft mb-0">
-          Access is checked on every request. What you can do depends on your role and on
-          whether the content is yours or has been shared with you.
-        </p>
+        <p class="lead-soft mb-0">Access is checked on every request. What you can do depends on your role and on whether the content is yours or has been shared with you.</p>
       </div>
     </div>
-
     <div class="row g-4">
       <div class="col-md-6 col-lg-4">
         <div class="role-card">
@@ -389,7 +162,6 @@
           </ul>
         </div>
       </div>
-
       <div class="col-md-6 col-lg-4">
         <div class="role-card">
           <div class="role-icon"><i class="bi bi-person-check"></i></div>
@@ -405,7 +177,6 @@
           </ul>
         </div>
       </div>
-
       <div class="col-md-6 col-lg-4">
         <div class="role-card">
           <div class="role-icon"><i class="bi bi-shield-lock"></i></div>
@@ -424,211 +195,38 @@
   </div>
 </section>
 
-<!-- ================= FEATURES ================= -->
+<!-- Features -->
 <section class="section" id="features" style="background:#f8fafc;">
   <div class="container">
     <div class="row justify-content-center text-center mb-5">
       <div class="col-lg-7">
         <span class="pill-badge mb-3"><i class="bi bi-grid"></i> Features</span>
         <h2 class="mb-3">What the platform does</h2>
-        <p class="lead-soft mb-0">
-          Everything below is enforced on the server, not just in the browser.
-        </p>
+        <p class="lead-soft mb-0">Everything below is enforced on the server, not just in the browser.</p>
       </div>
     </div>
-
     <div class="row g-4">
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-person-plus"></i></div>
-          <h5 class="mb-2">Registration with confirmation</h5>
-          <p class="text-soft mb-0 small">
-            A unique email address, first name, last name, password and repeated password are
-            required. A strong password is enforced and the registration must be confirmed.
-            Every new account receives a default storage quota.
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-key"></i></div>
-          <h5 class="mb-2">Two-factor sign-in</h5>
-          <p class="text-soft mb-0 small">
-            Signing in requires your password and a one-time code sent to your email address.
-            Account recovery is handled with a magic link.
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-clock-history"></i></div>
-          <h5 class="mb-2">Password policy and reset</h5>
-          <p class="text-soft mb-0 small">
-            A password can only be changed once it is at least one day old. Passwords expire
-            after 60 days, after which sign-in is blocked until a reset. Resets use a
-            short-lived link sent to the known email address.
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-folder2-open"></i></div>
-          <h5 class="mb-2">Folders at any depth</h5>
-          <p class="text-soft mb-0 small">
-            Create a folder in the root or inside any subfolder. Folders form a hierarchy of
-            arbitrary depth, and you can browse into any of them.
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-cloud-arrow-up"></i></div>
-          <h5 class="mb-2">Upload and new versions</h5>
-          <p class="text-soft mb-0 small">
-            Upload files into any of your folders. The assigned quota is checked before the
-            upload is accepted. Uploading a new version replaces the file content and records
-            the time of the last modification.
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-pencil-square"></i></div>
-          <h5 class="mb-2">Browse and rename</h5>
-          <p class="text-soft mb-0 small">
-            Opening a folder shows its subfolders and files. The name of any file or folder you
-            own can be changed.
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-people"></i></div>
-          <h5 class="mb-2">User groups</h5>
-          <p class="text-soft mb-0 small">
-            Create groups, add members and remove them again. Groups exist so that content can
-            be shared with several people at once and kept in sync as membership changes.
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-share"></i></div>
-          <h5 class="mb-2">Sharing with users and groups</h5>
-          <p class="text-soft mb-0 small">
-            Share a file or a folder with a single user or with one of your groups. Sharing a
-            folder applies to everything inside it. Your profile shows what you have shared and
-            with whom, and what has been shared with you — and you can revoke at any time.
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-lock"></i></div>
-          <h5 class="mb-2">Clear limits for recipients</h5>
-          <p class="text-soft mb-0 small">
-            A user you share with can view and download the content. They cannot delete it and
-            they cannot upload new versions of it. Those actions stay with the owner.
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-download"></i></div>
-          <h5 class="mb-2">Download and preview</h5>
-          <p class="text-soft mb-0 small">
-            Download a file or open its metadata in the browser. Access rights are verified
-            before either action. Text files and images can be previewed directly in the browser.
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-search"></i></div>
-          <h5 class="mb-2">Search scoped to your access</h5>
-          <p class="text-soft mb-0 small">
-            Search files and folders by name, powered by Elasticsearch with partial matching
-            and tolerance for typing mistakes. Results only ever include your own content,
-            content shared directly with you, content shared through a group you belong to,
-            and content inside a shared parent folder.
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-bell"></i></div>
-          <h5 class="mb-2">Notifications</h5>
-          <p class="text-soft mb-0 small">
-            You are notified when someone shares a file or folder with you, when a new file is
-            added to a folder shared with you, and when a new version of a file shared with you
-            is uploaded.
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-speedometer2"></i></div>
-          <h5 class="mb-2">Storage quota and admin approval</h5>
-          <p class="text-soft mb-0 small">
-            Your quota is assigned at registration and checked on every upload. If you need
-            more space you submit a request stating the desired value. An administrator sees
-            all users with their quota and usage and can approve or reject each request.
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-list-check"></i></div>
-          <h5 class="mb-2">Activity history</h5>
-          <p class="text-soft mb-0 small">
-            Uploads, renames, deletions and downloads, creation and revocation of shares, and
-            folder and group operations are all recorded and shown in your history. The history
-            is built from an event log rather than a mutable table.
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-bar-chart-line"></i></div>
-          <h5 class="mb-2">Account analytics</h5>
-          <p class="text-soft mb-0 small">
-            Total storage used, the number of files per type, the five files you accessed the
-            most, and the number of files shared with you. Analytics are computed from the same
-            event stream as the activity history.
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-trash3"></i></div>
-          <h5 class="mb-2">Deletion that cleans up after itself</h5>
-          <p class="text-soft mb-0 small">
-            Deleting a folder deletes everything inside it. File content, metadata, sharing
-            information and related notifications are all removed. The operation runs as a saga
-            so that a partial failure does not leave orphaned data behind.
-          </p>
-        </div>
-      </div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-person-plus"></i></div><h5 class="mb-2">Registration with confirmation</h5><p class="text-soft mb-0 small">A unique email address, first name, last name, password and repeated password are required. A strong password is enforced and the registration must be confirmed. Every new account receives a default storage quota.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-key"></i></div><h5 class="mb-2">Two-factor sign-in</h5><p class="text-soft mb-0 small">Signing in requires your password and a one-time code sent to your email address. Account recovery is handled with a magic link.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-clock-history"></i></div><h5 class="mb-2">Password policy and reset</h5><p class="text-soft mb-0 small">A password can only be changed once it is at least one day old. Passwords expire after 60 days, after which sign-in is blocked until a reset. Resets use a short-lived link sent to the known email address.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-folder2-open"></i></div><h5 class="mb-2">Folders at any depth</h5><p class="text-soft mb-0 small">Create a folder in the root or inside any subfolder. Folders form a hierarchy of arbitrary depth, and you can browse into any of them.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-cloud-arrow-up"></i></div><h5 class="mb-2">Upload and new versions</h5><p class="text-soft mb-0 small">Upload files into any of your folders. The assigned quota is checked before the upload is accepted. Uploading a new version replaces the file content and records the time of the last modification.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-pencil-square"></i></div><h5 class="mb-2">Browse and rename</h5><p class="text-soft mb-0 small">Opening a folder shows its subfolders and files. The name of any file or folder you own can be changed.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-people"></i></div><h5 class="mb-2">User groups</h5><p class="text-soft mb-0 small">Create groups, add members and remove them again. Groups exist so that content can be shared with several people at once and kept in sync as membership changes.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-share"></i></div><h5 class="mb-2">Sharing with users and groups</h5><p class="text-soft mb-0 small">Share a file or a folder with a single user or with one of your groups. Sharing a folder applies to everything inside it. Your profile shows what you have shared and with whom, and what has been shared with you — and you can revoke at any time.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-lock"></i></div><h5 class="mb-2">Clear limits for recipients</h5><p class="text-soft mb-0 small">A user you share with can view and download the content. They cannot delete it and they cannot upload new versions of it. Those actions stay with the owner.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-download"></i></div><h5 class="mb-2">Download and preview</h5><p class="text-soft mb-0 small">Download a file or open its metadata in the browser. Access rights are verified before either action. Text files and images can be previewed directly in the browser.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-search"></i></div><h5 class="mb-2">Search scoped to your access</h5><p class="text-soft mb-0 small">Search files and folders by name, powered by Elasticsearch with partial matching and tolerance for typing mistakes. Results only ever include your own content, content shared directly with you, content shared through a group you belong to, and content inside a shared parent folder.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-bell"></i></div><h5 class="mb-2">Notifications</h5><p class="text-soft mb-0 small">You are notified when someone shares a file or folder with you, when a new file is added to a folder shared with you, and when a new version of a file shared with you is uploaded.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-speedometer2"></i></div><h5 class="mb-2">Storage quota and admin approval</h5><p class="text-soft mb-0 small">Your quota is assigned at registration and checked on every upload. If you need more space you submit a request stating the desired value. An administrator sees all users with their quota and usage and can approve or reject each request.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-list-check"></i></div><h5 class="mb-2">Activity history</h5><p class="text-soft mb-0 small">Uploads, renames, deletions and downloads, creation and revocation of shares, and folder and group operations are all recorded and shown in your history. The history is built from an event log rather than a mutable table.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-bar-chart-line"></i></div><h5 class="mb-2">Account analytics</h5><p class="text-soft mb-0 small">Total storage used, the number of files per type, the five files you accessed the most, and the number of files shared with you. Analytics are computed from the same event stream as the activity history.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-trash3"></i></div><h5 class="mb-2">Deletion that cleans up after itself</h5><p class="text-soft mb-0 small">Deleting a folder deletes everything inside it. File content, metadata, sharing information and related notifications are all removed. The operation runs as a saga so that a partial failure does not leave orphaned data behind.</p></div></div>
     </div>
   </div>
 </section>
 
-<!-- ================= HOW IT WORKS ================= -->
+<!-- How it works -->
 <section class="section" id="how">
   <div class="container">
     <div class="row justify-content-center text-center mb-5">
@@ -638,267 +236,61 @@
         <p class="lead-soft mb-0">Three steps, each with its own security check.</p>
       </div>
     </div>
-
     <div class="row g-4">
-      <div class="col-md-4">
-        <div class="feature-card text-center">
-          <div class="step-num mx-auto mb-3">1</div>
-          <h5 class="mb-2">Register and confirm</h5>
-          <p class="text-soft small mb-0">
-            Enter your name, a unique email address and a strong password twice. Confirm the
-            registration, and your account is created with a default storage quota.
-          </p>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="feature-card text-center">
-          <div class="step-num mx-auto mb-3">2</div>
-          <h5 class="mb-2">Sign in with two factors</h5>
-          <p class="text-soft small mb-0">
-            Enter your password, then the one-time code that arrives by email. If your password
-            has expired, sign-in is blocked until you reset it through the emailed link.
-          </p>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="feature-card text-center">
-          <div class="step-num mx-auto mb-3">3</div>
-          <h5 class="mb-2">Upload, organize and share</h5>
-          <p class="text-soft small mb-0">
-            Build your folder structure, upload files within your quota, create groups, and
-            share files or folders with users and groups. Notifications keep everyone informed.
-          </p>
-        </div>
-      </div>
+      <div class="col-md-4"><div class="feature-card text-center"><div class="step-num mx-auto mb-3">1</div><h5 class="mb-2">Register and confirm</h5><p class="text-soft small mb-0">Enter your name, a unique email address and a strong password twice. Confirm the registration, and your account is created with a default storage quota.</p></div></div>
+      <div class="col-md-4"><div class="feature-card text-center"><div class="step-num mx-auto mb-3">2</div><h5 class="mb-2">Sign in with two factors</h5><p class="text-soft small mb-0">Enter your password, then the one-time code that arrives by email. If your password has expired, sign-in is blocked until you reset it through the emailed link.</p></div></div>
+      <div class="col-md-4"><div class="feature-card text-center"><div class="step-num mx-auto mb-3">3</div><h5 class="mb-2">Upload, organize and share</h5><p class="text-soft small mb-0">Build your folder structure, upload files within your quota, create groups, and share files or folders with users and groups. Notifications keep everyone informed.</p></div></div>
     </div>
   </div>
 </section>
 
-<!-- ================= SECURITY ================= -->
+<!-- Security -->
 <section class="section" id="security" style="background:#f8fafc;">
   <div class="container">
     <div class="row justify-content-center text-center mb-5">
       <div class="col-lg-7">
         <span class="pill-badge mb-3"><i class="bi bi-shield-check"></i> Security</span>
         <h2 class="mb-3">Controls applied to every request</h2>
-        <p class="lead-soft mb-0">
-          Security is enforced in the API gateway and in each service, on the server side,
-          regardless of what the client sends.
-        </p>
+        <p class="lead-soft mb-0">Security is enforced in the API gateway and in each service, on the server side, regardless of what the client sends.</p>
       </div>
     </div>
-
     <div class="row g-4">
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-person-lock"></i></div>
-          <h5 class="mb-2">Authentication</h5>
-          <ul class="check-list small">
-            <li><i class="bi bi-check-lg"></i><span>Password plus a one-time code sent by email</span></li>
-            <li><i class="bi bi-check-lg"></i><span>Magic-link account recovery</span></li>
-            <li><i class="bi bi-check-lg"></i><span>Password change only after one day of use</span></li>
-            <li><i class="bi bi-check-lg"></i><span>60-day password expiry blocks sign-in until reset</span></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-check2-square"></i></div>
-          <h5 class="mb-2">Authorization</h5>
-          <ul class="check-list small">
-            <li><i class="bi bi-check-lg"></i><span>Checked for every request, on the server</span></li>
-            <li><i class="bi bi-check-lg"></i><span>Applies to downloads and previews, not just the UI</span></li>
-            <li><i class="bi bi-check-lg"></i><span>State kept on the client is encrypted and integrity-protected</span></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-filter-square"></i></div>
-          <h5 class="mb-2">Input validation</h5>
-          <ul class="check-list small">
-            <li><i class="bi bi-check-lg"></i><span>String checks, whitelisting and boundary checking</span></li>
-            <li><i class="bi bi-check-lg"></i><span>Numeric and special-character validation</span></li>
-            <li><i class="bi bi-check-lg"></i><span>Validation on both the client and the server</span></li>
-            <li><i class="bi bi-check-lg"></i><span>Output encoding as protection against XSS and injection</span></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-file-earmark-lock"></i></div>
-          <h5 class="mb-2">Safe file handling</h5>
-          <ul class="check-list small">
-            <li><i class="bi bi-check-lg"></i><span>User privileges checked before any file operation</span></li>
-            <li><i class="bi bi-check-lg"></i><span>File type whitelisting on upload</span></li>
-            <li><i class="bi bi-check-lg"></i><span>Integrity verification of stored files</span></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-lock-fill"></i></div>
-          <h5 class="mb-2">Transport and credentials</h5>
-          <ul class="check-list small">
-            <li><i class="bi bi-check-lg"></i><span>HTTPS between the client and the API gateway</span></li>
-            <li><i class="bi bi-check-lg"></i><span>HTTPS between services</span></li>
-            <li><i class="bi bi-check-lg"></i><span>Sensitive parameters are not sent in the URL</span></li>
-            <li><i class="bi bi-check-lg"></i><span>Passwords stored hashed and salted</span></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-journal-text"></i></div>
-          <h5 class="mb-2">Logging and audit trail</h5>
-          <ul class="check-list small">
-            <li><i class="bi bi-check-lg"></i><span>Validation failures and access-control failures</span></li>
-            <li><i class="bi bi-check-lg"></i><span>Successful and failed sign-in attempts</span></li>
-            <li><i class="bi bi-check-lg"></i><span>Invalid or expired session tokens, failed backend TLS</span></li>
-            <li><i class="bi bi-check-lg"></i><span>Administrator actions and unexpected state changes</span></li>
-            <li><i class="bi bi-check-lg"></i><span>Log rotation, restricted access, no sensitive data or stack traces</span></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-cone-striped"></i></div>
-          <h5 class="mb-2">Abuse protection</h5>
-          <ul class="check-list small">
-            <li><i class="bi bi-check-lg"></i><span>Rate limiting of transactions per user against DoS</span></li>
-            <li><i class="bi bi-check-lg"></i><span>Timeouts on every outgoing request</span></li>
-            <li><i class="bi bi-check-lg"></i><span>Circuit breaker and retry so failures stay contained</span></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-clipboard-data"></i></div>
-          <h5 class="mb-2">Vulnerability analysis</h5>
-          <p class="text-soft mb-0 small">
-            A security report documents which tools were used to look for vulnerabilities, what
-            was found, how it could be exploited, and how the issue is mitigated.
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="bi bi-bug"></i></div>
-          <h5 class="mb-2">Attack demonstrations</h5>
-          <p class="text-soft mb-0 small">
-            The platform ships with mechanisms that demonstrate XSS, SQL injection, brute-force
-            and DoS attempts, together with the defense that stop them.
-          </p>
-        </div>
-      </div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-person-lock"></i></div><h5 class="mb-2">Authentication</h5><ul class="check-list small"><li><i class="bi bi-check-lg"></i><span>Password plus a one-time code sent by email</span></li><li><i class="bi bi-check-lg"></i><span>Magic-link account recovery</span></li><li><i class="bi bi-check-lg"></i><span>Password change only after one day of use</span></li><li><i class="bi bi-check-lg"></i><span>60-day password expiry blocks sign-in until reset</span></li></ul></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-check2-square"></i></div><h5 class="mb-2">Authorization</h5><ul class="check-list small"><li><i class="bi bi-check-lg"></i><span>Checked for every request, on the server</span></li><li><i class="bi bi-check-lg"></i><span>Applies to downloads and previews, not just the UI</span></li><li><i class="bi bi-check-lg"></i><span>State kept on the client is encrypted and integrity-protected</span></li></ul></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-filter-square"></i></div><h5 class="mb-2">Input validation</h5><ul class="check-list small"><li><i class="bi bi-check-lg"></i><span>String checks, whitelisting and boundary checking</span></li><li><i class="bi bi-check-lg"></i><span>Numeric and special-character validation</span></li><li><i class="bi bi-check-lg"></i><span>Validation on both the client and the server</span></li><li><i class="bi bi-check-lg"></i><span>Output encoding as protection against XSS and injection</span></li></ul></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-file-earmark-lock"></i></div><h5 class="mb-2">Safe file handling</h5><ul class="check-list small"><li><i class="bi bi-check-lg"></i><span>User privileges checked before any file operation</span></li><li><i class="bi bi-check-lg"></i><span>File type whitelisting on upload</span></li><li><i class="bi bi-check-lg"></i><span>Integrity verification of stored files</span></li></ul></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-lock-fill"></i></div><h5 class="mb-2">Transport and credentials</h5><ul class="check-list small"><li><i class="bi bi-check-lg"></i><span>HTTPS between the client and the API gateway</span></li><li><i class="bi bi-check-lg"></i><span>HTTPS between services</span></li><li><i class="bi bi-check-lg"></i><span>Sensitive parameters are not sent in the URL</span></li><li><i class="bi bi-check-lg"></i><span>Passwords stored hashed and salted</span></li></ul></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-journal-text"></i></div><h5 class="mb-2">Logging and audit trail</h5><ul class="check-list small"><li><i class="bi bi-check-lg"></i><span>Validation failures and access-control failures</span></li><li><i class="bi bi-check-lg"></i><span>Successful and failed sign-in attempts</span></li><li><i class="bi bi-check-lg"></i><span>Invalid or expired session tokens, failed backend TLS</span></li><li><i class="bi bi-check-lg"></i><span>Administrator actions and unexpected state changes</span></li><li><i class="bi bi-check-lg"></i><span>Log rotation, restricted access, no sensitive data or stack traces</span></li></ul></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-cone-striped"></i></div><h5 class="mb-2">Abuse protection</h5><ul class="check-list small"><li><i class="bi bi-check-lg"></i><span>Rate limiting of transactions per user against DoS</span></li><li><i class="bi bi-check-lg"></i><span>Timeouts on every outgoing request</span></li><li><i class="bi bi-check-lg"></i><span>Circuit breaker and retry so failures stay contained</span></li></ul></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-clipboard-data"></i></div><h5 class="mb-2">Vulnerability analysis</h5><p class="text-soft mb-0 small">A security report documents which tools were used to look for vulnerabilities, what was found, how it could be exploited, and how the issue is mitigated.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-bug"></i></div><h5 class="mb-2">Attack demonstrations</h5><p class="text-soft mb-0 small">The platform ships with mechanisms that demonstrate XSS, SQL injection, brute-force and DoS attempts, together with the defenses that stop them.</p></div></div>
     </div>
   </div>
 </section>
 
-<!-- ================= ARCHITECTURE ================= -->
+<!-- Architecture -->
 <section class="section" id="architecture">
   <div class="container">
     <div class="row justify-content-center text-center mb-5">
       <div class="col-lg-7">
         <span class="pill-badge mb-3"><i class="bi bi-diagram-3"></i> Architecture</span>
         <h2 class="mb-3">Five services behind one gateway</h2>
-        <p class="lead-soft mb-0">
-          Every client request enters through the REST API gateway. Services talk to each other
-          synchronously where an answer is needed immediately, and asynchronously for everything
-          that can be derived from events.
-        </p>
+        <p class="lead-soft mb-0">Every client request enters through the REST API gateway. Services talk to each other synchronously where an answer is needed immediately, and asynchronously for everything that can be derived from events.</p>
       </div>
     </div>
-
     <div class="row g-4 mb-5">
-      <div class="col-md-6 col-lg-4">
-        <div class="arch-card">
-          <div class="arch-icon"><i class="bi bi-person-gear"></i></div>
-          <h5 class="mb-1">Users</h5>
-          <div class="service-meta">Document database</div>
-          <p class="text-soft mb-0 small">
-            Stores credentials, roles, first and last name, and storage quota. Handles
-            registration and sign-in.
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="arch-card">
-          <div class="arch-icon"><i class="bi bi-folder"></i></div>
-          <h5 class="mb-1">Files</h5>
-          <div class="service-meta">Document database + object store</div>
-          <p class="text-soft mb-0 small">
-            Keeps file and folder metadata: name, type, size, owner, parent folder, timestamps
-            and a reference to the content. Content itself lives in the object store.
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="arch-card">
-          <div class="arch-icon"><i class="bi bi-share"></i></div>
-          <h5 class="mb-1">Sharing</h5>
-          <div class="service-meta">Graph database</div>
-          <p class="text-soft mb-0 small">
-            Holds the access graph: who may see which file or folder, and which groups exist
-            and who belongs to them. Reacts to events from the Files service.
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="arch-card">
-          <div class="arch-icon"><i class="bi bi-bell"></i></div>
-          <h5 class="mb-1">Notifications</h5>
-          <div class="service-meta">Wide-column database</div>
-          <p class="text-soft mb-0 small">
-            Stores and delivers notifications. Listens for sharing events and new-version
-            events to decide which users to inform.
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="arch-card">
-          <div class="arch-icon"><i class="bi bi-graph-up"></i></div>
-          <h5 class="mb-1">Analytics</h5>
-          <div class="service-meta">Event-sourced read model</div>
-          <p class="text-soft mb-0 small">
-            Records activity history and computes analytics for files and storage usage by
-            consuming events from the other services.
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="arch-card">
-          <div class="arch-icon"><i class="bi bi-hdd-network"></i></div>
-          <h5 class="mb-1">Supporting infrastructure</h5>
-          <div class="service-meta">Cache, search, object store</div>
-          <p class="text-soft mb-0 small">
-            Redis caches the most frequently accessed files. Elasticsearch indexes files and
-            folders for search. The object store holds file content.
-          </p>
-        </div>
-      </div>
+      <div class="col-md-6 col-lg-4"><div class="arch-card"><div class="arch-icon"><i class="bi bi-person-gear"></i></div><h5 class="mb-1">Users</h5><div class="service-meta">Document database</div><p class="text-soft mb-0 small">Stores credentials, roles, first and last name, and storage quota. Handles registration and sign-in.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="arch-card"><div class="arch-icon"><i class="bi bi-folder"></i></div><h5 class="mb-1">Files</h5><div class="service-meta">Document database + object store</div><p class="text-soft mb-0 small">Keeps file and folder metadata: name, type, size, owner, parent folder, timestamps and a reference to the content. Content itself lives in the object store.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="arch-card"><div class="arch-icon"><i class="bi bi-share"></i></div><h5 class="mb-1">Sharing</h5><div class="service-meta">Graph database</div><p class="text-soft mb-0 small">Holds the access graph: who may see which file or folder, and which groups exist and who belongs to them. Reacts to events from the Files service.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="arch-card"><div class="arch-icon"><i class="bi bi-bell"></i></div><h5 class="mb-1">Notifications</h5><div class="service-meta">Wide-column database</div><p class="text-soft mb-0 small">Stores and delivers notifications. Listens for sharing events and new-version events to decide which users to inform.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="arch-card"><div class="arch-icon"><i class="bi bi-graph-up"></i></div><h5 class="mb-1">Analytics</h5><div class="service-meta">Event-sourced read model</div><p class="text-soft mb-0 small">Records activity history and computes analytics for files and storage usage by consuming events from the other services.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="arch-card"><div class="arch-icon"><i class="bi bi-hdd-network"></i></div><h5 class="mb-1">Supporting infrastructure</h5><div class="service-meta">Cache, search, object store</div><p class="text-soft mb-0 small">Redis caches the most frequently accessed files. Elasticsearch indexes files and folders for search. The object store holds file content.</p></div></div>
     </div>
-
     <div class="row justify-content-center">
       <div class="col-lg-10">
         <div class="text-center mb-3">
           <h5 class="mb-2">Patterns and mechanisms in use</h5>
-          <p class="text-soft small mb-0">
-            Each of these is visible in the running system, not only in the design document.
-          </p>
+          <p class="text-soft small mb-0">Each of these is visible in the running system, not only in the design document.</p>
         </div>
         <div class="d-flex flex-wrap justify-content-center gap-2">
           <span class="pattern-pill"><i class="bi bi-signpost"></i> API gateway</span>
@@ -921,7 +313,7 @@
   </div>
 </section>
 
-<!-- ================= FAQ ================= -->
+<!-- FAQ -->
 <section class="section" id="faq" style="background:#f8fafc;">
   <div class="container">
     <div class="row justify-content-center text-center mb-5">
@@ -931,137 +323,28 @@
         <p class="lead-soft mb-0">How the platform behaves in the situations that come up most.</p>
       </div>
     </div>
-
     <div class="row justify-content-center">
       <div class="col-lg-9">
         <div class="accordion" id="faqAccordion">
-
-          <div class="accordion-item">
-            <h2 class="accordion-header">
-              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="true" aria-controls="faq1">
-                How does signing in work?
-              </button>
-            </h2>
-            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
-              <div class="accordion-body text-soft small">
-                Sign-in is combined: you enter your password, and a one-time code is sent to your
-                email address. Both are required. If you lose access to your account, recovery is
-                available through a magic link.
-              </div>
-            </div>
-          </div>
-
-          <div class="accordion-item">
-            <h2 class="accordion-header">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2">
-                What happens when my password expires?
-              </button>
-            </h2>
-            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-              <div class="accordion-body text-soft small">
-                A password is valid for 60 days. Once it expires, sign-in is blocked until you
-                set a new one through the reset link sent to your email address. This makes the
-                account auditable: an expired credential cannot be used to get in. A password
-                can only be changed after it has been in use for at least one day.
-              </div>
-            </div>
-          </div>
-
-          <div class="accordion-item">
-            <h2 class="accordion-header">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" aria-expanded="false" aria-controls="faq3">
-                How much storage do I get, and how do I get more?
-              </button>
-            </h2>
-            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-              <div class="accordion-body text-soft small">
-                Every account is created with a default quota, and every upload is checked
-                against it. If you need more space, submit a request stating the value you want.
-                An administrator reviews it and either approves it, which updates your quota, or
-                rejects it.
-              </div>
-            </div>
-          </div>
-
-          <div class="accordion-item">
-            <h2 class="accordion-header">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" aria-expanded="false" aria-controls="faq4">
-                What can someone do with content I share with them?
-              </button>
-            </h2>
-            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-              <div class="accordion-body text-soft small">
-                They can view and download it. They cannot delete it and they cannot upload new
-                versions of it. If you share a folder, the same rules apply to everything inside
-                that folder. You can revoke a share at any time, and your profile lists both what
-                you have shared and what has been shared with you.
-              </div>
-            </div>
-          </div>
-
-          <div class="accordion-item">
-            <h2 class="accordion-header">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5" aria-expanded="false" aria-controls="faq5">
-                Which files show up in search results?
-              </button>
-            </h2>
-            <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-              <div class="accordion-body text-soft small">
-                Only content you are allowed to see: your own files and folders, content shared
-                directly with you, content shared with a group you are a member of, and content
-                inside a shared parent folder. Search is by name, supports partial matches and
-                tolerates typing mistakes.
-              </div>
-            </div>
-          </div>
-
-          <div class="accordion-item">
-            <h2 class="accordion-header">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6" aria-expanded="false" aria-controls="faq6">
-                What is removed when I delete a file or a folder?
-              </button>
-            </h2>
-            <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-              <div class="accordion-body text-soft small">
-                The content itself, its metadata, the sharing information attached to it, and
-                the notifications that refer to it. Deleting a folder removes everything inside
-                it. Because deletion touches several services, it runs as a saga with
-                compensating steps, so a failure part-way through does not leave data behind.
-              </div>
-            </div>
-          </div>
-
-          <div class="accordion-item">
-            <h2 class="accordion-header">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq7" aria-expanded="false" aria-controls="faq7">
-                What appears in my activity history and analytics?
-              </button>
-            </h2>
-            <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-              <div class="accordion-body text-soft small">
-                Your history lists uploads, renames, deletions, downloads, creation and
-                revocation of shares, and folder and group operations. Your analytics show total
-                storage used, the number of files per type, the five files you accessed the most,
-                and the number of files shared with you.
-              </div>
-            </div>
-          </div>
-
+          <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="true" aria-controls="faq1">How does signing in work?</button></h2><div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion"><div class="accordion-body text-soft small">Sign-in is combined: you enter your password, and a one-time code is sent to your email address. Both are required. If you lose access to your account, recovery is available through a magic link.</div></div></div>
+          <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2">What happens when my password expires?</button></h2><div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion"><div class="accordion-body text-soft small">A password is valid for 60 days. Once it expires, sign-in is blocked until you set a new one through the reset link sent to your email address. This makes the account auditable: an expired credential cannot be used to get in. A password can only be changed after it has been in use for at least one day.</div></div></div>
+          <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" aria-expanded="false" aria-controls="faq3">How much storage do I get, and how do I get more?</button></h2><div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion"><div class="accordion-body text-soft small">Every account is created with a default quota, and every upload is checked against it. If you need more space, submit a request stating the value you want. An administrator reviews it and either approves it, which updates your quota, or rejects it.</div></div></div>
+          <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" aria-expanded="false" aria-controls="faq4">What can someone do with content I share with them?</button></h2><div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion"><div class="accordion-body text-soft small">They can view and download it. They cannot delete it and they cannot upload new versions of it. If you share a folder, the same rules apply to everything inside that folder. You can revoke a share at any time, and your profile lists both what you have shared and what has been shared with you.</div></div></div>
+          <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5" aria-expanded="false" aria-controls="faq5">Which files show up in search results?</button></h2><div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion"><div class="accordion-body text-soft small">Only content you are allowed to see: your own files and folders, content shared directly with you, content shared with a group you are a member of, and content inside a shared parent folder. Search is by name, supports partial matches and tolerates typing mistakes.</div></div></div>
+          <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6" aria-expanded="false" aria-controls="faq6">What is removed when I delete a file or a folder?</button></h2><div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion"><div class="accordion-body text-soft small">The content itself, its metadata, the sharing information attached to it, and the notifications that refer to it. Deleting a folder removes everything inside it. Because deletion touches several services, it runs as a saga with compensating steps, so a failure part-way through does not leave data behind.</div></div></div>
+          <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq7" aria-expanded="false" aria-controls="faq7">What appears in my activity history and analytics?</button></h2><div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion"><div class="accordion-body text-soft small">Your history lists uploads, renames, deletions, downloads, creation and revocation of shares, and folder and group operations. Your analytics show total storage used, the number of files per type, the five files you accessed the most, and the number of files shared with you.</div></div></div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ================= CTA ================= -->
+<!-- CTA -->
 <section class="pb-5 pt-5">
   <div class="container">
     <div class="cta-panel">
       <h2 class="mb-3">Create an account and get your quota</h2>
-      <p class="mb-4 mx-auto" style="max-width:36rem;opacity:.9;">
-        Register with a strong password, confirm your account, and start organizing your files
-        in folders. Sharing, search and notifications are available from your first sign-in.
-      </p>
+      <p class="mb-4 mx-auto" style="max-width:36rem;opacity:.9;">Register with a strong password, confirm your account, and start organizing your files in folders. Sharing, search and notifications are available from your first sign-in.</p>
       <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
         <a href="register.html" class="btn btn-light btn-lg rounded-pill px-4 fw-semibold" style="color:#4338ca;">Create account</a>
         <a href="login.html" class="btn btn-outline-light btn-lg rounded-pill px-4">Sign in</a>
@@ -1070,8 +353,8 @@
   </div>
 </section>
 
-<!-- ================= FOOTER ================= -->
-<footer class="footer">
+<!-- Footer -->
+<footer class="footer mega">
   <div class="container">
     <div class="row g-4">
       <div class="col-lg-4">
@@ -1079,17 +362,9 @@
           <span class="brand-mark"><i class="bi bi-cloud-fill"></i></span>
           <span>FileSify</span>
         </a>
-        <p class="small" style="max-width:22rem;">
-          A file storage and sharing platform built as a microservice system: five services,
-          one REST API gateway, HTTPS end to end between services, and access checks on every
-          request.
-        </p>
-        <p class="small mb-0" style="max-width:22rem;opacity:.75;">
-          Academic project — Service-Oriented Architectures, NoSQL Databases and Information
-          Security.
-        </p>
+        <p class="small" style="max-width:22rem;">A file storage and sharing platform built as a microservice system: five services, one REST API gateway, HTTPS end to end between services, and access checks on every request.</p>
+        <p class="small mb-0" style="max-width:22rem;opacity:.75;">Academic project — Service-Oriented Architectures, NoSQL Databases and Information Security.</p>
       </div>
-
       <div class="col-6 col-lg-2">
         <h6>Platform</h6>
         <ul class="list-unstyled small d-grid gap-2 mb-0">
@@ -1100,7 +375,6 @@
           <li><a href="#architecture">Architecture</a></li>
         </ul>
       </div>
-
       <div class="col-6 col-lg-2">
         <h6>Services</h6>
         <ul class="list-unstyled small d-grid gap-2 mb-0">
@@ -1111,7 +385,6 @@
           <li><a href="#architecture">Analytics</a></li>
         </ul>
       </div>
-
       <div class="col-6 col-lg-2">
         <h6>Security</h6>
         <ul class="list-unstyled small d-grid gap-2 mb-0">
@@ -1122,7 +395,6 @@
           <li><a href="#security">Vulnerability analysis</a></li>
         </ul>
       </div>
-
       <div class="col-6 col-lg-2">
         <h6>Documentation</h6>
         <ul class="list-unstyled small d-grid gap-2 mb-0">
@@ -1134,16 +406,14 @@
         </ul>
       </div>
     </div>
-
     <div class="footer-bottom d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
       <span>&copy; 2025 FileSify. Academic project.</span>
-      <span class="d-flex align-items-center gap-2">
-        <i class="bi bi-shield-check"></i> HTTPS between client, gateway and services
-      </span>
+      <span class="d-flex align-items-center gap-2"><i class="bi bi-shield-check"></i> HTTPS between client, gateway and services</span>
     </div>
   </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="JS/app.js"></script>
 </body>
 </html>

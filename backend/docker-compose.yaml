@@ -1,0 +1,28 @@
+services:
+  user-service:
+    build: ./user-service
+    env_file:
+      - ./user-service/.env
+    ports:
+      - "${PORT}:8082"
+    environment:
+      - MONGO_URI=${MONGO_URI}
+    networks:
+      - user-network
+  user-mongo:
+    image: mongo:latest
+    container_name: user-db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${USER_DB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${USER_DB_PASS}
+    volumes:
+      - user-data:/data/db
+    restart: unless-stopped
+    networks:
+      - user-network
+
+networks:
+  user-network: #isolated user network
+
+volumes:
+  user-data:    

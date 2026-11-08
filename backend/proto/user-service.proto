@@ -8,6 +8,7 @@ option go_package = "gen/user-service-gen";
 
 service UserService {
   rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse) {}
+  rpc LoginUser(LoginUserRequest) returns (LoginUserResponse) {}
 }
 
 message UserProfile {

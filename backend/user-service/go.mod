@@ -4,6 +4,7 @@ go 1.27.3
 
 require (
 	gen v0.0.1
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	go.mongodb.org/mongo-driver v1.17.10
 	golang.org/x/crypto v0.58.0
 	google.golang.org/genproto v0.0.0-20261104224025-d1e00e9f33ab

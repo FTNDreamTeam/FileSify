@@ -108,6 +108,19 @@
         const strengthLabel = document.getElementById('strengthLabel');
         const emailFeedback = document.getElementById('emailFeedback');
 
+        const registerAlert = document.getElementById('registerAlert');
+
+        function showAlert(message, type) {
+            registerAlert.textContent = message;
+            registerAlert.className = `alert alert-${type} mb-3`;
+            registerAlert.classList.remove('d-none');
+        }
+
+        function hideAlert() {
+            registerAlert.classList.add('d-none');
+            registerAlert.textContent = '';
+        }
+
         function validateName(input) {
             const v = input.value.trim();
             const ok = v.length >= 2 && v.length <= 50 && /^[\p{L}][\p{L}\s'’.-]*$/u.test(v);
@@ -210,8 +223,10 @@
         bindToggle('pwToggle', password);
         bindToggle('pwToggle2', confirm);
 
-        form.addEventListener('submit', function (e) {
+        form.addEventListener('submit', async function (e) {
             e.preventDefault();
+            hideAlert();
+
             const results = [
                 validateName(firstName),
                 validateName(lastName),
@@ -229,7 +244,52 @@
                 }
                 return;
             }
-            alert("Create account clicked!");
+
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating account…';
+
+            try {
+                const payload = {
+                    email:     email.value.trim(),
+                    password:  password.value,
+                    firstName: firstName.value.trim(),
+                    lastName:  lastName.value.trim()
+                };
+
+                const res = await fetch('/api/register', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify(payload)
+                });
+
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    if (res.status === 409 || data.code === 6) {
+                        email.classList.add('is-invalid');
+                        email.classList.remove('is-valid');
+                        emailFeedback.textContent = 'An account with this email already exists.';
+                        email.focus();
+                        email.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } else if (res.status === 400 || data.code === 3) {
+                        showAlert(data.message || 'Please check your input and try again.', 'danger');
+                    } else {
+                        showAlert(data.message || `Registration failed (HTTP ${res.status}).`, 'danger');
+                    }
+                    return;
+                }
+
+                showAlert(data.message || 'User registration successful. Redirecting…', 'success');
+                setTimeout(() => { window.location.href = 'login.html'; }, 1200);
+
+            } catch (err) {
+                showAlert('Network error. Please check your connection and try again.', 'danger');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
         });
 
         [firstName, lastName, email, password, confirm].forEach(input => {

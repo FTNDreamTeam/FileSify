@@ -26,54 +26,54 @@ func (s *server) RegisterUser(ctx context.Context, request *userpb.RegisterUserR
 }
 
 func main() {
-
-	mux := http.NewServeMux()
-
-	mux.Handle("/", http.FileServer(http.Dir("./frontend")))
-	go func() { http.ListenAndServe(":8080", mux) }()
-
+	// Internal gRPC listener (only reachable from inside the Docker network)
 	lis, err := net.Listen("tcp", "api-gateway:"+os.Getenv("GATEWAY_PORT"))
 	if err != nil {
 		log.Fatalln("Failed to listen:", err)
 	}
 
+	// Dial user-service
 	userConn, err := grpc.NewClient(
 		"user-service:"+os.Getenv("USER_SERVICE_PORT"),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
-
+	if err != nil {
+		log.Fatalln("Failed to dial user-service:", err)
+	}
 	userClient := userpb.NewUserServiceClient(userConn)
 
-	s := grpc.NewServer()
-
-	pb.RegisterGatewayServiceServer(s, &server{userClient: userClient})
-
-	log.Println("Serving gRPC on 0.0.0.0:8081")
-	reflection.Register(s)
+	// Start internal gRPC server
+	grpcServer := grpc.NewServer()
+	pb.RegisterGatewayServiceServer(grpcServer, &server{userClient: userClient})
+	reflection.Register(grpcServer)
 	go func() {
-		log.Fatalln(s.Serve(lis))
+		log.Fatalln(grpcServer.Serve(lis))
 	}()
 
-	if err != nil {
-		log.Fatalln("Failed to dial server:", err)
-	}
-
-	gwmux := runtime.NewServeMux()
+	// Dial the gateway's own gRPC server, so gwmux can forward REST → gRPC
 	gwConn, err := grpc.NewClient(
 		"api-gateway:"+os.Getenv("GATEWAY_PORT"),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
-	err = pb.RegisterGatewayServiceHandler(context.Background(), gwmux, gwConn)
 	if err != nil {
+		log.Fatalln("Failed to dial gateway gRPC:", err)
+	}
+
+	gwmux := runtime.NewServeMux()
+	if err := pb.RegisterGatewayServiceHandler(context.Background(), gwmux, gwConn); err != nil {
 		log.Fatalln("Failed to register gateway:", err)
 	}
 
-	gwRest := &http.Server{
-		Addr:    ":8090",
-		Handler: gwmux,
+	// ONE public port: /api/* goes to gwmux, everything else to the file server
+	root := http.NewServeMux()
+	root.Handle("/api/", gwmux)
+	root.Handle("/", http.FileServer(http.Dir("./frontend")))
+
+	httpServer := &http.Server{
+		Addr:    ":8080",
+		Handler: root,
 	}
 
-	log.Println("Serving gRPC-Gateway on http://0.0.0.0:8090")
-	log.Fatalln(gwRest.ListenAndServe())
-
+	log.Println("Serving frontend + API on http://0.0.0.0:8080")
+	log.Fatalln(httpServer.ListenAndServe())
 }

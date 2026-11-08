@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -38,6 +39,14 @@ func getDummyHash() []byte {
 		dummyHash, _ = bcrypt.GenerateFromPassword([]byte("dummy-for-timing"), bcrypt.DefaultCost)
 	})
 	return dummyHash
+}
+
+func passwordMaxAge() time.Duration {
+	d, err := time.ParseDuration(os.Getenv("PASSWORD_MAX_AGE"))
+	if err != nil || d <= 0 {
+		return 60 * 24 * time.Hour
+	}
+	return d
 }
 
 func (s *UserServer) RegisterUser(ctx context.Context, req *userpb.RegisterUserRequest) (*userpb.RegisterUserResponse, error) {
@@ -134,6 +143,11 @@ func (s *UserServer) LoginUser(ctx context.Context, req *userpb.LoginUserRequest
 	token, err := GenerateToken(user.ID.Hex(), user.Email)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to issue token: %v", err)
+	}
+
+	if time.Since(user.PasswordActive.Time()) > passwordMaxAge() {
+		return nil, status.Error(codes.FailedPrecondition,
+			"your password has expired; please reset it to continue")
 	}
 
 	return &userpb.LoginUserResponse{

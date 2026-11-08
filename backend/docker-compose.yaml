@@ -35,8 +35,45 @@ services:
     networks:
       - user-network
 
+  silo:
+    image: docker.io/pgsty/silo:RELEASE.2026-09-16T00-00-00Z
+    container_name: filesify-silo
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - silo-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "silo", "healthcheck", "ready"]      
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - storage-network
+
+  data-storage-service:
+    build: ./data-storage-service
+    container_name: filesify-storage
+    ports:
+      - "${DATA_STORAGE_PORT}:8083" # TEMPORARY: Remove this once api-gateway is ready
+    env_file:
+      - .env
+    environment:
+      - SILO_ENDPOINT=${SILO_ENDPOINT}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    depends_on:
+      silo:
+        condition: service_healthy
+    networks:
+      - storage-network
+
 networks:
   user-network: #isolated user network
+  storage-network: #isolated storage network
 
 volumes:
-  user-data:    
+  user-data:
+  silo-data:    

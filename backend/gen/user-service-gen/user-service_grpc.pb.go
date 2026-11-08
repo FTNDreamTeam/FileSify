@@ -4,7 +4,7 @@
 // - protoc             v7.36.2
 // source: user-service.proto
 
-package user_service
+package user_service_gen
 
 import (
 	context "context"

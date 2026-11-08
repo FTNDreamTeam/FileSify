@@ -8,6 +8,7 @@ package gateway
 
 import (
 	context "context"
+	user_service_gen "gen/user-service-gen"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -19,14 +20,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	GatewayService_GetUser_FullMethodName = "/gateway.v1.GatewayService/GetUser"
+	GatewayService_RegisterUser_FullMethodName = "/gateway.v1.GatewayService/RegisterUser"
 )
 
 // GatewayServiceClient is the client API for GatewayService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GatewayServiceClient interface {
-	GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
+	RegisterUser(ctx context.Context, in *user_service_gen.RegisterUserRequest, opts ...grpc.CallOption) (*user_service_gen.RegisterUserResponse, error)
 }
 
 type gatewayServiceClient struct {
@@ -37,10 +38,10 @@ func NewGatewayServiceClient(cc grpc.ClientConnInterface) GatewayServiceClient {
 	return &gatewayServiceClient{cc}
 }
 
-func (c *gatewayServiceClient) GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error) {
+func (c *gatewayServiceClient) RegisterUser(ctx context.Context, in *user_service_gen.RegisterUserRequest, opts ...grpc.CallOption) (*user_service_gen.RegisterUserResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetUserResponse)
-	err := c.cc.Invoke(ctx, GatewayService_GetUser_FullMethodName, in, out, cOpts...)
+	out := new(user_service_gen.RegisterUserResponse)
+	err := c.cc.Invoke(ctx, GatewayService_RegisterUser_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +52,7 @@ func (c *gatewayServiceClient) GetUser(ctx context.Context, in *GetUserRequest, 
 // All implementations must embed UnimplementedGatewayServiceServer
 // for forward compatibility.
 type GatewayServiceServer interface {
-	GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error)
+	RegisterUser(context.Context, *user_service_gen.RegisterUserRequest) (*user_service_gen.RegisterUserResponse, error)
 	mustEmbedUnimplementedGatewayServiceServer()
 }
 
@@ -62,8 +63,8 @@ type GatewayServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedGatewayServiceServer struct{}
 
-func (UnimplementedGatewayServiceServer) GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetUser not implemented")
+func (UnimplementedGatewayServiceServer) RegisterUser(context.Context, *user_service_gen.RegisterUserRequest) (*user_service_gen.RegisterUserResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RegisterUser not implemented")
 }
 func (UnimplementedGatewayServiceServer) mustEmbedUnimplementedGatewayServiceServer() {}
 func (UnimplementedGatewayServiceServer) testEmbeddedByValue()                        {}
@@ -86,20 +87,20 @@ func RegisterGatewayServiceServer(s grpc.ServiceRegistrar, srv GatewayServiceSer
 	s.RegisterService(&GatewayService_ServiceDesc, srv)
 }
 
-func _GatewayService_GetUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserRequest)
+func _GatewayService_RegisterUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(user_service_gen.RegisterUserRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GatewayServiceServer).GetUser(ctx, in)
+		return srv.(GatewayServiceServer).RegisterUser(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: GatewayService_GetUser_FullMethodName,
+		FullMethod: GatewayService_RegisterUser_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GatewayServiceServer).GetUser(ctx, req.(*GetUserRequest))
+		return srv.(GatewayServiceServer).RegisterUser(ctx, req.(*user_service_gen.RegisterUserRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -112,8 +113,8 @@ var GatewayService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*GatewayServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetUser",
-			Handler:    _GatewayService_GetUser_Handler,
+			MethodName: "RegisterUser",
+			Handler:    _GatewayService_RegisterUser_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

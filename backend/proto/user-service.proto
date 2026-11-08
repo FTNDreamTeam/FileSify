@@ -4,10 +4,10 @@ package user_service.v1;
 
 import "google/date.proto";
 
-option go_package = "github.com/FTNDreamTeam/FileSify/backend/user-service/proto/user-service-gen;user_service";
+option go_package = "gen/user-service-gen";
 
 service UserService {
-  rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse);
+  rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse) {}
 }
 
 message UserProfile {

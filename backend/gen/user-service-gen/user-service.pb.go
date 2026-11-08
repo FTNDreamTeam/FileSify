@@ -4,7 +4,7 @@
 // 	protoc        v7.36.2
 // source: user-service.proto
 
-package user_service
+package user_service_gen
 
 import (
 	date "google.golang.org/genproto/googleapis/type/date"
@@ -348,9 +348,9 @@ const file_user_service_proto_rawDesc = "" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"[\n" +
 	"\x11LoginUserResponse\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\x120\n" +
-	"\x04user\x18\x02 \x01(\v2\x1c.user_service.v1.UserProfileR\x04user2j\n" +
-	"\vUserService\x12[\n" +
-	"\fRegisterUser\x12$.user_service.v1.RegisterUserRequest\x1a%.user_service.v1.RegisterUserResponseB[ZYgithub.com/FTNDreamTeam/FileSify/backend/user-service/proto/user-service-gen;user_serviceb\x06proto3"
+	"\x04user\x18\x02 \x01(\v2\x1c.user_service.v1.UserProfileR\x04user2l\n" +
+	"\vUserService\x12]\n" +
+	"\fRegisterUser\x12$.user_service.v1.RegisterUserRequest\x1a%.user_service.v1.RegisterUserResponse\"\x00B\x16Z\x14gen/user-service-genb\x06proto3"
 
 var (
 	file_user_service_proto_rawDescOnce sync.Once

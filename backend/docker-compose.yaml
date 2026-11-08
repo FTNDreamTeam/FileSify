@@ -1,12 +1,26 @@
 services:
+  api-gateway:
+    container_name: "api-gateway"
+    build:
+      context: ..
+      dockerfile: ./backend/api-gateway/Dockerfile
+    env_file:
+      - ./api-gateway/.env
+    ports:
+      - "${GATEWAY_PORT}:${GATEWAY_PORT}"
+      - "8080:8080"
+    depends_on:
+      - user-service
+    networks:
+      - user-network
+
   user-service:
-    build: ./user-service
+    container_name: "user-service"
+    build:
+      context: .
+      dockerfile: ./user-service/Dockerfile
     env_file:
       - ./user-service/.env
-    ports:
-      - "${PORT}:8082"
-    environment:
-      - MONGO_URI=${MONGO_URI}
     networks:
       - user-network
   user-mongo:

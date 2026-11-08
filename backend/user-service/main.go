@@ -7,7 +7,8 @@ import (
 	"os"
 	"time"
 
-	userpb "github.com/FTNDreamTeam/FileSify/backend/user-service/proto/user-service-gen"
+	userpb "gen/user-service-gen"
+
 	"github.com/FTNDreamTeam/FileSify/backend/user-service/server"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"

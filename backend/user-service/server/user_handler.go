@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	userpb "gen/user-service-gen"
@@ -27,12 +28,26 @@ func NewUserServer(collection *mongo.Collection) *UserServer {
 }
 
 func (s *UserServer) RegisterUser(ctx context.Context, req *userpb.RegisterUserRequest) (*userpb.RegisterUserResponse, error) {
-	if req.GetEmail() == "" || req.GetPassword() == "" {
-		return nil, status.Error(codes.InvalidArgument, "email and password are required")
+	email := strings.TrimSpace(req.GetEmail())
+	firstName := strings.TrimSpace(req.GetFirstName())
+	lastName := strings.TrimSpace(req.GetLastName())
+	password := req.GetPassword()
+
+	if err := validateEmail(email); err != nil {
+		return nil, err
+	}
+	if err := validateName("first name", firstName); err != nil {
+		return nil, err
+	}
+	if err := validateName("last name", lastName); err != nil {
+		return nil, err
+	}
+	if err := validatePassword(password); err != nil {
+		return nil, err
 	}
 
 	var existingUser db.UserDBModel
-	err := s.dbCollection.FindOne(ctx, bson.M{"email": req.GetEmail()}).Decode(&existingUser)
+	err := s.dbCollection.FindOne(ctx, bson.M{"email": email}).Decode(&existingUser)
 	if err == nil {
 		return nil, status.Error(codes.AlreadyExists, "a user with this email already exists")
 	}
@@ -47,10 +62,10 @@ func (s *UserServer) RegisterUser(ctx context.Context, req *userpb.RegisterUserR
 
 	newUser := db.UserDBModel{
 		ID:             primitive.NewObjectID(),
-		Email:          req.GetEmail(),
+		Email:          email,
 		Password:       string(hashedPassword),
-		FirstName:      req.GetFirstName(),
-		LastName:       req.GetLastName(),
+		FirstName:      firstName,
+		LastName:       lastName,
 		PasswordActive: primitive.NewDateTimeFromTime(time.Now()),
 	}
 
@@ -60,7 +75,7 @@ func (s *UserServer) RegisterUser(ctx context.Context, req *userpb.RegisterUserR
 	}
 
 	responseUser := &userpb.UserProfile{
-		Id:        newUser.ID.Hex(), // Converts ObjectID to string
+		Id:        newUser.ID.Hex(),
 		Email:     newUser.Email,
 		FirstName: newUser.FirstName,
 		LastName:  newUser.LastName,

@@ -1,14 +1,14 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
+	"github.com/FTNDreamTeam/FileSify/backend/data-storage-service/internal/storage"
 )
 
 func main() {
@@ -25,54 +25,25 @@ func main() {
 		log.Fatal("MINIO_ROOT_USER and MINIO_ROOT_PASSWORD must be set")
 	}
 
-	client, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
-		Secure: false,
-	})
+	store, err := storage.NewSiloStore(endpoint, accessKey, secretKey, false)
 	if err != nil {
-		log.Fatalln("Silo client init failed:", err)
+		log.Fatalf("Failed to create Silo store: %v", err)
 	}
 	log.Println("Connected to Silo at", endpoint)
 
 	ctx := context.Background()
+
 	bucketName := "filesify"
+	if err := store.CreateBucket(ctx, bucketName); err != nil {
+		log.Fatalf("Failed to ensure bucket exists: %v", err)
+	}
+	log.Printf("Bucket %s is ready", bucketName)
 
-	exists, err := client.BucketExists(ctx, bucketName)
-	if err != nil {
-		log.Fatalln("Bucket check failed:", err)
-	}
-	if !exists {
-		if err := client.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{}); err != nil {
-			log.Fatalln("Bucket creation failed:", err)
-		}
-		log.Println("Bucket created:", bucketName)
-	} else {
-		log.Println("Bucket already exists:", bucketName)
-	}
+	fmt.Println("Data Storage Service is running. Press Ctrl+C to exit.")
 
-	// Smoke test: upload a small object
-	objectName := "hello.txt"
-	content := []byte("Hello from Go to Silo!\n")
-	info, err := client.PutObject(
-		ctx, bucketName, objectName,
-		bytes.NewReader(content), int64(len(content)),
-		minio.PutObjectOptions{ContentType: "text/plain"},
-	)
-	if err != nil {
-		log.Fatalln("Upload failed:", err)
-	}
-	fmt.Printf("Uploaded %s (%d bytes)\n", info.Key, info.Size)
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
-	// Verify by reading it back
-	obj, err := client.GetObject(ctx, bucketName, objectName, minio.GetObjectOptions{})
-	if err != nil {
-		log.Fatalln("GetObject failed:", err)
-	}
-	defer obj.Close()
-
-	buf := new(bytes.Buffer)
-	if _, err := buf.ReadFrom(obj); err != nil {
-		log.Fatalln("Read failed:", err)
-	}
-	fmt.Printf("Read back: %q\n", buf.String())
+	<-stop
+	log.Println("Shutting down Data Storage Service gracefully...")
 }

@@ -9,6 +9,7 @@ option go_package = "gen/user-service-gen";
 service UserService {
   rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse) {}
   rpc LoginUser(LoginUserRequest) returns (LoginUserResponse) {}
+  rpc VerifyAccount(VerifyAccountRequest) returns (VerifyAccountResponse) {}
 }
 
 message UserProfile {
@@ -16,7 +17,7 @@ message UserProfile {
   string email = 2;
   string first_name = 3;
   string last_name = 4;
-  google.type.Date password_valid = 5;
+  google.type.Date password_valid = 6;
 }
 
 message RegisterUserRequest {
@@ -39,4 +40,15 @@ message LoginUserRequest {
 message LoginUserResponse {
   string token = 1;
   UserProfile user = 2;
+}
+
+message VerifyAccountRequest {
+  string email = 1;
+  string username = 2;
+  string verification_url = 3;
+  int64 expires_at_unix = 4;
+}
+
+message VerifyAccountResponse {
+  string message = 1;
 }

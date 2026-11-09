@@ -2,14 +2,17 @@ package server
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"log"
 	"log/slog"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	mailpb "gen/mail-service"
 	userpb "gen/user-service-gen"
 
 	db "github.com/FTNDreamTeam/FileSify/backend/user-service/db"
@@ -25,10 +28,11 @@ import (
 type UserServer struct {
 	userpb.UnimplementedUserServiceServer
 	dbCollection *mongo.Collection
+	mailClient   mailpb.MailServiceClient
 }
 
-func NewUserServer(collection *mongo.Collection) *UserServer {
-	return &UserServer{dbCollection: collection}
+func NewUserServer(collection *mongo.Collection, mailClient mailpb.MailServiceClient) *UserServer {
+	return &UserServer{dbCollection: collection, mailClient: mailClient}
 }
 
 var (
@@ -93,10 +97,34 @@ func (s *UserServer) RegisterUser(ctx context.Context, req *userpb.RegisterUserR
 		PasswordActive: primitive.NewDateTimeFromTime(time.Now()),
 	}
 
-	_, err = s.dbCollection.InsertOne(ctx, newUser)
+	verificationToken, err := sha256.New().Write([]byte(req.GetEmail()))
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to save user to database: %v", err)
+		return nil, status.Errorf(codes.Internal, "failed to create verification token: %v", err)
 	}
+	verificationLink := "http://localhost:8080/api/verify/" + strconv.Itoa(verificationToken)
+	expiresAt := time.Now().Add(24 * time.Hour).Unix()
+
+	go func() {
+		mailCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		_, mailErr := s.mailClient.VerifyAccount(mailCtx, &userpb.VerifyAccountRequest{
+			Email:           newUser.Email,
+			Username:        newUser.FirstName,
+			VerificationUrl: verificationLink,
+			ExpiresAtUnix:   expiresAt,
+		})
+
+		if mailErr != nil {
+			log.Printf("Asynchronous email dispatch failed for %s: %v", newUser.Email, mailErr)
+		}
+
+	}()
+
+	//_, err = s.dbCollection.InsertOne(ctx, newUser)
+	//if err != nil {
+	//	return nil, status.Errorf(codes.Internal, "failed to save user to database: %v", err)
+	//}
 
 	responseUser := &userpb.UserProfile{
 		Id:        newUser.ID.Hex(),
@@ -173,4 +201,8 @@ func (s *UserServer) LoginUser(ctx context.Context, req *userpb.LoginUserRequest
 			},
 		},
 	}, nil
+}
+
+func (s *UserServer) VerifyAccount(ctx context.Context, req *userpb.VerifyAccountRequest) (*userpb.VerifyAccountResponse, error) {
+	return s.mailClient.VerifyAccount(ctx, req)
 }

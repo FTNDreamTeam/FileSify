@@ -31,6 +31,7 @@ services:
           max-file: "3"
     networks:
       - user-network
+      - mail-network
   user-mongo:
     image: mongo:latest
     container_name: user-db
@@ -78,9 +79,21 @@ services:
     networks:
       - storage-network
 
+  mail-service:
+    build:
+      context: .
+      dockerfile: ./mail-service/Dockerfile
+    env_file:
+      - ./mail-service/.env
+    ports:
+      - "${SMTP_PORT}:${SMTP_PORT}"
+    networks:
+      - mail-network
+
 networks:
   user-network: #isolated user network
   storage-network: #isolated storage network
+  mail-network: #isolated mail network
 
 volumes:
   user-data:

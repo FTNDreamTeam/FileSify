@@ -2,15 +2,14 @@ package server
 
 import (
 	"context"
-	"crypto/sha256"
 	"errors"
 	"log"
 	"log/slog"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
+	"uuid"
 
 	mailpb "gen/mail-service"
 	userpb "gen/user-service-gen"
@@ -97,11 +96,8 @@ func (s *UserServer) RegisterUser(ctx context.Context, req *userpb.RegisterUserR
 		PasswordActive: primitive.NewDateTimeFromTime(time.Now()),
 	}
 
-	verificationToken, err := sha256.New().Write([]byte(req.GetEmail()))
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to create verification token: %v", err)
-	}
-	verificationLink := "http://localhost:8080/api/verify/" + strconv.Itoa(verificationToken)
+	verificationToken := uuid.New().String()
+	verificationLink := "http://localhost:8080/api/verify/" + verificationToken
 	expiresAt := time.Now().Add(24 * time.Hour).Unix()
 
 	go func() {

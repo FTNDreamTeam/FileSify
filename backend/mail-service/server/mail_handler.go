@@ -3,10 +3,13 @@ package server
 import (
 	"bytes"
 	"context"
+	"fmt"
 	mailpb "gen/mail-service"
 	userpb "gen/user-service-gen"
 	"html/template"
 	"log"
+	"net/smtp"
+	"os"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -45,10 +48,11 @@ const verificationEmailTemplate = `
 
 type MailServer struct {
 	mailpb.UnimplementedMailServiceServer
+	userClient userpb.UserServiceClient
 }
 
-func NewMailServer() *MailServer {
-	return &MailServer{}
+func NewMailServer(userClient userpb.UserServiceClient) *MailServer {
+	return &MailServer{userClient: userClient}
 }
 
 func (s *MailServer) VerifyAccount(ctx context.Context, req *userpb.VerifyAccountRequest) (*userpb.VerifyAccountResponse, error) {
@@ -67,4 +71,38 @@ func (s *MailServer) VerifyAccount(ctx context.Context, req *userpb.VerifyAccoun
 		log.Printf("[MailService] Failed to execute template payload: %v", err)
 		return nil, status.Errorf(codes.Internal, "failed to inject template data: %v", err)
 	}
+
+	smtpHost := os.Getenv("SMTP_HOST")
+	smtpPort := os.Getenv("SMTP_PORT")
+	smtpUser := os.Getenv("SMTP_USER")
+	smtpPass := os.Getenv("SMTP_PASS")
+	fromAddr := os.Getenv("SMTP_FROM")
+	toAddr := req.GetEmail()
+
+	var rawMessage bytes.Buffer
+	rawMessage.WriteString(fmt.Sprintf("From: %s\r\n", fromAddr))
+	rawMessage.WriteString(fmt.Sprintf("To: %s\r\n", toAddr))
+	rawMessage.WriteString("Subject: Verify Your FileSify Account\r\n")
+	rawMessage.WriteString("MIME-Version: 1.0\r\n")
+	rawMessage.WriteString("Content-Type: text/html; charset=\"utf-8\"\r\n")
+	rawMessage.WriteString("\r\n")
+	rawMessage.Write(bodyBuffer.Bytes())
+
+	var auth smtp.Auth
+	if smtpUser != "" && smtpPass != "" {
+		auth = smtp.PlainAuth("", smtpUser, smtpPass, smtpHost)
+	}
+
+	addr := fmt.Sprintf("%s:%s", smtpHost, smtpPort)
+	err = smtp.SendMail(addr, auth, fromAddr, []string{toAddr}, rawMessage.Bytes())
+	if err != nil {
+		log.Printf("[MailService] Native SMTP delivery breakdown to %s: %v", toAddr, err)
+		return nil, status.Errorf(codes.Internal, "failed to deliver email package: %v", err)
+	}
+
+	log.Printf("[MailService] Verification successfully delivered natively to %s", toAddr)
+
+	return &userpb.VerifyAccountResponse{
+		Message: "Verification email sent successfully natively.",
+	}, nil
 }

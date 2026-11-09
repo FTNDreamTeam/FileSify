@@ -21,6 +21,14 @@ services:
       dockerfile: ./user-service/Dockerfile
     env_file:
       - ./user-service/.env
+    user: "1000:1000"
+    volumes:
+      - ./user-service/logs:/app/logs
+    logging:
+        driver: json-file
+        options:
+          max-size: "10m"
+          max-file: "3"
     networks:
       - user-network
   user-mongo:

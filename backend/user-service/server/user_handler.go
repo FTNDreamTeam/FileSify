@@ -3,6 +3,8 @@ package server
 import (
 	"context"
 	"errors"
+	"log"
+	"log/slog"
 	"os"
 	"strings"
 	"sync"
@@ -123,6 +125,7 @@ func (s *UserServer) LoginUser(ctx context.Context, req *userpb.LoginUserRequest
 	password := req.GetPassword()
 
 	if email == "" || password == "" {
+		slog.Warn("login_failure", "event", "auth.login.failed", "reason", "invalid_input", "status", "failure")
 		return nil, status.Error(codes.InvalidArgument, "email and password are required")
 	}
 
@@ -131,23 +134,29 @@ func (s *UserServer) LoginUser(ctx context.Context, req *userpb.LoginUserRequest
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			_ = bcrypt.CompareHashAndPassword(getDummyHash(), []byte(password))
+			slog.Warn("login_failure", "event", "auth.login.failed", "reason", "no_user", "status", "failure")
 			return nil, status.Error(codes.Unauthenticated, "invalid email or password")
 		}
+		log.Fatalf("Database error: %v", err)
 		return nil, status.Errorf(codes.Internal, "login lookup failed: %v", err)
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		log.Fatalf("Token generating error: %v", err)
 		return nil, status.Error(codes.Unauthenticated, "invalid email or password")
 	}
 
 	token, err := GenerateToken(user.ID.Hex(), user.Email)
 	if err != nil {
+		slog.Error("login_failure", "event", "auth.login.failed", "reason", "token_generation_failed", "user_id", user.ID.Hex(), "status", "failure", "error", err.Error())
 		return nil, status.Errorf(codes.Internal, "failed to issue token: %v", err)
 	}
 
+	slog.Info("login_success", "event", "auth.login", "user_id", user.ID.Hex(), "status", "success")
+
 	if time.Since(user.PasswordActive.Time()) > passwordMaxAge() {
-		return nil, status.Error(codes.FailedPrecondition,
-			"your password has expired; please reset it to continue")
+		slog.Warn("login_failure", "event", "auth.login.failed", "reason", "password_expired", "user_id", user.ID.Hex(), "status", "failure")
+		return nil, status.Error(codes.FailedPrecondition, "your password has expired; please reset it to continue")
 	}
 
 	return &userpb.LoginUserResponse{

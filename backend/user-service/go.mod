@@ -9,6 +9,7 @@ require (
 	golang.org/x/crypto v0.58.0
 	google.golang.org/genproto v0.0.0-20261104224025-d1e00e9f33ab
 	google.golang.org/grpc v1.85.0
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
 
 require (

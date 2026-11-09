@@ -32,6 +32,10 @@ func main() {
 	}
 	log.Println("Successfully connected to MongoDB!")
 
+	if os.Getenv("JWT_SECRET") == "" {
+		log.Fatalf("JWT_SECRET is not set")
+	}
+
 	userCollection := client.Database("users_metadata").Collection("users")
 
 	lis, err := net.Listen("tcp", ":"+os.Getenv("PORT"))

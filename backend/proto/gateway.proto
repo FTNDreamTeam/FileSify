@@ -14,4 +14,11 @@ service GatewayService {
       body: "*"
     };
   }
+
+  rpc LoginUser(user_service.v1.LoginUserRequest) returns (user_service.v1.LoginUserResponse) {
+    option (google.api.http) = {
+      post: "/api/login"
+      body: "*"
+    };
+  }
 }

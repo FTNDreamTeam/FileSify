@@ -3,7 +3,9 @@ package server
 import (
 	"context"
 	"errors"
+	"os"
 	"strings"
+	"sync"
 	"time"
 
 	userpb "gen/user-service-gen"
@@ -25,6 +27,26 @@ type UserServer struct {
 
 func NewUserServer(collection *mongo.Collection) *UserServer {
 	return &UserServer{dbCollection: collection}
+}
+
+var (
+	dummyHashOnce sync.Once
+	dummyHash     []byte
+)
+
+func getDummyHash() []byte {
+	dummyHashOnce.Do(func() {
+		dummyHash, _ = bcrypt.GenerateFromPassword([]byte("dummy-for-timing"), bcrypt.DefaultCost)
+	})
+	return dummyHash
+}
+
+func passwordMaxAge() time.Duration {
+	d, err := time.ParseDuration(os.Getenv("PASSWORD_MAX_AGE"))
+	if err != nil || d <= 0 {
+		return 60 * 24 * time.Hour
+	}
+	return d
 }
 
 func (s *UserServer) RegisterUser(ctx context.Context, req *userpb.RegisterUserRequest) (*userpb.RegisterUserResponse, error) {
@@ -94,4 +116,52 @@ func (s *UserServer) RegisterUser(ctx context.Context, req *userpb.RegisterUserR
 	println(returnUser)
 
 	return returnUser, nil
+}
+
+func (s *UserServer) LoginUser(ctx context.Context, req *userpb.LoginUserRequest) (*userpb.LoginUserResponse, error) {
+	email := strings.TrimSpace(req.GetEmail())
+	password := req.GetPassword()
+
+	if email == "" || password == "" {
+		return nil, status.Error(codes.InvalidArgument, "email and password are required")
+	}
+
+	var user db.UserDBModel
+	err := s.dbCollection.FindOne(ctx, bson.M{"email": email}).Decode(&user)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			_ = bcrypt.CompareHashAndPassword(getDummyHash(), []byte(password))
+			return nil, status.Error(codes.Unauthenticated, "invalid email or password")
+		}
+		return nil, status.Errorf(codes.Internal, "login lookup failed: %v", err)
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return nil, status.Error(codes.Unauthenticated, "invalid email or password")
+	}
+
+	token, err := GenerateToken(user.ID.Hex(), user.Email)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to issue token: %v", err)
+	}
+
+	if time.Since(user.PasswordActive.Time()) > passwordMaxAge() {
+		return nil, status.Error(codes.FailedPrecondition,
+			"your password has expired; please reset it to continue")
+	}
+
+	return &userpb.LoginUserResponse{
+		Token: token,
+		User: &userpb.UserProfile{
+			Id:        user.ID.Hex(),
+			Email:     user.Email,
+			FirstName: user.FirstName,
+			LastName:  user.LastName,
+			PasswordValid: &date.Date{
+				Year:  int32(user.PasswordActive.Time().Year()),
+				Month: int32(user.PasswordActive.Time().Month()),
+				Day:   int32(user.PasswordActive.Time().Day()),
+			},
+		},
+	}, nil
 }

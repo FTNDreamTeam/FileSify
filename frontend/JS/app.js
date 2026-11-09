@@ -24,6 +24,19 @@
         const pwToggle      = document.getElementById('loginPwToggle');
         const emailFeedback = email.parentElement.querySelector('.invalid-feedback');
         const forgotLink    = document.getElementById('forgotPasswordLink');
+        const loginAlert = document.getElementById('loginAlert');
+
+        function showLoginAlert(message, type) {
+            loginAlert.textContent = message;
+            loginAlert.className = `alert alert-${type} mb-3`;
+            loginAlert.classList.remove('d-none');
+            loginAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function hideLoginAlert() {
+            loginAlert.classList.add('d-none');
+            loginAlert.textContent = '';
+        }
 
         function validateEmail() {
             const v = email.value.trim();
@@ -73,8 +86,10 @@
             alert("Password reset button clicked!");
         });
 
-        form.addEventListener('submit', function (e) {
+        form.addEventListener('submit', async function (e) {
             e.preventDefault();
+            hideLoginAlert();
+
             const okEmail = validateEmail();
             const okPw    = validatePassword();
             if (!okEmail || !okPw) {
@@ -85,7 +100,53 @@
                 }
                 return;
             }
-            alert("Login button clicked!");
+
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Signing in…';
+
+            try {
+                const res = await fetch('/api/login', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({
+                        email:    email.value.trim(),
+                        password: password.value
+                    })
+                });
+
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    if (res.status === 401 || data.code === 16) {
+                        showLoginAlert('Invalid email or password.', 'danger');
+                    } else if (data.code === 9) {
+                        showLoginAlert('Your password has expired. Please reset it to continue.', 'warning');
+                    } else if (res.status === 400 || data.code === 3) {
+                        showLoginAlert(data.message || 'Please enter your email and password.', 'danger');
+                    } else {
+                        showLoginAlert(data.message || `Sign-in failed (HTTP ${res.status}).`, 'danger');
+                    }
+                    return;
+                }
+
+                localStorage.setItem('token', data.token);
+                if (data.user) {
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                }
+
+                showLoginAlert('Signed in. Redirecting…', 'success');
+                setTimeout(() => {
+                    window.location.href = '/HTML/dashboard.html';
+                }, 800);
+
+            } catch (err) {
+                showLoginAlert('Network error. Please check your connection and try again.', 'danger');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
         });
     })();
 
@@ -322,9 +383,7 @@
             btn.addEventListener('click', () => dialog.close('cancel'));
         });
 
-        // Backdrop click — native <dialog> reports the backdrop click with
-        // the dialog as target; only treat it as a cancel if the coordinates
-        // fall outside the dialog rectangle.
+        // Backdrop click
         dialog.addEventListener('click', (e) => {
             const r = dialog.getBoundingClientRect();
             const outside =
@@ -336,11 +395,10 @@
         // Confirm
         confirmBtn.addEventListener('click', () => dialog.close('confirm'));
 
-        // Fire the actual redirect only on confirm.
-        // Escape key and Cancel set returnValue to 'cancel' (or ''), so they
-        // do nothing here.
+        // Fire the actual redirect only on confirm
         dialog.addEventListener('close', () => {
             if (dialog.returnValue === 'confirm') {
+                localStorage.removeItem('token');
                 window.location.href = 'login.html';
             }
         });

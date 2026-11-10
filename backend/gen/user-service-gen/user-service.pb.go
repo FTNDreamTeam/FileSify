@@ -322,7 +322,7 @@ func (x *LoginUserResponse) GetUser() *UserProfile {
 	return nil
 }
 
-type VerifyAccountRequest struct {
+type SendVerificationRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	Email           string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
 	Username        string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
@@ -332,9 +332,118 @@ type VerifyAccountRequest struct {
 	sizeCache       protoimpl.SizeCache
 }
 
+func (x *SendVerificationRequest) Reset() {
+	*x = SendVerificationRequest{}
+	mi := &file_user_service_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendVerificationRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendVerificationRequest) ProtoMessage() {}
+
+func (x *SendVerificationRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_user_service_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendVerificationRequest.ProtoReflect.Descriptor instead.
+func (*SendVerificationRequest) Descriptor() ([]byte, []int) {
+	return file_user_service_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *SendVerificationRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *SendVerificationRequest) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *SendVerificationRequest) GetVerificationUrl() string {
+	if x != nil {
+		return x.VerificationUrl
+	}
+	return ""
+}
+
+func (x *SendVerificationRequest) GetExpiresAtUnix() int64 {
+	if x != nil {
+		return x.ExpiresAtUnix
+	}
+	return 0
+}
+
+type SendVerificationResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SendVerificationResponse) Reset() {
+	*x = SendVerificationResponse{}
+	mi := &file_user_service_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendVerificationResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendVerificationResponse) ProtoMessage() {}
+
+func (x *SendVerificationResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_user_service_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendVerificationResponse.ProtoReflect.Descriptor instead.
+func (*SendVerificationResponse) Descriptor() ([]byte, []int) {
+	return file_user_service_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *SendVerificationResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+type VerifyAccountRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
 func (x *VerifyAccountRequest) Reset() {
 	*x = VerifyAccountRequest{}
-	mi := &file_user_service_proto_msgTypes[5]
+	mi := &file_user_service_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -346,7 +455,7 @@ func (x *VerifyAccountRequest) String() string {
 func (*VerifyAccountRequest) ProtoMessage() {}
 
 func (x *VerifyAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_user_service_proto_msgTypes[5]
+	mi := &file_user_service_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -359,35 +468,14 @@ func (x *VerifyAccountRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VerifyAccountRequest.ProtoReflect.Descriptor instead.
 func (*VerifyAccountRequest) Descriptor() ([]byte, []int) {
-	return file_user_service_proto_rawDescGZIP(), []int{5}
+	return file_user_service_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *VerifyAccountRequest) GetEmail() string {
+func (x *VerifyAccountRequest) GetToken() string {
 	if x != nil {
-		return x.Email
+		return x.Token
 	}
 	return ""
-}
-
-func (x *VerifyAccountRequest) GetUsername() string {
-	if x != nil {
-		return x.Username
-	}
-	return ""
-}
-
-func (x *VerifyAccountRequest) GetVerificationUrl() string {
-	if x != nil {
-		return x.VerificationUrl
-	}
-	return ""
-}
-
-func (x *VerifyAccountRequest) GetExpiresAtUnix() int64 {
-	if x != nil {
-		return x.ExpiresAtUnix
-	}
-	return 0
 }
 
 type VerifyAccountResponse struct {
@@ -399,7 +487,7 @@ type VerifyAccountResponse struct {
 
 func (x *VerifyAccountResponse) Reset() {
 	*x = VerifyAccountResponse{}
-	mi := &file_user_service_proto_msgTypes[6]
+	mi := &file_user_service_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -411,7 +499,7 @@ func (x *VerifyAccountResponse) String() string {
 func (*VerifyAccountResponse) ProtoMessage() {}
 
 func (x *VerifyAccountResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_user_service_proto_msgTypes[6]
+	mi := &file_user_service_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -424,7 +512,7 @@ func (x *VerifyAccountResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VerifyAccountResponse.ProtoReflect.Descriptor instead.
 func (*VerifyAccountResponse) Descriptor() ([]byte, []int) {
-	return file_user_service_proto_rawDescGZIP(), []int{6}
+	return file_user_service_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *VerifyAccountResponse) GetMessage() string {
@@ -460,17 +548,22 @@ const file_user_service_proto_rawDesc = "" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"[\n" +
 	"\x11LoginUserResponse\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\x120\n" +
-	"\x04user\x18\x02 \x01(\v2\x1c.user_service.v1.UserProfileR\x04user\"\x9b\x01\n" +
-	"\x14VerifyAccountRequest\x12\x14\n" +
+	"\x04user\x18\x02 \x01(\v2\x1c.user_service.v1.UserProfileR\x04user\"\x9e\x01\n" +
+	"\x17SendVerificationRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12)\n" +
 	"\x10verification_url\x18\x03 \x01(\tR\x0fverificationUrl\x12&\n" +
-	"\x0fexpires_at_unix\x18\x04 \x01(\x03R\rexpiresAtUnix\"1\n" +
+	"\x0fexpires_at_unix\x18\x04 \x01(\x03R\rexpiresAtUnix\"4\n" +
+	"\x18SendVerificationResponse\x12\x18\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\",\n" +
+	"\x14VerifyAccountRequest\x12\x14\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\"1\n" +
 	"\x15VerifyAccountResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage2\xa4\x02\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage2\x8f\x03\n" +
 	"\vUserService\x12]\n" +
 	"\fRegisterUser\x12$.user_service.v1.RegisterUserRequest\x1a%.user_service.v1.RegisterUserResponse\"\x00\x12T\n" +
-	"\tLoginUser\x12!.user_service.v1.LoginUserRequest\x1a\".user_service.v1.LoginUserResponse\"\x00\x12`\n" +
+	"\tLoginUser\x12!.user_service.v1.LoginUserRequest\x1a\".user_service.v1.LoginUserResponse\"\x00\x12i\n" +
+	"\x10SendVerification\x12(.user_service.v1.SendVerificationRequest\x1a).user_service.v1.SendVerificationResponse\"\x00\x12`\n" +
 	"\rVerifyAccount\x12%.user_service.v1.VerifyAccountRequest\x1a&.user_service.v1.VerifyAccountResponse\"\x00B\x16Z\x14gen/user-service-genb\x06proto3"
 
 var (
@@ -485,29 +578,33 @@ func file_user_service_proto_rawDescGZIP() []byte {
 	return file_user_service_proto_rawDescData
 }
 
-var file_user_service_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_user_service_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_user_service_proto_goTypes = []any{
-	(*UserProfile)(nil),           // 0: user_service.v1.UserProfile
-	(*RegisterUserRequest)(nil),   // 1: user_service.v1.RegisterUserRequest
-	(*RegisterUserResponse)(nil),  // 2: user_service.v1.RegisterUserResponse
-	(*LoginUserRequest)(nil),      // 3: user_service.v1.LoginUserRequest
-	(*LoginUserResponse)(nil),     // 4: user_service.v1.LoginUserResponse
-	(*VerifyAccountRequest)(nil),  // 5: user_service.v1.VerifyAccountRequest
-	(*VerifyAccountResponse)(nil), // 6: user_service.v1.VerifyAccountResponse
-	(*date.Date)(nil),             // 7: google.type.Date
+	(*UserProfile)(nil),              // 0: user_service.v1.UserProfile
+	(*RegisterUserRequest)(nil),      // 1: user_service.v1.RegisterUserRequest
+	(*RegisterUserResponse)(nil),     // 2: user_service.v1.RegisterUserResponse
+	(*LoginUserRequest)(nil),         // 3: user_service.v1.LoginUserRequest
+	(*LoginUserResponse)(nil),        // 4: user_service.v1.LoginUserResponse
+	(*SendVerificationRequest)(nil),  // 5: user_service.v1.SendVerificationRequest
+	(*SendVerificationResponse)(nil), // 6: user_service.v1.SendVerificationResponse
+	(*VerifyAccountRequest)(nil),     // 7: user_service.v1.VerifyAccountRequest
+	(*VerifyAccountResponse)(nil),    // 8: user_service.v1.VerifyAccountResponse
+	(*date.Date)(nil),                // 9: google.type.Date
 }
 var file_user_service_proto_depIdxs = []int32{
-	7, // 0: user_service.v1.UserProfile.password_valid:type_name -> google.type.Date
+	9, // 0: user_service.v1.UserProfile.password_valid:type_name -> google.type.Date
 	0, // 1: user_service.v1.RegisterUserResponse.user:type_name -> user_service.v1.UserProfile
 	0, // 2: user_service.v1.LoginUserResponse.user:type_name -> user_service.v1.UserProfile
 	1, // 3: user_service.v1.UserService.RegisterUser:input_type -> user_service.v1.RegisterUserRequest
 	3, // 4: user_service.v1.UserService.LoginUser:input_type -> user_service.v1.LoginUserRequest
-	5, // 5: user_service.v1.UserService.VerifyAccount:input_type -> user_service.v1.VerifyAccountRequest
-	2, // 6: user_service.v1.UserService.RegisterUser:output_type -> user_service.v1.RegisterUserResponse
-	4, // 7: user_service.v1.UserService.LoginUser:output_type -> user_service.v1.LoginUserResponse
-	6, // 8: user_service.v1.UserService.VerifyAccount:output_type -> user_service.v1.VerifyAccountResponse
-	6, // [6:9] is the sub-list for method output_type
-	3, // [3:6] is the sub-list for method input_type
+	5, // 5: user_service.v1.UserService.SendVerification:input_type -> user_service.v1.SendVerificationRequest
+	7, // 6: user_service.v1.UserService.VerifyAccount:input_type -> user_service.v1.VerifyAccountRequest
+	2, // 7: user_service.v1.UserService.RegisterUser:output_type -> user_service.v1.RegisterUserResponse
+	4, // 8: user_service.v1.UserService.LoginUser:output_type -> user_service.v1.LoginUserResponse
+	6, // 9: user_service.v1.UserService.SendVerification:output_type -> user_service.v1.SendVerificationResponse
+	8, // 10: user_service.v1.UserService.VerifyAccount:output_type -> user_service.v1.VerifyAccountResponse
+	7, // [7:11] is the sub-list for method output_type
+	3, // [3:7] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name
 	3, // [3:3] is the sub-list for extension extendee
 	0, // [0:3] is the sub-list for field type_name
@@ -524,7 +621,7 @@ func file_user_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_user_service_proto_rawDesc), len(file_user_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

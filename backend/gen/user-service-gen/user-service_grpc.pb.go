@@ -19,9 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_RegisterUser_FullMethodName  = "/user_service.v1.UserService/RegisterUser"
-	UserService_LoginUser_FullMethodName     = "/user_service.v1.UserService/LoginUser"
-	UserService_VerifyAccount_FullMethodName = "/user_service.v1.UserService/VerifyAccount"
+	UserService_RegisterUser_FullMethodName     = "/user_service.v1.UserService/RegisterUser"
+	UserService_LoginUser_FullMethodName        = "/user_service.v1.UserService/LoginUser"
+	UserService_SendVerification_FullMethodName = "/user_service.v1.UserService/SendVerification"
+	UserService_VerifyAccount_FullMethodName    = "/user_service.v1.UserService/VerifyAccount"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -30,6 +31,7 @@ const (
 type UserServiceClient interface {
 	RegisterUser(ctx context.Context, in *RegisterUserRequest, opts ...grpc.CallOption) (*RegisterUserResponse, error)
 	LoginUser(ctx context.Context, in *LoginUserRequest, opts ...grpc.CallOption) (*LoginUserResponse, error)
+	SendVerification(ctx context.Context, in *SendVerificationRequest, opts ...grpc.CallOption) (*SendVerificationResponse, error)
 	VerifyAccount(ctx context.Context, in *VerifyAccountRequest, opts ...grpc.CallOption) (*VerifyAccountResponse, error)
 }
 
@@ -61,6 +63,16 @@ func (c *userServiceClient) LoginUser(ctx context.Context, in *LoginUserRequest,
 	return out, nil
 }
 
+func (c *userServiceClient) SendVerification(ctx context.Context, in *SendVerificationRequest, opts ...grpc.CallOption) (*SendVerificationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SendVerificationResponse)
+	err := c.cc.Invoke(ctx, UserService_SendVerification_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userServiceClient) VerifyAccount(ctx context.Context, in *VerifyAccountRequest, opts ...grpc.CallOption) (*VerifyAccountResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(VerifyAccountResponse)
@@ -77,6 +89,7 @@ func (c *userServiceClient) VerifyAccount(ctx context.Context, in *VerifyAccount
 type UserServiceServer interface {
 	RegisterUser(context.Context, *RegisterUserRequest) (*RegisterUserResponse, error)
 	LoginUser(context.Context, *LoginUserRequest) (*LoginUserResponse, error)
+	SendVerification(context.Context, *SendVerificationRequest) (*SendVerificationResponse, error)
 	VerifyAccount(context.Context, *VerifyAccountRequest) (*VerifyAccountResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
@@ -93,6 +106,9 @@ func (UnimplementedUserServiceServer) RegisterUser(context.Context, *RegisterUse
 }
 func (UnimplementedUserServiceServer) LoginUser(context.Context, *LoginUserRequest) (*LoginUserResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method LoginUser not implemented")
+}
+func (UnimplementedUserServiceServer) SendVerification(context.Context, *SendVerificationRequest) (*SendVerificationResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SendVerification not implemented")
 }
 func (UnimplementedUserServiceServer) VerifyAccount(context.Context, *VerifyAccountRequest) (*VerifyAccountResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method VerifyAccount not implemented")
@@ -154,6 +170,24 @@ func _UserService_LoginUser_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_SendVerification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendVerificationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).SendVerification(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_SendVerification_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).SendVerification(ctx, req.(*SendVerificationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _UserService_VerifyAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(VerifyAccountRequest)
 	if err := dec(in); err != nil {
@@ -186,6 +220,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LoginUser",
 			Handler:    _UserService_LoginUser_Handler,
+		},
+		{
+			MethodName: "SendVerification",
+			Handler:    _UserService_SendVerification_Handler,
 		},
 		{
 			MethodName: "VerifyAccount",

@@ -36,11 +36,16 @@ func main() {
 		log.Fatalf("Failed to ping MongoDB: %v", err)
 	}
 
+	userCollection := client.Database("users_metadata").Collection("users")
+	verificationCollection := client.Database("authentication_db").Collection("verification_mail")
+
+	if err := server.EnsureTTLIndex(ctx, verificationCollection); err != nil {
+		log.Fatalf("Index creation error: %v", err)
+	}
+
 	if os.Getenv("JWT_SECRET") == "" {
 		log.Fatalf("JWT_SECRET is not set")
 	}
-
-	userCollection := client.Database("users_metadata").Collection("users")
 
 	lis, err := net.Listen("tcp", ":"+os.Getenv("PORT"))
 	if err != nil {
@@ -57,7 +62,7 @@ func main() {
 	mailClient := mailpb.NewMailServiceClient(mailConn)
 
 	grpcServer := grpc.NewServer()
-	userServer := server.NewUserServer(userCollection, mailClient)
+	userServer := server.NewUserServer(userCollection, verificationCollection, mailClient)
 
 	userpb.RegisterUserServiceServer(grpcServer, userServer)
 	reflection.Register(grpcServer)

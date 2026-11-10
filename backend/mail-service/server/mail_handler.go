@@ -55,7 +55,18 @@ func NewMailServer(userClient userpb.UserServiceClient) *MailServer {
 	return &MailServer{userClient: userClient}
 }
 
-func (s *MailServer) VerifyAccount(ctx context.Context, req *userpb.VerifyAccountRequest) (*userpb.VerifyAccountResponse, error) {
+type EmailPayload struct {
+	To      []string
+	Subject string
+	Body    string
+}
+
+type TemplateData struct {
+	Username        string
+	VerificationUrl string
+}
+
+func (s *MailServer) SendVerification(ctx context.Context, req *userpb.SendVerificationRequest) (*userpb.SendVerificationResponse, error) {
 	if req.GetEmail() == "" || req.GetVerificationUrl() == "" {
 		return nil, status.Error(codes.InvalidArgument, "email and verification url are required fields")
 	}
@@ -66,43 +77,45 @@ func (s *MailServer) VerifyAccount(ctx context.Context, req *userpb.VerifyAccoun
 		return nil, status.Errorf(codes.Internal, "failed to parse template: %v", err)
 	}
 
+	data := TemplateData{
+		Username:        req.GetUsername(),
+		VerificationUrl: req.GetVerificationUrl(),
+	}
+
 	var bodyBuffer bytes.Buffer
-	if err := tmpl.Execute(&bodyBuffer, req); err != nil {
+	if err := tmpl.Execute(&bodyBuffer, data); err != nil {
 		log.Printf("[MailService] Failed to execute template payload: %v", err)
 		return nil, status.Errorf(codes.Internal, "failed to inject template data: %v", err)
 	}
+	smtpAddress := os.Getenv("SMTP_ADDRESS")
+	if smtpAddress == "" {
+		smtpAddress = "mailhog:1025"
+	}
 
-	smtpHost := os.Getenv("SMTP_HOST")
-	smtpPort := os.Getenv("SMTP_PORT")
-	smtpUser := os.Getenv("SMTP_USER")
-	smtpPass := os.Getenv("SMTP_PASS")
-	fromAddr := os.Getenv("SMTP_FROM")
-	toAddr := req.GetEmail()
+	email := &EmailPayload{
+		To:      []string{req.GetEmail()},
+		Subject: "Verify Mail",
+		Body:    "Thank you for your registration please verify your mail here! " + req.GetVerificationUrl(),
+	}
+
+	from := "noreply@filesify.com"
 
 	var rawMessage bytes.Buffer
-	rawMessage.WriteString(fmt.Sprintf("From: %s\r\n", fromAddr))
-	rawMessage.WriteString(fmt.Sprintf("To: %s\r\n", toAddr))
-	rawMessage.WriteString("Subject: Verify Your FileSify Account\r\n")
+	fmt.Fprintf(&rawMessage, "From: %s\r\n", from)
+	fmt.Fprintf(&rawMessage, "To: %s\r\n", email.To[0])
+	fmt.Fprintf(&rawMessage, "Subject: %s\r\n", email.Subject)
 	rawMessage.WriteString("MIME-Version: 1.0\r\n")
 	rawMessage.WriteString("Content-Type: text/html; charset=\"utf-8\"\r\n")
 	rawMessage.WriteString("\r\n")
 	rawMessage.Write(bodyBuffer.Bytes())
 
-	var auth smtp.Auth
-	if smtpUser != "" && smtpPass != "" {
-		auth = smtp.PlainAuth("", smtpUser, smtpPass, smtpHost)
-	}
-
-	addr := fmt.Sprintf("%s:%s", smtpHost, smtpPort)
-	err = smtp.SendMail(addr, auth, fromAddr, []string{toAddr}, rawMessage.Bytes())
+	err = smtp.SendMail(smtpAddress, nil, from, email.To, rawMessage.Bytes())
 	if err != nil {
-		log.Printf("[MailService] Native SMTP delivery breakdown to %s: %v", toAddr, err)
-		return nil, status.Errorf(codes.Internal, "failed to deliver email package: %v", err)
+		log.Printf("Failed to route mail to MailHog: %v", err)
+		return nil, status.Errorf(codes.Unavailable, "failed to send email via mail relay: %v", err)
 	}
 
-	log.Printf("[MailService] Verification successfully delivered natively to %s", toAddr)
-
-	return &userpb.VerifyAccountResponse{
+	return &userpb.SendVerificationResponse{
 		Message: "Verification email sent successfully natively.",
 	}, nil
 }

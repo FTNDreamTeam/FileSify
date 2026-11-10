@@ -20,14 +20,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	MailService_VerifyAccount_FullMethodName = "/mail_service.v1.MailService/VerifyAccount"
+	MailService_SendVerification_FullMethodName = "/mail_service.v1.MailService/SendVerification"
 )
 
 // MailServiceClient is the client API for MailService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MailServiceClient interface {
-	VerifyAccount(ctx context.Context, in *user_service_gen.VerifyAccountRequest, opts ...grpc.CallOption) (*user_service_gen.VerifyAccountResponse, error)
+	SendVerification(ctx context.Context, in *user_service_gen.SendVerificationRequest, opts ...grpc.CallOption) (*user_service_gen.SendVerificationResponse, error)
 }
 
 type mailServiceClient struct {
@@ -38,10 +38,10 @@ func NewMailServiceClient(cc grpc.ClientConnInterface) MailServiceClient {
 	return &mailServiceClient{cc}
 }
 
-func (c *mailServiceClient) VerifyAccount(ctx context.Context, in *user_service_gen.VerifyAccountRequest, opts ...grpc.CallOption) (*user_service_gen.VerifyAccountResponse, error) {
+func (c *mailServiceClient) SendVerification(ctx context.Context, in *user_service_gen.SendVerificationRequest, opts ...grpc.CallOption) (*user_service_gen.SendVerificationResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(user_service_gen.VerifyAccountResponse)
-	err := c.cc.Invoke(ctx, MailService_VerifyAccount_FullMethodName, in, out, cOpts...)
+	out := new(user_service_gen.SendVerificationResponse)
+	err := c.cc.Invoke(ctx, MailService_SendVerification_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (c *mailServiceClient) VerifyAccount(ctx context.Context, in *user_service_
 // All implementations must embed UnimplementedMailServiceServer
 // for forward compatibility.
 type MailServiceServer interface {
-	VerifyAccount(context.Context, *user_service_gen.VerifyAccountRequest) (*user_service_gen.VerifyAccountResponse, error)
+	SendVerification(context.Context, *user_service_gen.SendVerificationRequest) (*user_service_gen.SendVerificationResponse, error)
 	mustEmbedUnimplementedMailServiceServer()
 }
 
@@ -63,8 +63,8 @@ type MailServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedMailServiceServer struct{}
 
-func (UnimplementedMailServiceServer) VerifyAccount(context.Context, *user_service_gen.VerifyAccountRequest) (*user_service_gen.VerifyAccountResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method VerifyAccount not implemented")
+func (UnimplementedMailServiceServer) SendVerification(context.Context, *user_service_gen.SendVerificationRequest) (*user_service_gen.SendVerificationResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SendVerification not implemented")
 }
 func (UnimplementedMailServiceServer) mustEmbedUnimplementedMailServiceServer() {}
 func (UnimplementedMailServiceServer) testEmbeddedByValue()                     {}
@@ -87,20 +87,20 @@ func RegisterMailServiceServer(s grpc.ServiceRegistrar, srv MailServiceServer) {
 	s.RegisterService(&MailService_ServiceDesc, srv)
 }
 
-func _MailService_VerifyAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(user_service_gen.VerifyAccountRequest)
+func _MailService_SendVerification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(user_service_gen.SendVerificationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MailServiceServer).VerifyAccount(ctx, in)
+		return srv.(MailServiceServer).SendVerification(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: MailService_VerifyAccount_FullMethodName,
+		FullMethod: MailService_SendVerification_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MailServiceServer).VerifyAccount(ctx, req.(*user_service_gen.VerifyAccountRequest))
+		return srv.(MailServiceServer).SendVerification(ctx, req.(*user_service_gen.SendVerificationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -113,8 +113,8 @@ var MailService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*MailServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "VerifyAccount",
-			Handler:    _MailService_VerifyAccount_Handler,
+			MethodName: "SendVerification",
+			Handler:    _MailService_SendVerification_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

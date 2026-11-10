@@ -7,5 +7,5 @@ import "user-service.proto";
 option go_package = "gen/mail-service";
 
 service MailService {
-  rpc VerifyAccount(user_service.v1.VerifyAccountRequest) returns (user_service.v1.VerifyAccountResponse) {}
+  rpc SendVerification(user_service.v1.SendVerificationRequest) returns (user_service.v1.SendVerificationResponse) {}
 }

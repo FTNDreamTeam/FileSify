@@ -19,6 +19,6 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 COPY --from=builder /mail-service /mail-service
 
-EXPOSE 8083 1025
+EXPOSE 8085 1025
 
 ENTRYPOINT ["/mail-service"]

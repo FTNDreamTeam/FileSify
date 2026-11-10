@@ -25,17 +25,17 @@ var File_mail_service_proto protoreflect.FileDescriptor
 
 const file_mail_service_proto_rawDesc = "" +
 	"\n" +
-	"\x12mail-service.proto\x12\x0fmail_service.v1\x1a\x12user-service.proto2o\n" +
-	"\vMailService\x12`\n" +
-	"\rVerifyAccount\x12%.user_service.v1.VerifyAccountRequest\x1a&.user_service.v1.VerifyAccountResponse\"\x00B\x12Z\x10gen/mail-serviceb\x06proto3"
+	"\x12mail-service.proto\x12\x0fmail_service.v1\x1a\x12user-service.proto2x\n" +
+	"\vMailService\x12i\n" +
+	"\x10SendVerification\x12(.user_service.v1.SendVerificationRequest\x1a).user_service.v1.SendVerificationResponse\"\x00B\x12Z\x10gen/mail-serviceb\x06proto3"
 
 var file_mail_service_proto_goTypes = []any{
-	(*user_service_gen.VerifyAccountRequest)(nil),  // 0: user_service.v1.VerifyAccountRequest
-	(*user_service_gen.VerifyAccountResponse)(nil), // 1: user_service.v1.VerifyAccountResponse
+	(*user_service_gen.SendVerificationRequest)(nil),  // 0: user_service.v1.SendVerificationRequest
+	(*user_service_gen.SendVerificationResponse)(nil), // 1: user_service.v1.SendVerificationResponse
 }
 var file_mail_service_proto_depIdxs = []int32{
-	0, // 0: mail_service.v1.MailService.VerifyAccount:input_type -> user_service.v1.VerifyAccountRequest
-	1, // 1: mail_service.v1.MailService.VerifyAccount:output_type -> user_service.v1.VerifyAccountResponse
+	0, // 0: mail_service.v1.MailService.SendVerification:input_type -> user_service.v1.SendVerificationRequest
+	1, // 1: mail_service.v1.MailService.SendVerification:output_type -> user_service.v1.SendVerificationResponse
 	1, // [1:2] is the sub-list for method output_type
 	0, // [0:1] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name

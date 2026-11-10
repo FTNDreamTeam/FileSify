@@ -9,6 +9,7 @@ import (
 
 	userpb "gen/user-service-gen"
 
+	"github.com/FTNDreamTeam/FileSify/backend/user-service/logger"
 	"github.com/FTNDreamTeam/FileSify/backend/user-service/server"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -17,6 +18,8 @@ import (
 )
 
 func main() {
+	logger.Init("/app/logs/user-service.log")
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -30,7 +33,6 @@ func main() {
 	if err := client.Ping(ctx, nil); err != nil {
 		log.Fatalf("Failed to ping MongoDB: %v", err)
 	}
-	log.Println("Successfully connected to MongoDB!")
 
 	if os.Getenv("JWT_SECRET") == "" {
 		log.Fatalf("JWT_SECRET is not set")
@@ -49,7 +51,6 @@ func main() {
 	userpb.RegisterUserServiceServer(grpcServer, userServer)
 	reflection.Register(grpcServer)
 
-	log.Println("gRPC User Service server is running on port :" + lis.Addr().String())
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve gRPC: %v", err)
 	}

@@ -29,6 +29,10 @@ func (s *server) LoginUser(ctx context.Context, request *userpb.LoginUserRequest
 	return s.userClient.LoginUser(ctx, request)
 }
 
+func (s *server) VerifyAccount(ctx context.Context, request *userpb.VerifyAccountRequest) (*userpb.VerifyAccountResponse, error) {
+	return s.userClient.VerifyAccount(ctx, request)
+}
+
 func main() {
 	// Internal gRPC listener (only reachable from inside the Docker network)
 	lis, err := net.Listen("tcp", "api-gateway:"+os.Getenv("GATEWAY_PORT"))

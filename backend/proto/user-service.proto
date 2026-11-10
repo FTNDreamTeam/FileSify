@@ -9,6 +9,7 @@ option go_package = "gen/user-service-gen";
 service UserService {
   rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse) {}
   rpc LoginUser(LoginUserRequest) returns (LoginUserResponse) {}
+  rpc SendVerification(SendVerificationRequest) returns (SendVerificationResponse) {}
   rpc VerifyAccount(VerifyAccountRequest) returns (VerifyAccountResponse) {}
 }
 
@@ -42,11 +43,19 @@ message LoginUserResponse {
   UserProfile user = 2;
 }
 
-message VerifyAccountRequest {
+message SendVerificationRequest {
   string email = 1;
   string username = 2;
   string verification_url = 3;
   int64 expires_at_unix = 4;
+}
+
+message SendVerificationResponse {
+  string message = 1;
+}
+
+message VerifyAccountRequest {
+  string token = 1;
 }
 
 message VerifyAccountResponse {

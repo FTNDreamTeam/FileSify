@@ -32,6 +32,9 @@ services:
     networks:
       - user-network
       - mail-network
+    depends_on:
+      - user-mongo
+
   user-mongo:
     image: mongo:latest
     container_name: user-db
@@ -83,10 +86,23 @@ services:
     build:
       context: .
       dockerfile: ./mail-service/Dockerfile
+    container_name: mail-service
     env_file:
       - ./mail-service/.env
+    networks:
+      - mail-network
+    depends_on:
+      - mailhog
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
     ports:
-      - "${SMTP_PORT}:${SMTP_PORT}"
+      - "${MAILHOG_UI_PORT}:${MAILHOG_UI_PORT}"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
     networks:
       - mail-network
 

@@ -73,51 +73,43 @@ func EnsureTTLIndex(ctx context.Context, collection *mongo.Collection) error {
 }
 
 func (s *UserServer) VerifyAccount(ctx context.Context, req *userpb.VerifyAccountRequest) (*userpb.VerifyAccountResponse, error) {
-	filter := bson.M{"verification_token": req.GetToken()}
+	token := strings.TrimPrefix(req.GetToken(), "veri")
+	if token == "" {
+		return nil, status.Error(codes.InvalidArgument, "verification token is required")
+	}
 
 	var verificationToken db.VerificationTokenModel
-	err := s.verificationCollection.FindOne(ctx, filter, options.FindOne().SetProjection(bson.M{"user_id": 1})).Decode(&verificationToken)
+	err := s.verificationCollection.FindOne(ctx, bson.M{"verification_token": token}).Decode(&verificationToken)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			fmt.Println("No token document matched the search criteria of " + req.GetToken())
+			slog.Warn("verification_failure", "event", "auth.verify.failed", "reason", "invalid_token", "status", "failure")
+			return nil, status.Error(codes.NotFound, "verification token is invalid or has expired")
 		}
-		log.Printf("Failed to execute FindOne or Decode: %v", err)
+		slog.Error("verification_failure", "event", "auth.verify.failed", "reason", "db_error", "status", "failure", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "verification lookup failed: %v", err)
 	}
 
-	objectId, err := primitive.ObjectIDFromHex(verificationToken.UserId)
+	objectID, err := primitive.ObjectIDFromHex(verificationToken.UserId)
 	if err != nil {
-		log.Printf("Invalid ID format: %v", err)
+		slog.Error("verification_failure", "event", "auth.verify.failed", "reason", "invalid_user_id", "status", "failure", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "invalid user id in token: %v", err)
 	}
 
-	update := bson.M{
-		"$set": bson.M{
-			"verified": true,
-		},
-	}
-
-	result, err := s.dbCollection.UpdateByID(ctx, objectId, update)
+	result, err := s.dbCollection.UpdateByID(ctx, objectID, bson.M{"$set": bson.M{"verified": true}})
 	if err != nil {
-		log.Printf("Failed to update document: %v", err)
+		slog.Error("verification_failure", "event", "auth.verify.failed", "reason", "db_error", "status", "failure", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "failed to mark user as verified: %v", err)
 	}
-
 	if result.MatchedCount == 0 {
-		fmt.Println("No document found with that ID.")
-	} else {
-		fmt.Printf("Successfully matched %d and modified %d document(s).\n",
-			result.MatchedCount, result.ModifiedCount)
+		slog.Error("verification_failure", "event", "auth.verify.failed", "reason", "user_not_found", "status", "failure")
+		return nil, status.Error(codes.Internal, "user associated with token not found")
 	}
 
-	filter = bson.M{"_id": verificationToken.ID}
-	deleteResult, err := s.verificationCollection.DeleteOne(ctx, filter)
-	if err != nil {
-		log.Printf("Failed to delete document: %v", err)
+	if _, err := s.verificationCollection.DeleteOne(ctx, bson.M{"_id": verificationToken.ID}); err != nil {
+		slog.Warn("verification_cleanup_failed", "event", "auth.verify.cleanup", "error", err.Error())
 	}
 
-	if deleteResult.DeletedCount == 0 {
-		fmt.Println("No document found with that ID to delete.")
-	} else {
-		fmt.Printf("Successfully deleted %d document.\n", deleteResult.DeletedCount)
-	}
+	slog.Info("verification_success", "event", "auth.verify", "user_id", verificationToken.UserId, "status", "success")
 
 	return &userpb.VerifyAccountResponse{
 		Message: "User Verification Successful",
@@ -168,7 +160,7 @@ func (s *UserServer) RegisterUser(ctx context.Context, req *userpb.RegisterUserR
 	}
 
 	verificationToken := uuid.New().String()
-	verificationLink := "http://localhost:8080/api/verify/" + verificationToken
+	verificationLink := "http://localhost:8080/HTML/verify-email.html?token=veri" + verificationToken
 	expiresAt := time.Now().Add(12 * time.Hour).Unix()
 
 	tokenModel := &db.VerificationTokenModel{
@@ -247,6 +239,12 @@ func (s *UserServer) LoginUser(ctx context.Context, req *userpb.LoginUserRequest
 		}
 		log.Fatalf("Database error: %v", err)
 		return nil, status.Errorf(codes.Internal, "login lookup failed: %v", err)
+
+	}
+
+	if !user.Verified {
+		slog.Warn("login_failure", "event", "auth.login.failed", "reason", "account_not_verified", "user_id", user.ID.Hex(), "status", "failure")
+		return nil, status.Error(codes.FailedPrecondition, "your account is not verified. please check your email for the verification link")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
@@ -260,12 +258,12 @@ func (s *UserServer) LoginUser(ctx context.Context, req *userpb.LoginUserRequest
 		return nil, status.Errorf(codes.Internal, "failed to issue token: %v", err)
 	}
 
-	slog.Info("login_success", "event", "auth.login", "user_id", user.ID.Hex(), "status", "success")
-
 	if time.Since(user.PasswordActive.Time()) > passwordMaxAge() {
 		slog.Warn("login_failure", "event", "auth.login.failed", "reason", "password_expired", "user_id", user.ID.Hex(), "status", "failure")
 		return nil, status.Error(codes.FailedPrecondition, "your password has expired; please reset it to continue")
 	}
+
+	slog.Info("login_success", "event", "auth.login", "user_id", user.ID.Hex(), "status", "success")
 
 	return &userpb.LoginUserResponse{
 		Token: token,

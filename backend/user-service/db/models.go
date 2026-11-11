@@ -13,7 +13,7 @@ type UserDBModel struct {
 	FirstName      string             `bson:"first_name"`
 	LastName       string             `bson:"last_name"`
 	PasswordActive primitive.DateTime `bson:"password_active"` //When the password was created
-	Verified       bool               `bson:verified`
+	Verified       bool               `bson:"verified"`
 }
 
 type VerificationTokenModel struct {

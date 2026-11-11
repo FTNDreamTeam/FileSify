@@ -78,8 +78,8 @@
                             <div class="invalid-feedback">Please enter your password.</div>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mb-4">
-                            <a href="#" id="forgotPasswordLink" class="text-decoration-none fw-semibold"
-                               style="color:var(--brand);font-size:.875rem;">Forgot password?</a>
+                            <a href="#" id="passwordProblemLink" class="text-decoration-none fw-semibold"
+                               style="color:var(--brand);font-size:.875rem;">Problem with password?</a>
                         </div>
                         <button type="submit" class="btn btn-brand btn-lg rounded-pill w-100">Continue</button>
                         <p class="text-soft text-center mt-3 mb-0" style="font-size:.85rem;">
@@ -118,6 +118,42 @@
 
         </div>
     </div>
+
+    <dialog class="dialog" id="passwordHelpDialog" aria-labelledby="passwordHelpTitle" aria-describedby="passwordHelpDesc">
+        <div class="dialog-header">
+            <h2 class="dialog-title" id="passwordHelpTitle">Password help</h2>
+            <button type="button" class="dialog-close" data-dialog-close aria-label="Close">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="dialog-body" id="passwordHelpDesc">
+            <p class="mb-3" style="font-size:.9rem;text-align:left;">
+                Enter your account email. We'll send you a sign-in link that gets you back into your account.
+            </p>
+
+            <div class="mb-3" style="text-align:left;">
+                <label for="passwordHelpEmail" class="form-label">Email address</label>
+                <input type="email" class="form-control" id="passwordHelpEmail"
+                       autocomplete="email" placeholder="you@example.com" maxlength="254" required>
+                <div class="invalid-feedback" id="passwordHelpFeedback" style="display:none;">
+                    Please enter a valid email address.
+                </div>
+            </div>
+
+            <div id="passwordHelpAlert" class="alert d-none mb-0" role="alert" aria-live="polite" style="text-align:left;"></div>
+        </div>
+
+        <div class="dialog-footer flex-wrap gap-2">
+            <button type="button" class="btn btn-outline-brand rounded-pill px-3" data-dialog-close>Cancel</button>
+            <button type="button" class="btn btn-brand rounded-pill px-3" id="forgottenPasswordBtn">
+                <i class="bi bi-question-circle me-1"></i> Forgotten password
+            </button>
+            <button type="button" class="btn btn-brand rounded-pill px-3" id="expiredPasswordBtn">
+                <i class="bi bi-clock-history me-1"></i> Expired password
+            </button>
+        </div>
+    </dialog>
 </main>
 
 <!-- Footer -->

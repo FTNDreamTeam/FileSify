@@ -122,7 +122,7 @@
                     if (res.status === 401 || data.code === 16) {
                         showLoginAlert('Invalid email or password.', 'danger');
                     } else if (data.code === 9) {
-                        showLoginAlert('Your password has expired. Please reset it to continue.', 'warning');
+                        showLoginAlert('Your password expired or account is not verified after registration.', 'warning');
                     } else if (res.status === 400 || data.code === 3) {
                         showLoginAlert(data.message || 'Please enter your email and password.', 'danger');
                     } else {

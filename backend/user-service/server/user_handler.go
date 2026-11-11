@@ -3,19 +3,23 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"log/slog"
 	"os"
 	"strings"
 	"sync"
 	"time"
+	"uuid"
 
+	mailpb "gen/mail-service"
 	userpb "gen/user-service-gen"
 
 	db "github.com/FTNDreamTeam/FileSify/backend/user-service/db"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/genproto/googleapis/type/date"
 	"google.golang.org/grpc/codes"
@@ -24,11 +28,13 @@ import (
 
 type UserServer struct {
 	userpb.UnimplementedUserServiceServer
-	dbCollection *mongo.Collection
+	dbCollection           *mongo.Collection
+	verificationCollection *mongo.Collection
+	mailClient             mailpb.MailServiceClient
 }
 
-func NewUserServer(collection *mongo.Collection) *UserServer {
-	return &UserServer{dbCollection: collection}
+func NewUserServer(collection *mongo.Collection, verificationCollection *mongo.Collection, mailClient mailpb.MailServiceClient) *UserServer {
+	return &UserServer{dbCollection: collection, verificationCollection: verificationCollection, mailClient: mailClient}
 }
 
 var (
@@ -49,6 +55,73 @@ func passwordMaxAge() time.Duration {
 		return 60 * 24 * time.Hour
 	}
 	return d
+}
+
+func EnsureTTLIndex(ctx context.Context, collection *mongo.Collection) error {
+	indexModel := mongo.IndexModel{
+		Keys:    bson.D{{Key: "created_at", Value: 1}},        //Key used for index
+		Options: options.Index().SetExpireAfterSeconds(43200), //Expires after 12 hours
+	}
+
+	name, err := collection.Indexes().CreateOne(ctx, indexModel)
+	if err != nil {
+		return fmt.Errorf("failed to create TTL index: %w", err)
+	}
+
+	log.Printf("Successfully created or verified TTL index: %s", name)
+	return nil
+}
+
+func (s *UserServer) VerifyAccount(ctx context.Context, req *userpb.VerifyAccountRequest) (*userpb.VerifyAccountResponse, error) {
+	filter := bson.M{"verification_token": req.GetToken()}
+
+	var verificationToken db.VerificationTokenModel
+	err := s.verificationCollection.FindOne(ctx, filter, options.FindOne().SetProjection(bson.M{"user_id": 1})).Decode(&verificationToken)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			fmt.Println("No token document matched the search criteria of " + req.GetToken())
+		}
+		log.Printf("Failed to execute FindOne or Decode: %v", err)
+	}
+
+	objectId, err := primitive.ObjectIDFromHex(verificationToken.UserId)
+	if err != nil {
+		log.Printf("Invalid ID format: %v", err)
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"verified": true,
+		},
+	}
+
+	result, err := s.dbCollection.UpdateByID(ctx, objectId, update)
+	if err != nil {
+		log.Printf("Failed to update document: %v", err)
+	}
+
+	if result.MatchedCount == 0 {
+		fmt.Println("No document found with that ID.")
+	} else {
+		fmt.Printf("Successfully matched %d and modified %d document(s).\n",
+			result.MatchedCount, result.ModifiedCount)
+	}
+
+	filter = bson.M{"_id": verificationToken.ID}
+	deleteResult, err := s.verificationCollection.DeleteOne(ctx, filter)
+	if err != nil {
+		log.Printf("Failed to delete document: %v", err)
+	}
+
+	if deleteResult.DeletedCount == 0 {
+		fmt.Println("No document found with that ID to delete.")
+	} else {
+		fmt.Printf("Successfully deleted %d document.\n", deleteResult.DeletedCount)
+	}
+
+	return &userpb.VerifyAccountResponse{
+		Message: "User Verification Successful",
+	}, nil
 }
 
 func (s *UserServer) RegisterUser(ctx context.Context, req *userpb.RegisterUserRequest) (*userpb.RegisterUserResponse, error) {
@@ -91,7 +164,42 @@ func (s *UserServer) RegisterUser(ctx context.Context, req *userpb.RegisterUserR
 		FirstName:      firstName,
 		LastName:       lastName,
 		PasswordActive: primitive.NewDateTimeFromTime(time.Now()),
+		Verified:       false,
 	}
+
+	verificationToken := uuid.New().String()
+	verificationLink := "http://localhost:8080/api/verify/" + verificationToken
+	expiresAt := time.Now().Add(12 * time.Hour).Unix()
+
+	tokenModel := &db.VerificationTokenModel{
+		ID:                primitive.NewObjectID(),
+		UserId:            newUser.ID.Hex(),
+		VerificationToken: verificationToken,
+		Email:             newUser.Email,
+		CreatedAt:         time.Now(),
+	}
+
+	_, err = s.verificationCollection.InsertOne(ctx, tokenModel)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to save token to verification database: %v", err)
+	}
+
+	go func() {
+		mailCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		_, mailErr := s.mailClient.SendVerification(mailCtx, &userpb.SendVerificationRequest{
+			Email:           newUser.Email,
+			Username:        newUser.FirstName,
+			VerificationUrl: verificationLink,
+			ExpiresAtUnix:   expiresAt,
+		})
+
+		if mailErr != nil {
+			log.Printf("Asynchronous email dispatch failed for %s: %v", newUser.Email, mailErr)
+		}
+
+	}()
 
 	_, err = s.dbCollection.InsertOne(ctx, newUser)
 	if err != nil {

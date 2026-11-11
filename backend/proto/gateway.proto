@@ -21,4 +21,8 @@ service GatewayService {
       body: "*"
     };
   }
+
+  rpc VerifyAccount(user_service.v1.VerifyAccountRequest) returns (user_service.v1.VerifyAccountResponse) {
+    option (google.api.http) = {get: "/api/verify/{token}"};
+  }
 }

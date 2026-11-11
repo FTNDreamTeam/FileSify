@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	mailpb "gen/mail-service"
 	userpb "gen/user-service-gen"
 
 	"github.com/FTNDreamTeam/FileSify/backend/user-service/logger"
@@ -14,6 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -34,19 +36,33 @@ func main() {
 		log.Fatalf("Failed to ping MongoDB: %v", err)
 	}
 
+	userCollection := client.Database("users_metadata").Collection("users")
+	verificationCollection := client.Database("authentication_db").Collection("verification_mail")
+
+	if err := server.EnsureTTLIndex(ctx, verificationCollection); err != nil {
+		log.Fatalf("Index creation error: %v", err)
+	}
+
 	if os.Getenv("JWT_SECRET") == "" {
 		log.Fatalf("JWT_SECRET is not set")
 	}
-
-	userCollection := client.Database("users_metadata").Collection("users")
 
 	lis, err := net.Listen("tcp", ":"+os.Getenv("PORT"))
 	if err != nil {
 		log.Fatalf("Failed to listen on port 8082: %v", err)
 	}
 
+	mailConn, err := grpc.NewClient(
+		"mail-service:"+os.Getenv("MAIL_PORT"),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatalln("Failed to dial user-service:", err)
+	}
+	mailClient := mailpb.NewMailServiceClient(mailConn)
+
 	grpcServer := grpc.NewServer()
-	userServer := server.NewUserServer(userCollection)
+	userServer := server.NewUserServer(userCollection, verificationCollection, mailClient)
 
 	userpb.RegisterUserServiceServer(grpcServer, userServer)
 	reflection.Register(grpcServer)

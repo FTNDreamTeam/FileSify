@@ -23,3 +23,11 @@ type VerificationTokenModel struct {
 	Email             string             `bson:"email"`
 	CreatedAt         time.Time          `bson:"created_at"`
 }
+
+type MagicLinkTokenModel struct {
+	ID             primitive.ObjectID `bson:"_id"`
+	UserId         string             `bson:"user_id"`
+	MagicLinkToken string             `bson:"magic_link_token"`
+	Email          string             `bson:"email"`
+	CreatedAt      time.Time          `bson:"created_at"`
+}

@@ -25,4 +25,20 @@ service GatewayService {
   rpc VerifyAccount(user_service.v1.VerifyAccountRequest) returns (user_service.v1.VerifyAccountResponse) {
     option (google.api.http) = {get: "/api/verify/{token}"};
   }
+
+  rpc RequestMagicLink(user_service.v1.RequestMagicLinkRequest) returns (user_service.v1.RequestMagicLinkResponse) {
+    option (google.api.http) = {
+      post: "/api/auth/magic-link/request"
+      body: "*"
+    };
+  }
+
+  rpc VerifyMagicLink(user_service.v1.VerifyMagicLinkRequest) returns (user_service.v1.LoginUserResponse) {
+    option (google.api.http) = {
+      post: "/api/auth/magic-link/verify"
+      body: "*"
+    };
+  }
 }
+
+

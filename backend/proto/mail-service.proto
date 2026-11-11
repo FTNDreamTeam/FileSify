@@ -8,4 +8,5 @@ option go_package = "gen/mail-service";
 
 service MailService {
   rpc SendVerification(user_service.v1.SendVerificationRequest) returns (user_service.v1.SendVerificationResponse) {}
+  rpc SendMagicLink(user_service.v1.SendMagicLinkRequest) returns (user_service.v1.SendMagicLinkResponse) {}
 }

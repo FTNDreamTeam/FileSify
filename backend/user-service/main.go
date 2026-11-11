@@ -38,9 +38,13 @@ func main() {
 
 	userCollection := client.Database("users_metadata").Collection("users")
 	verificationCollection := client.Database("authentication_db").Collection("verification_mail")
+	magicLinkCollection := client.Database("authentication_db").Collection("magic_link_tokens")
 
 	if err := server.EnsureTTLIndex(ctx, verificationCollection); err != nil {
-		log.Fatalf("Index creation error: %v", err)
+		log.Fatalf("Verification TTL index creation error: %v", err)
+	}
+	if err := server.EnsureTTLIndex(ctx, magicLinkCollection); err != nil {
+		log.Fatalf("Magic link TTL index creation error: %v", err)
 	}
 
 	if os.Getenv("JWT_SECRET") == "" {
@@ -62,8 +66,7 @@ func main() {
 	mailClient := mailpb.NewMailServiceClient(mailConn)
 
 	grpcServer := grpc.NewServer()
-	userServer := server.NewUserServer(userCollection, verificationCollection, mailClient)
-
+	userServer := server.NewUserServer(userCollection, verificationCollection, magicLinkCollection, mailClient)
 	userpb.RegisterUserServiceServer(grpcServer, userServer)
 	reflection.Register(grpcServer)
 

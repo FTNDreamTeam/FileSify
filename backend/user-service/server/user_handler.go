@@ -30,11 +30,22 @@ type UserServer struct {
 	userpb.UnimplementedUserServiceServer
 	dbCollection           *mongo.Collection
 	verificationCollection *mongo.Collection
+	magicLinkCollection    *mongo.Collection
 	mailClient             mailpb.MailServiceClient
 }
 
-func NewUserServer(collection *mongo.Collection, verificationCollection *mongo.Collection, mailClient mailpb.MailServiceClient) *UserServer {
-	return &UserServer{dbCollection: collection, verificationCollection: verificationCollection, mailClient: mailClient}
+func NewUserServer(
+	collection *mongo.Collection,
+	verificationCollection *mongo.Collection,
+	magicLinkCollection *mongo.Collection,
+	mailClient mailpb.MailServiceClient,
+) *UserServer {
+	return &UserServer{
+		dbCollection:           collection,
+		verificationCollection: verificationCollection,
+		magicLinkCollection:    magicLinkCollection,
+		mailClient:             mailClient,
+	}
 }
 
 var (
@@ -113,6 +124,125 @@ func (s *UserServer) VerifyAccount(ctx context.Context, req *userpb.VerifyAccoun
 
 	return &userpb.VerifyAccountResponse{
 		Message: "User Verification Successful",
+	}, nil
+}
+
+func (s *UserServer) RequestMagicLink(ctx context.Context, req *userpb.RequestMagicLinkRequest) (*userpb.RequestMagicLinkResponse, error) {
+	email := strings.TrimSpace(req.GetEmail())
+	if email == "" {
+		return nil, status.Error(codes.InvalidArgument, "email is required")
+	}
+
+	const genericMessage = "If an account exists for that email, a sign-in link has been sent."
+
+	var user db.UserDBModel
+	err := s.dbCollection.FindOne(ctx, bson.M{"email": email}).Decode(&user)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			slog.Info("magic_link_requested", "event", "auth.magic_link.request", "status", "no_user")
+			return &userpb.RequestMagicLinkResponse{Message: genericMessage}, nil
+		}
+		slog.Error("magic_link_request_failed", "event", "auth.magic_link.request", "status", "db_error", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "magic link lookup failed: %v", err)
+	}
+
+	if !user.Verified {
+		slog.Info("magic_link_requested", "event", "auth.magic_link.request", "status", "unverified", "user_id", user.ID.Hex())
+		return &userpb.RequestMagicLinkResponse{Message: genericMessage}, nil
+	}
+
+	token := uuid.New().String()
+	tokenModel := &db.MagicLinkTokenModel{
+		ID:             primitive.NewObjectID(),
+		UserId:         user.ID.Hex(),
+		MagicLinkToken: token,
+		Email:          user.Email,
+		CreatedAt:      time.Now(),
+	}
+
+	if _, err := s.magicLinkCollection.InsertOne(ctx, tokenModel); err != nil {
+		slog.Error("magic_link_request_failed", "event", "auth.magic_link.request", "status", "db_error", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "failed to save magic link token: %v", err)
+	}
+
+	magicLinkURL := "http://localhost:8080/HTML/magic-login.html?token=" + token
+
+	go func() {
+		mailCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		_, mailErr := s.mailClient.SendMagicLink(mailCtx, &userpb.SendMagicLinkRequest{
+			Email:         user.Email,
+			Username:      user.FirstName,
+			MagicLinkUrl:  magicLinkURL,
+			ExpiresAtUnix: time.Now().Add(12 * time.Hour).Unix(),
+		})
+		if mailErr != nil {
+			slog.Error("magic_link_email_failed", "event", "auth.magic_link.request", "status", "mail_failed", "user_id", user.ID.Hex(), "error", mailErr.Error())
+		}
+	}()
+
+	slog.Info("magic_link_requested", "event", "auth.magic_link.request", "status", "success", "user_id", user.ID.Hex())
+
+	return &userpb.RequestMagicLinkResponse{Message: genericMessage}, nil
+}
+
+func (s *UserServer) VerifyMagicLink(ctx context.Context, req *userpb.VerifyMagicLinkRequest) (*userpb.LoginUserResponse, error) {
+	token := strings.TrimSpace(req.GetToken())
+	if token == "" {
+		slog.Warn("magic_link_failure", "event", "auth.magic_link.failed", "reason", "invalid_input", "status", "failure")
+		return nil, status.Error(codes.InvalidArgument, "magic link token is required")
+	}
+
+	var tokenDoc db.MagicLinkTokenModel
+	err := s.magicLinkCollection.FindOne(ctx, bson.M{"magic_link_token": token}).Decode(&tokenDoc)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			slog.Warn("magic_link_failure", "event", "auth.magic_link.failed", "reason", "invalid_token", "status", "failure")
+			return nil, status.Error(codes.NotFound, "magic link is invalid or has expired")
+		}
+		slog.Error("magic_link_failure", "event", "auth.magic_link.failed", "reason", "db_error", "status", "failure", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "magic link lookup failed: %v", err)
+	}
+
+	objectID, err := primitive.ObjectIDFromHex(tokenDoc.UserId)
+	if err != nil {
+		slog.Error("magic_link_failure", "event", "auth.magic_link.failed", "reason", "invalid_user_id", "status", "failure", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "invalid user id in token: %v", err)
+	}
+
+	var user db.UserDBModel
+	err = s.dbCollection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&user)
+	if err != nil {
+		slog.Error("magic_link_failure", "event", "auth.magic_link.failed", "reason", "user_not_found", "status", "failure", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "user not found for token: %v", err)
+	}
+
+	if _, err := s.magicLinkCollection.DeleteOne(ctx, bson.M{"_id": tokenDoc.ID}); err != nil {
+		slog.Warn("magic_link_cleanup_failed", "event", "auth.magic_link.cleanup", "error", err.Error())
+	}
+
+	jwtToken, err := GenerateToken(user.ID.Hex(), user.Email)
+	if err != nil {
+		slog.Error("magic_link_failure", "event", "auth.magic_link.failed", "reason", "token_generation_failed", "status", "failure", "user_id", user.ID.Hex(), "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "failed to issue token: %v", err)
+	}
+
+	slog.Info("magic_link_success", "event", "auth.magic_link", "user_id", user.ID.Hex(), "status", "success")
+
+	return &userpb.LoginUserResponse{
+		Token: jwtToken,
+		User: &userpb.UserProfile{
+			Id:        user.ID.Hex(),
+			Email:     user.Email,
+			FirstName: user.FirstName,
+			LastName:  user.LastName,
+			PasswordValid: &date.Date{
+				Year:  int32(user.PasswordActive.Time().Year()),
+				Month: int32(user.PasswordActive.Time().Month()),
+				Day:   int32(user.PasswordActive.Time().Day()),
+			},
+		},
 	}, nil
 }
 

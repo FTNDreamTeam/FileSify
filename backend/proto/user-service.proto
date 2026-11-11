@@ -11,6 +11,8 @@ service UserService {
   rpc LoginUser(LoginUserRequest) returns (LoginUserResponse) {}
   rpc SendVerification(SendVerificationRequest) returns (SendVerificationResponse) {}
   rpc VerifyAccount(VerifyAccountRequest) returns (VerifyAccountResponse) {}
+  rpc RequestMagicLink(RequestMagicLinkRequest) returns (RequestMagicLinkResponse) {}
+  rpc VerifyMagicLink(VerifyMagicLinkRequest) returns (LoginUserResponse) {}
 }
 
 message UserProfile {
@@ -59,5 +61,28 @@ message VerifyAccountRequest {
 }
 
 message VerifyAccountResponse {
+  string message = 1;
+}
+
+message RequestMagicLinkRequest {
+  string email = 1;
+}
+
+message RequestMagicLinkResponse {
+  string message = 1;
+}
+
+message VerifyMagicLinkRequest {
+  string token = 1;
+}
+
+message SendMagicLinkRequest {
+  string email = 1;
+  string username = 2;
+  string magic_link_url = 3;
+  int64 expires_at_unix = 4;
+}
+
+message SendMagicLinkResponse {
   string message = 1;
 }

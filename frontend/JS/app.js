@@ -23,7 +23,7 @@
         const password      = document.getElementById('loginPassword');
         const pwToggle      = document.getElementById('loginPwToggle');
         const emailFeedback = email.parentElement.querySelector('.invalid-feedback');
-        const forgotLink    = document.getElementById('forgotPasswordLink');
+        const problemLink    = document.getElementById('passwordProblemLink');
         const loginAlert = document.getElementById('loginAlert');
 
         function showLoginAlert(message, type) {
@@ -81,10 +81,122 @@
             pwToggle.querySelector('i').className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
         });
 
-        forgotLink.addEventListener('click', (e) => {
+        problemLink.addEventListener('click', (e) => {
             e.preventDefault();
-            alert("Password reset button clicked!");
+            const dlg = document.getElementById('passwordHelpDialog');
+            if (!dlg) return;
+
+            const dialogEmail = document.getElementById('passwordHelpEmail');
+            const feedback    = document.getElementById('passwordHelpFeedback');
+            const alertEl     = document.getElementById('passwordHelpAlert');
+
+            dialogEmail.value = email.value.trim();
+            dialogEmail.classList.remove('is-valid', 'is-invalid');
+            feedback.textContent = '';
+            feedback.style.display = 'none';
+            alertEl.classList.add('d-none');
+            alertEl.textContent = '';
+
+            dlg.showModal();
+            setTimeout(() => dialogEmail.focus(), 100);
         });
+
+        // ============================================================
+        // PASSWORD HELP DIALOG (login page only)
+        // ============================================================
+        (function initPasswordHelpDialog() {
+            const dialog = document.getElementById('passwordHelpDialog');
+            if (!dialog) return;
+
+            const dialogEmail      = document.getElementById('passwordHelpEmail');
+            const feedback         = document.getElementById('passwordHelpFeedback');
+            const alertEl          = document.getElementById('passwordHelpAlert');
+            const forgottenBtn     = document.getElementById('forgottenPasswordBtn');
+            const expiredBtn       = document.getElementById('expiredPasswordBtn');
+
+            function showAlert(message, type) {
+                alertEl.textContent = message;
+                alertEl.className = `alert alert-${type} mb-0`;
+                alertEl.classList.remove('d-none');
+            }
+            function hideAlert() {
+                alertEl.classList.add('d-none');
+                alertEl.textContent = '';
+            }
+            function validateEmail() {
+                const v = dialogEmail.value.trim();
+                const ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) && v.length <= 254;
+                dialogEmail.classList.toggle('is-valid', ok);
+                dialogEmail.classList.toggle('is-invalid', !ok);
+                feedback.textContent = ok ? '' :
+                    (v.length === 0 ? 'Please enter your email address.' : 'Please enter a valid email address.');
+                feedback.style.display = ok ? 'none' : 'block';
+                return ok;
+            }
+
+            // Close buttons (X and Cancel)
+            dialog.querySelectorAll('[data-dialog-close]').forEach(btn => {
+                btn.addEventListener('click', () => dialog.close('cancel'));
+            });
+
+            // Backdrop click
+            dialog.addEventListener('click', (e) => {
+                const r = dialog.getBoundingClientRect();
+                const outside =
+                    e.clientX < r.left || e.clientX > r.right ||
+                    e.clientY < r.top  || e.clientY > r.bottom;
+                if (outside) dialog.close('cancel');
+            });
+
+            // Live validation on blur and re-validation on input if already invalid
+            dialogEmail.addEventListener('blur', validateEmail);
+            dialogEmail.addEventListener('input', () => {
+                if (dialogEmail.classList.contains('is-invalid')) validateEmail();
+            });
+
+            async function sendMagicLink(btn, reasonLabel) {
+                hideAlert();
+                if (!validateEmail()) {
+                    dialogEmail.focus();
+                    return;
+                }
+
+                const originalText = btn.innerHTML;
+                const otherBtn     = btn === forgottenBtn ? expiredBtn : forgottenBtn;
+                btn.disabled = true;
+                otherBtn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Sending…';
+
+                try {
+                    const res = await fetch('/api/auth/magic-link/request', {
+                        method:  'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body:    JSON.stringify({ email: dialogEmail.value.trim() })
+                    });
+                    const data = await res.json().catch(() => ({}));
+
+                    if (!res.ok) {
+                        showAlert(data.message || `Request failed (HTTP ${res.status}).`, 'danger');
+                        return;
+                    }
+
+                    showAlert(
+                        data.message ||
+                        `If an account exists for that email, we've sent you a sign-in link. Check your inbox.`,
+                        'success'
+                    );
+                } catch {
+                    showAlert('Network error. Please check your connection and try again.', 'danger');
+                } finally {
+                    btn.disabled = false;
+                    otherBtn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            }
+
+            forgottenBtn.addEventListener('click', () => sendMagicLink(forgottenBtn, 'forgotten'));
+            expiredBtn.addEventListener('click',   () => sendMagicLink(expiredBtn,   'expired'));
+        })();
 
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
@@ -449,5 +561,58 @@
                 window.location.href = 'login.html';
             }
         });
+    })();
+
+    // ============================================================
+    // MAGIC LINK LOGIN PAGE
+    // ============================================================
+    (function initMagicLogin() {
+        const elLoading = document.getElementById('magic-loading');
+        if (!elLoading) return;
+
+        const elSuccess = document.getElementById('magic-success');
+        const elError   = document.getElementById('magic-error');
+        const elNoToken = document.getElementById('magic-no-token');
+
+        function show(el) {
+            [elLoading, elSuccess, elError, elNoToken].forEach(x => x && x.classList.add('d-none'));
+            el.classList.remove('d-none');
+        }
+
+        const token = new URLSearchParams(window.location.search).get('token');
+
+        if (!token) {
+            show(elNoToken);
+            return;
+        }
+
+        fetch('/api/auth/magic-link/verify', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ token })
+        })
+            .then(async (res) => {
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    document.getElementById('magic-error-message').textContent =
+                        data.message || `Sign-in failed (HTTP ${res.status}).`;
+                    show(elError);
+                    return;
+                }
+
+                localStorage.setItem('token', data.token);
+                if (data.user) {
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                }
+
+                show(elSuccess);
+                setTimeout(() => { window.location.replace('dashboard.html'); }, 300);
+            })
+            .catch(() => {
+                document.getElementById('magic-error-message').textContent =
+                    'Network error. Please check your connection and try again.';
+                show(elError);
+            });
     })();
 })();

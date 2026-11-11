@@ -168,7 +168,7 @@ func (s *UserServer) RegisterUser(ctx context.Context, req *userpb.RegisterUserR
 	}
 
 	verificationToken := uuid.New().String()
-	verificationLink := "http://localhost:8080/api/verify/" + verificationToken
+	verificationLink := "http://localhost:8080/HTML/verify-email.html?token=veri" + verificationToken
 	expiresAt := time.Now().Add(12 * time.Hour).Unix()
 
 	tokenModel := &db.VerificationTokenModel{

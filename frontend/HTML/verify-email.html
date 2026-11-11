@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Email Verification — FileSify</title>
+    <meta name="description" content="Verify your FileSify email address.">
+    <meta name="referrer" content="no-referrer">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../CSS/styles.css">
+    <style>
+        .verify-state { padding: 1.5rem 0; }
+        .verify-icon {
+            font-size: 4rem;
+            line-height: 1;
+            margin-bottom: 1rem;
+        }
+        .verify-icon.success { color: #16a34a; }
+        .verify-icon.error   { color: #dc3545; }
+        .verify-icon.info    { color: #0ea5e9; }
+        .verify-spinner {
+            width: 3rem;
+            height: 3rem;
+            margin-bottom: 1rem;
+        }
+        .verify-actions {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: .5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg fixed-top navbar-glass py-2">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="index.html">
+            <span class="brand-mark"><i class="bi bi-cloud-fill"></i></span>
+            <span>FileSify</span>
+        </a>
+    </div>
+</nav>
+
+<main class="auth-wrap">
+    <div class="container">
+        <div class="row justify-content-center align-items-center">
+            <div class="col-lg-6 col-xl-5">
+                <div class="form-card text-center">
+
+                    <!-- Loading state -->
+                    <div id="state-loading" class="verify-state">
+                        <div class="spinner-border text-primary verify-spinner" role="status">
+                            <span class="visually-hidden">Loading…</span>
+                        </div>
+                        <h1 class="h4 mb-2">Verifying your email…</h1>
+                        <p class="text-soft mb-0" style="font-size:.9rem;">This only takes a moment.</p>
+                    </div>
+
+                    <!-- Success state -->
+                    <div id="state-success" class="verify-state d-none">
+                        <div class="verify-icon success">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <h1 class="h4 mb-2">Email verified</h1>
+                        <p class="text-soft mb-0" style="font-size:.9rem;" id="success-message">
+                            Your account is now active. You can sign in.
+                        </p>
+                        <div class="verify-actions">
+                            <a href="login.html" class="btn btn-brand rounded-pill px-4">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Sign in
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Error state -->
+                    <div id="state-error" class="verify-state d-none">
+                        <div class="verify-icon error">
+                            <i class="bi bi-x-circle-fill"></i>
+                        </div>
+                        <h1 class="h4 mb-2">Verification failed</h1>
+                        <p class="text-soft mb-0" style="font-size:.9rem;" id="error-message">
+                            The verification link is invalid or has expired.
+                        </p>
+                        <div class="verify-actions">
+                            <a href="register.html" class="btn btn-outline-brand rounded-pill px-4">
+                                Register again
+                            </a>
+                            <a href="login.html" class="btn btn-brand rounded-pill px-4">
+                                Back to sign in
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- No-token state (user landed on the page without a token in URL) -->
+                    <div id="state-no-token" class="verify-state d-none">
+                        <div class="verify-icon info">
+                            <i class="bi bi-info-circle-fill"></i>
+                        </div>
+                        <h1 class="h4 mb-2">Missing verification token</h1>
+                        <p class="text-soft mb-0" style="font-size:.9rem;">
+                            The verification link is incomplete. Open the link from your email exactly as it was sent.
+                        </p>
+                        <div class="verify-actions">
+                            <a href="login.html" class="btn btn-brand rounded-pill px-4">
+                                Back to sign in
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+            <a href="index.html" class="d-inline-flex align-items-center gap-2 fw-bold text-white">
+                <span class="brand-mark"><i class="bi bi-cloud-fill"></i></span>
+                <span>FileSify</span>
+            </a>
+            <span class="small">&copy; 2025 FileSify. Academic project.</span>
+        </div>
+    </div>
+</footer>
+
+<script>
+    (function () {
+        'use strict';
+
+        const params = new URLSearchParams(window.location.search);
+        const token  = params.get('token');
+
+        const elLoading = document.getElementById('state-loading');
+        const elSuccess = document.getElementById('state-success');
+        const elError   = document.getElementById('state-error');
+        const elNoToken = document.getElementById('state-no-token');
+
+        function show(el) {
+            [elLoading, elSuccess, elError, elNoToken].forEach(x => x.classList.add('d-none'));
+            el.classList.remove('d-none');
+        }
+
+        if (!token) {
+            show(elNoToken);
+            return;
+        }
+
+        // Call the verify endpoint. Assumes GET /api/verify?token=... → JSON.
+        fetch('/api/verify/' + encodeURIComponent(token))
+            .then(async (res) => {
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    document.getElementById('error-message').textContent =
+                        data.message || `Verification failed (HTTP ${res.status}).`;
+                    show(elError);
+                    return;
+                }
+
+                if (data.message) {
+                    document.getElementById('success-message').textContent = data.message;
+                }
+                show(elSuccess);
+            })
+            .catch(() => {
+                document.getElementById('error-message').textContent =
+                    'Network error. Please check your connection and try again.';
+                show(elError);
+            });
+    })();
+</script>
+
+</body>
+</html>

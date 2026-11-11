@@ -363,6 +363,53 @@
     })();
 
     // ============================================================
+    // EMAIL VERIFICATION PAGE
+    // ============================================================
+    (function initVerifyEmail() {
+        const elLoading = document.getElementById('state-loading');
+        if (!elLoading) return;
+
+        const elSuccess = document.getElementById('state-success');
+        const elError   = document.getElementById('state-error');
+        const elNoToken = document.getElementById('state-no-token');
+
+        function show(el) {
+            [elLoading, elSuccess, elError, elNoToken].forEach(x => x.classList.add('d-none'));
+            el.classList.remove('d-none');
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const token  = params.get('token');
+
+        if (!token) {
+            show(elNoToken);
+            return;
+        }
+
+        fetch('/api/verify/' + encodeURIComponent(token))
+            .then(async (res) => {
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    document.getElementById('error-message').textContent =
+                        data.message || `Verification failed (HTTP ${res.status}).`;
+                    show(elError);
+                    return;
+                }
+
+                if (data.message) {
+                    document.getElementById('success-message').textContent = data.message;
+                }
+                show(elSuccess);
+            })
+            .catch(() => {
+                document.getElementById('error-message').textContent =
+                    'Network error. Please check your connection and try again.';
+                show(elError);
+            });
+    })();
+
+    // ============================================================
 // LOGOUT CONFIRMATION DIALOG (dashboard only)
 // ============================================================
     (function initLogoutDialog() {

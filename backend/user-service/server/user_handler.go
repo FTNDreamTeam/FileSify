@@ -16,6 +16,7 @@ import (
 	userpb "gen/user-service-gen"
 
 	db "github.com/FTNDreamTeam/FileSify/backend/user-service/db"
+	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -32,6 +33,8 @@ type UserServer struct {
 	verificationCollection *mongo.Collection
 	magicLinkCollection    *mongo.Collection
 	mailClient             mailpb.MailServiceClient
+	twoFactorService       TwoFactorService
+	rdb                    *redis.Client
 }
 
 func NewUserServer(
@@ -39,12 +42,14 @@ func NewUserServer(
 	verificationCollection *mongo.Collection,
 	magicLinkCollection *mongo.Collection,
 	mailClient mailpb.MailServiceClient,
+	twoFactorService TwoFactorService,
 ) *UserServer {
 	return &UserServer{
 		dbCollection:           collection,
 		verificationCollection: verificationCollection,
 		magicLinkCollection:    magicLinkCollection,
 		mailClient:             mailClient,
+		twoFactorService:       twoFactorService,
 	}
 }
 
@@ -393,10 +398,30 @@ func (s *UserServer) LoginUser(ctx context.Context, req *userpb.LoginUserRequest
 		return nil, status.Error(codes.FailedPrecondition, "your password has expired; please reset it to continue")
 	}
 
+	if user.TwoFactor {
+		code, err := s.twoFactorService.GenerateOTP(ctx, user.ID.Hex())
+		if err != nil {
+			return nil, err
+		}
+		_, err = s.mailClient.SendTwoFactor(ctx, &userpb.SendTwoFactorRequest{
+			Email: user.Email,
+			Code:  code,
+		})
+		if err != nil {
+			return nil, err
+		}
+		return &userpb.LoginUserResponse{
+			Token:     "",
+			TwoFactor: true,
+			User:      nil,
+		}, nil
+	}
+
 	slog.Info("login_success", "event", "auth.login", "user_id", user.ID.Hex(), "status", "success")
 
 	return &userpb.LoginUserResponse{
-		Token: token,
+		Token:     token,
+		TwoFactor: false,
 		User: &userpb.UserProfile{
 			Id:        user.ID.Hex(),
 			Email:     user.Email,

@@ -195,7 +195,24 @@
             }
 
             forgottenBtn.addEventListener('click', () => sendMagicLink(forgottenBtn, 'forgotten'));
-            expiredBtn.addEventListener('click',   () => sendMagicLink(expiredBtn,   'expired'));
+
+            expiredBtn.addEventListener('click', () => {
+                if (!validateEmail()) {
+                    dialogEmail.focus();
+                    return;
+                }
+                const emailValue = dialogEmail.value.trim();
+                dialog.close('expired');
+
+                const changeDlg = document.getElementById('changePasswordDialog');
+                if (!changeDlg) return;
+
+                // Pre-fill the email from dialog 1
+                const cpEmail = document.getElementById('cpEmail');
+                if (cpEmail) cpEmail.value = emailValue;
+
+                changeDlg.showModal();
+            });
         })();
 
         form.addEventListener('submit', async function (e) {
@@ -614,5 +631,190 @@
                     'Network error. Please check your connection and try again.';
                 show(elError);
             });
+    })();
+
+    // ============================================================
+    // CHANGE PASSWORD DIALOG (opened from "Expired password")
+    // ============================================================
+    (function initChangePasswordDialog() {
+        const dialog = document.getElementById('changePasswordDialog');
+        if (!dialog) return;
+
+        const email          = document.getElementById('cpEmail');
+        const current        = document.getElementById('cpCurrentPassword');
+        const newPw          = document.getElementById('cpNewPassword');
+        const confirm        = document.getElementById('cpConfirmPassword');
+        const ruleList       = document.getElementById('cpRuleList');
+        const strengthFill   = document.getElementById('cpStrengthFill');
+        const strengthLabel  = document.getElementById('cpStrengthLabel');
+        const emailFeedback  = document.getElementById('cpEmailFeedback');
+        const alertEl        = document.getElementById('changePwAlert');
+        const submitBtn      = document.getElementById('cpSubmitBtn');
+
+        function showAlert(message, type) {
+            alertEl.textContent = message;
+            alertEl.className = `alert alert-${type} mb-3`;
+            alertEl.classList.remove('d-none');
+        }
+        function hideAlert() {
+            alertEl.classList.add('d-none');
+            alertEl.textContent = '';
+        }
+
+        function validateEmail() {
+            const v = email.value.trim();
+            const ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) && v.length <= 254;
+            emailFeedback.textContent = ok ? '' :
+                (v.length === 0 ? 'Please enter your email address.' : 'Please enter a valid email address.');
+            return mark(email, ok);
+        }
+        function validateCurrent() {
+            return mark(current, current.value.length > 0);
+        }
+
+        const RULES = {
+            length : v => v.length >= 12,
+            upper  : v => /[A-Z]/.test(v),
+            lower  : v => /[a-z]/.test(v),
+            digit  : v => /[0-9]/.test(v),
+            special: v => /[^A-Za-z0-9]/.test(v)
+        };
+        function passwordMeetsAll(v) { return Object.keys(RULES).every(k => RULES[k](v)); }
+        function validateNewPw()      { return mark(newPw, passwordMeetsAll(newPw.value)); }
+        function validateConfirm()    { return mark(confirm, confirm.value.length > 0 && confirm.value === newPw.value); }
+
+        function updatePasswordUI() {
+            const v = newPw.value;
+            let met = 0;
+            ruleList.querySelectorAll('li').forEach(li => {
+                const rule = li.getAttribute('data-rule');
+                const ok = RULES[rule](v);
+                if (ok) met++;
+                li.classList.toggle('ok', ok);
+                li.querySelector('i').className = ok ? 'bi bi-check-circle-fill' : 'bi bi-circle';
+            });
+            strengthFill.style.width = ((met / 5) * 100) + '%';
+            let label = 'Password strength';
+            let color = '#e2e8f0';
+            if (v.length > 0) {
+                if (met <= 2)       { label = 'Weak';   color = '#dc3545'; }
+                else if (met <= 3)  { label = 'Fair';   color = '#f59e0b'; }
+                else if (met === 4) { label = 'Good';   color = '#0ea5e9'; }
+                else                { label = 'Strong'; color = '#16a34a'; }
+            }
+            strengthFill.style.background = color;
+            strengthLabel.textContent = label;
+            if (confirm.value.length > 0) validateConfirm();
+        }
+
+        const touched = new WeakSet();
+        function bindLive(input, validator) {
+            input.addEventListener('blur', () => { touched.add(input); validator(); });
+            input.addEventListener('input', () => { if (touched.has(input)) validator(); });
+        }
+        bindLive(email,   validateEmail);
+        bindLive(current, validateCurrent);
+        bindLive(newPw,   validateNewPw);
+        bindLive(confirm, validateConfirm);
+
+        newPw.addEventListener('input', updatePasswordUI);
+        newPw.addEventListener('blur',  updatePasswordUI);
+
+        // Close buttons
+        dialog.querySelectorAll('[data-dialog-close]').forEach(btn => {
+            btn.addEventListener('click', () => dialog.close('cancel'));
+        });
+
+        // Backdrop click
+        dialog.addEventListener('click', (e) => {
+            const r = dialog.getBoundingClientRect();
+            const outside =
+                e.clientX < r.left || e.clientX > r.right ||
+                e.clientY < r.top  || e.clientY > r.bottom;
+            if (outside) dialog.close('cancel');
+        });
+
+        // Password show/hide toggles
+        function bindToggle(buttonId, input) {
+            const btn = document.getElementById(buttonId);
+            if (!btn) return;
+            btn.addEventListener('click', () => {
+                const show = input.type === 'password';
+                input.type = show ? 'text' : 'password';
+                btn.setAttribute('aria-pressed', String(show));
+                btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+                btn.querySelector('i').className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+            });
+        }
+        bindToggle('cpPwToggle1', current);
+        bindToggle('cpPwToggle2', newPw);
+        bindToggle('cpPwToggle3', confirm);
+
+        // Reset state every time the dialog opens (email comes pre-filled from dialog 1)
+        dialog.addEventListener('close', () => {
+            // Reset alerts and validators, but keep email if reopening
+            hideAlert();
+        });
+
+        updatePasswordUI();
+
+        // Submit
+        submitBtn.addEventListener('click', async () => {
+            hideAlert();
+
+            const results = [ validateEmail(), validateCurrent(), validateNewPw(), validateConfirm() ];
+            updatePasswordUI();
+            if (results.includes(false)) {
+                const firstInvalid = dialog.querySelector('.is-invalid');
+                if (firstInvalid) firstInvalid.focus();
+                return;
+            }
+
+            if (newPw.value === current.value) {
+                showAlert('Your new password must be different from your current password.', 'warning');
+                newPw.focus();
+                return;
+            }
+
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Changing…';
+
+            try {
+                const res = await fetch('/api/auth/password/change', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({
+                        email:           email.value.trim(),
+                        currentPassword: current.value,
+                        newPassword:     newPw.value
+                    })
+                });
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    if (res.status === 401 || data.code === 16) {
+                        showAlert('Your email or current password is incorrect.', 'danger');
+                    } else if (res.status === 400 || data.code === 3) {
+                        showAlert(data.message || 'Please check your input and try again.', 'danger');
+                    } else {
+                        showAlert(data.message || `Password change failed (HTTP ${res.status}).`, 'danger');
+                    }
+                    return;
+                }
+
+                showAlert(data.message || 'Password changed successfully. Redirecting…', 'success');
+                setTimeout(() => {
+                    dialog.close('success');
+                    window.location.href = 'login.html';
+                }, 1500);
+
+            } catch {
+                showAlert('Network error. Please check your connection and try again.', 'danger');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        });
     })();
 })();

@@ -89,7 +89,7 @@ func NewMailServer(userClient userpb.UserServiceClient) *MailServer {
 type EmailPayload struct {
 	To      []string
 	Subject string
-	Body    string
+	Body    bytes.Buffer
 }
 
 type VerificationTemplateData struct {
@@ -100,6 +100,20 @@ type VerificationTemplateData struct {
 type MagicLinkTemplateData struct {
 	Username     string
 	MagicLinkUrl string
+}
+
+func SendMail(ctx context.Context, payload EmailPayload) error {
+	smtpAddress := os.Getenv("SMTP_ADDRESS")
+	if smtpAddress == "" {
+		smtpAddress = "mailhog:1025"
+	}
+
+	err := smtp.SendMail(smtpAddress, nil, "noreply@filesify.com", payload.To, payload.Body.Bytes())
+	if err != nil {
+		log.Printf("Failed to route mail to MailHog: %v", err)
+		return status.Errorf(codes.Unavailable, "failed to send email via mail relay: %v", err)
+	}
+	return nil
 }
 
 func (s *MailServer) SendVerification(ctx context.Context, req *userpb.SendVerificationRequest) (*userpb.SendVerificationResponse, error) {
@@ -123,32 +137,27 @@ func (s *MailServer) SendVerification(ctx context.Context, req *userpb.SendVerif
 		log.Printf("[MailService] Failed to execute template payload: %v", err)
 		return nil, status.Errorf(codes.Internal, "failed to inject template data: %v", err)
 	}
-	smtpAddress := os.Getenv("SMTP_ADDRESS")
-	if smtpAddress == "" {
-		smtpAddress = "mailhog:1025"
-	}
 
 	email := &EmailPayload{
-		To:      []string{req.GetEmail()},
 		Subject: "Verify Mail",
-		Body:    "Thank you for your registration please verify your mail here! " + req.GetVerificationUrl(),
 	}
 
 	from := "noreply@filesify.com"
+	to := []string{req.GetEmail()}
 
 	var rawMessage bytes.Buffer
 	fmt.Fprintf(&rawMessage, "From: %s\r\n", from)
-	fmt.Fprintf(&rawMessage, "To: %s\r\n", email.To[0])
+	fmt.Fprintf(&rawMessage, "To: %s\r\n", to)
 	fmt.Fprintf(&rawMessage, "Subject: %s\r\n", email.Subject)
 	rawMessage.WriteString("MIME-Version: 1.0\r\n")
 	rawMessage.WriteString("Content-Type: text/html; charset=\"utf-8\"\r\n")
 	rawMessage.WriteString("\r\n")
 	rawMessage.Write(bodyBuffer.Bytes())
 
-	err = smtp.SendMail(smtpAddress, nil, from, email.To, rawMessage.Bytes())
-	if err != nil {
-		log.Printf("Failed to route mail to MailHog: %v", err)
-		return nil, status.Errorf(codes.Unavailable, "failed to send email via mail relay: %v", err)
+	email.Body = rawMessage
+	email.To = to
+	if err := SendMail(ctx, *email); err != nil {
+		return nil, err
 	}
 
 	return &userpb.SendVerificationResponse{

@@ -13,6 +13,7 @@ service UserService {
   rpc VerifyAccount(VerifyAccountRequest) returns (VerifyAccountResponse) {}
   rpc RequestMagicLink(RequestMagicLinkRequest) returns (RequestMagicLinkResponse) {}
   rpc VerifyMagicLink(VerifyMagicLinkRequest) returns (LoginUserResponse) {}
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse) {}
 }
 
 message UserProfile {
@@ -84,5 +85,15 @@ message SendMagicLinkRequest {
 }
 
 message SendMagicLinkResponse {
+  string message = 1;
+}
+
+message ChangePasswordRequest {
+  string email = 1;
+  string current_password = 2;
+  string new_password = 3;
+}
+
+message ChangePasswordResponse {
   string message = 1;
 }

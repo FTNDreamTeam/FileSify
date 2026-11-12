@@ -39,6 +39,13 @@ service GatewayService {
       body: "*"
     };
   }
+
+  rpc ChangePassword(user_service.v1.ChangePasswordRequest) returns (user_service.v1.ChangePasswordResponse) {
+    option (google.api.http) = {
+      post: "/api/auth/password-reset"
+      body: "*"
+    };
+  }
 }
 
 

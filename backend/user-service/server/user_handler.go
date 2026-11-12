@@ -410,3 +410,63 @@ func (s *UserServer) LoginUser(ctx context.Context, req *userpb.LoginUserRequest
 		},
 	}, nil
 }
+
+func (s *UserServer) ChangePassword(ctx context.Context, req *userpb.ChangePasswordRequest) (*userpb.ChangePasswordResponse, error) {
+	email := strings.TrimSpace(req.GetEmail())
+	currentPw := req.GetCurrentPassword()
+	newPw := req.GetNewPassword()
+
+	if err := validatePassword(newPw); err != nil {
+		return nil, err
+	}
+	if email == "" || currentPw == "" {
+		return nil, status.Error(codes.InvalidArgument, "email and current password are required")
+	}
+
+	genericResponse := &userpb.ChangePasswordResponse{
+		Message: "If an account exists with those credentials and the current password has expired, the new password has been set.",
+	}
+
+	var user db.UserDBModel
+	err := s.dbCollection.FindOne(ctx, bson.M{"email": email}).Decode(&user)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			_ = bcrypt.CompareHashAndPassword(getDummyHash(), []byte(currentPw))
+			slog.Info("change_pw", "event", "auth.change_password", "status", "no_user")
+			return genericResponse, nil
+		}
+		slog.Error("change_pw", "event", "auth.change_password", "status", "db_error", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "lookup failed: %v", err)
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(currentPw)); err != nil {
+		slog.Warn("change_pw", "event", "auth.change_password", "status", "bad_password", "user_id", user.ID.Hex())
+		return genericResponse, nil
+	}
+
+	if time.Since(user.PasswordActive.Time()) <= passwordMaxAge() {
+		slog.Warn("change_pw", "event", "auth.change_password", "status", "not_expired", "user_id", user.ID.Hex())
+		return genericResponse, nil
+	}
+
+	hashed, err := bcrypt.GenerateFromPassword([]byte(newPw), bcrypt.DefaultCost)
+	if err != nil {
+		slog.Error("change_pw", "event", "auth.change_password", "status", "hash_failed", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "failed to hash new password: %v", err)
+	}
+
+	_, err = s.dbCollection.UpdateOne(ctx,
+		bson.M{"_id": user.ID},
+		bson.M{"$set": bson.M{
+			"password":        string(hashed),
+			"password_active": primitive.NewDateTimeFromTime(time.Now()),
+		}},
+	)
+	if err != nil {
+		slog.Error("change_pw", "event", "auth.change_password", "status", "update_failed", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "failed to update password: %v", err)
+	}
+
+	slog.Info("change_pw_success", "event", "auth.change_password", "user_id", user.ID.Hex(), "status", "success")
+	return genericResponse, nil
+}

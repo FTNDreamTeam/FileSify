@@ -27,14 +27,15 @@ var File_gateway_proto protoreflect.FileDescriptor
 const file_gateway_proto_rawDesc = "" +
 	"\n" +
 	"\rgateway.proto\x12\n" +
-	"gateway.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x12user-service.proto2\x8b\x05\n" +
+	"gateway.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x12user-service.proto2\x94\x06\n" +
 	"\x0eGatewayService\x12u\n" +
 	"\fRegisterUser\x12$.user_service.v1.RegisterUserRequest\x1a%.user_service.v1.RegisterUserResponse\"\x18\x82\xd3\xe4\x93\x02\x12:\x01*\"\r/api/register\x12i\n" +
 	"\tLoginUser\x12!.user_service.v1.LoginUserRequest\x1a\".user_service.v1.LoginUserResponse\"\x15\x82\xd3\xe4\x93\x02\x0f:\x01*\"\n" +
 	"/api/login\x12{\n" +
 	"\rVerifyAccount\x12%.user_service.v1.VerifyAccountRequest\x1a&.user_service.v1.VerifyAccountResponse\"\x1b\x82\xd3\xe4\x93\x02\x15\x12\x13/api/verify/{token}\x12\x90\x01\n" +
 	"\x10RequestMagicLink\x12(.user_service.v1.RequestMagicLinkRequest\x1a).user_service.v1.RequestMagicLinkResponse\"'\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/api/auth/magic-link/request\x12\x86\x01\n" +
-	"\x0fVerifyMagicLink\x12'.user_service.v1.VerifyMagicLinkRequest\x1a\".user_service.v1.LoginUserResponse\"&\x82\xd3\xe4\x93\x02 :\x01*\"\x1b/api/auth/magic-link/verifyB\rZ\vgen/gatewayb\x06proto3"
+	"\x0fVerifyMagicLink\x12'.user_service.v1.VerifyMagicLinkRequest\x1a\".user_service.v1.LoginUserResponse\"&\x82\xd3\xe4\x93\x02 :\x01*\"\x1b/api/auth/magic-link/verify\x12\x86\x01\n" +
+	"\x0eChangePassword\x12&.user_service.v1.ChangePasswordRequest\x1a'.user_service.v1.ChangePasswordResponse\"#\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/api/auth/password-resetB\rZ\vgen/gatewayb\x06proto3"
 
 var file_gateway_proto_goTypes = []any{
 	(*user_service_gen.RegisterUserRequest)(nil),      // 0: user_service.v1.RegisterUserRequest
@@ -42,27 +43,31 @@ var file_gateway_proto_goTypes = []any{
 	(*user_service_gen.VerifyAccountRequest)(nil),     // 2: user_service.v1.VerifyAccountRequest
 	(*user_service_gen.RequestMagicLinkRequest)(nil),  // 3: user_service.v1.RequestMagicLinkRequest
 	(*user_service_gen.VerifyMagicLinkRequest)(nil),   // 4: user_service.v1.VerifyMagicLinkRequest
-	(*user_service_gen.RegisterUserResponse)(nil),     // 5: user_service.v1.RegisterUserResponse
-	(*user_service_gen.LoginUserResponse)(nil),        // 6: user_service.v1.LoginUserResponse
-	(*user_service_gen.VerifyAccountResponse)(nil),    // 7: user_service.v1.VerifyAccountResponse
-	(*user_service_gen.RequestMagicLinkResponse)(nil), // 8: user_service.v1.RequestMagicLinkResponse
+	(*user_service_gen.ChangePasswordRequest)(nil),    // 5: user_service.v1.ChangePasswordRequest
+	(*user_service_gen.RegisterUserResponse)(nil),     // 6: user_service.v1.RegisterUserResponse
+	(*user_service_gen.LoginUserResponse)(nil),        // 7: user_service.v1.LoginUserResponse
+	(*user_service_gen.VerifyAccountResponse)(nil),    // 8: user_service.v1.VerifyAccountResponse
+	(*user_service_gen.RequestMagicLinkResponse)(nil), // 9: user_service.v1.RequestMagicLinkResponse
+	(*user_service_gen.ChangePasswordResponse)(nil),   // 10: user_service.v1.ChangePasswordResponse
 }
 var file_gateway_proto_depIdxs = []int32{
-	0, // 0: gateway.v1.GatewayService.RegisterUser:input_type -> user_service.v1.RegisterUserRequest
-	1, // 1: gateway.v1.GatewayService.LoginUser:input_type -> user_service.v1.LoginUserRequest
-	2, // 2: gateway.v1.GatewayService.VerifyAccount:input_type -> user_service.v1.VerifyAccountRequest
-	3, // 3: gateway.v1.GatewayService.RequestMagicLink:input_type -> user_service.v1.RequestMagicLinkRequest
-	4, // 4: gateway.v1.GatewayService.VerifyMagicLink:input_type -> user_service.v1.VerifyMagicLinkRequest
-	5, // 5: gateway.v1.GatewayService.RegisterUser:output_type -> user_service.v1.RegisterUserResponse
-	6, // 6: gateway.v1.GatewayService.LoginUser:output_type -> user_service.v1.LoginUserResponse
-	7, // 7: gateway.v1.GatewayService.VerifyAccount:output_type -> user_service.v1.VerifyAccountResponse
-	8, // 8: gateway.v1.GatewayService.RequestMagicLink:output_type -> user_service.v1.RequestMagicLinkResponse
-	6, // 9: gateway.v1.GatewayService.VerifyMagicLink:output_type -> user_service.v1.LoginUserResponse
-	5, // [5:10] is the sub-list for method output_type
-	0, // [0:5] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0,  // 0: gateway.v1.GatewayService.RegisterUser:input_type -> user_service.v1.RegisterUserRequest
+	1,  // 1: gateway.v1.GatewayService.LoginUser:input_type -> user_service.v1.LoginUserRequest
+	2,  // 2: gateway.v1.GatewayService.VerifyAccount:input_type -> user_service.v1.VerifyAccountRequest
+	3,  // 3: gateway.v1.GatewayService.RequestMagicLink:input_type -> user_service.v1.RequestMagicLinkRequest
+	4,  // 4: gateway.v1.GatewayService.VerifyMagicLink:input_type -> user_service.v1.VerifyMagicLinkRequest
+	5,  // 5: gateway.v1.GatewayService.ChangePassword:input_type -> user_service.v1.ChangePasswordRequest
+	6,  // 6: gateway.v1.GatewayService.RegisterUser:output_type -> user_service.v1.RegisterUserResponse
+	7,  // 7: gateway.v1.GatewayService.LoginUser:output_type -> user_service.v1.LoginUserResponse
+	8,  // 8: gateway.v1.GatewayService.VerifyAccount:output_type -> user_service.v1.VerifyAccountResponse
+	9,  // 9: gateway.v1.GatewayService.RequestMagicLink:output_type -> user_service.v1.RequestMagicLinkResponse
+	7,  // 10: gateway.v1.GatewayService.VerifyMagicLink:output_type -> user_service.v1.LoginUserResponse
+	10, // 11: gateway.v1.GatewayService.ChangePassword:output_type -> user_service.v1.ChangePasswordResponse
+	6,  // [6:12] is the sub-list for method output_type
+	0,  // [0:6] is the sub-list for method input_type
+	0,  // [0:0] is the sub-list for extension type_name
+	0,  // [0:0] is the sub-list for extension extendee
+	0,  // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_gateway_proto_init() }

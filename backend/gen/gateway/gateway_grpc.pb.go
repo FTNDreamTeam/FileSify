@@ -25,6 +25,7 @@ const (
 	GatewayService_VerifyAccount_FullMethodName    = "/gateway.v1.GatewayService/VerifyAccount"
 	GatewayService_RequestMagicLink_FullMethodName = "/gateway.v1.GatewayService/RequestMagicLink"
 	GatewayService_VerifyMagicLink_FullMethodName  = "/gateway.v1.GatewayService/VerifyMagicLink"
+	GatewayService_ChangePassword_FullMethodName   = "/gateway.v1.GatewayService/ChangePassword"
 )
 
 // GatewayServiceClient is the client API for GatewayService service.
@@ -36,6 +37,7 @@ type GatewayServiceClient interface {
 	VerifyAccount(ctx context.Context, in *user_service_gen.VerifyAccountRequest, opts ...grpc.CallOption) (*user_service_gen.VerifyAccountResponse, error)
 	RequestMagicLink(ctx context.Context, in *user_service_gen.RequestMagicLinkRequest, opts ...grpc.CallOption) (*user_service_gen.RequestMagicLinkResponse, error)
 	VerifyMagicLink(ctx context.Context, in *user_service_gen.VerifyMagicLinkRequest, opts ...grpc.CallOption) (*user_service_gen.LoginUserResponse, error)
+	ChangePassword(ctx context.Context, in *user_service_gen.ChangePasswordRequest, opts ...grpc.CallOption) (*user_service_gen.ChangePasswordResponse, error)
 }
 
 type gatewayServiceClient struct {
@@ -96,6 +98,16 @@ func (c *gatewayServiceClient) VerifyMagicLink(ctx context.Context, in *user_ser
 	return out, nil
 }
 
+func (c *gatewayServiceClient) ChangePassword(ctx context.Context, in *user_service_gen.ChangePasswordRequest, opts ...grpc.CallOption) (*user_service_gen.ChangePasswordResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(user_service_gen.ChangePasswordResponse)
+	err := c.cc.Invoke(ctx, GatewayService_ChangePassword_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GatewayServiceServer is the server API for GatewayService service.
 // All implementations must embed UnimplementedGatewayServiceServer
 // for forward compatibility.
@@ -105,6 +117,7 @@ type GatewayServiceServer interface {
 	VerifyAccount(context.Context, *user_service_gen.VerifyAccountRequest) (*user_service_gen.VerifyAccountResponse, error)
 	RequestMagicLink(context.Context, *user_service_gen.RequestMagicLinkRequest) (*user_service_gen.RequestMagicLinkResponse, error)
 	VerifyMagicLink(context.Context, *user_service_gen.VerifyMagicLinkRequest) (*user_service_gen.LoginUserResponse, error)
+	ChangePassword(context.Context, *user_service_gen.ChangePasswordRequest) (*user_service_gen.ChangePasswordResponse, error)
 	mustEmbedUnimplementedGatewayServiceServer()
 }
 
@@ -129,6 +142,9 @@ func (UnimplementedGatewayServiceServer) RequestMagicLink(context.Context, *user
 }
 func (UnimplementedGatewayServiceServer) VerifyMagicLink(context.Context, *user_service_gen.VerifyMagicLinkRequest) (*user_service_gen.LoginUserResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method VerifyMagicLink not implemented")
+}
+func (UnimplementedGatewayServiceServer) ChangePassword(context.Context, *user_service_gen.ChangePasswordRequest) (*user_service_gen.ChangePasswordResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ChangePassword not implemented")
 }
 func (UnimplementedGatewayServiceServer) mustEmbedUnimplementedGatewayServiceServer() {}
 func (UnimplementedGatewayServiceServer) testEmbeddedByValue()                        {}
@@ -241,6 +257,24 @@ func _GatewayService_VerifyMagicLink_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GatewayService_ChangePassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(user_service_gen.ChangePasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServiceServer).ChangePassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GatewayService_ChangePassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServiceServer).ChangePassword(ctx, req.(*user_service_gen.ChangePasswordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GatewayService_ServiceDesc is the grpc.ServiceDesc for GatewayService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -267,6 +301,10 @@ var GatewayService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "VerifyMagicLink",
 			Handler:    _GatewayService_VerifyMagicLink_Handler,
+		},
+		{
+			MethodName: "ChangePassword",
+			Handler:    _GatewayService_ChangePassword_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

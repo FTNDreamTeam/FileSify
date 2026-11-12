@@ -766,6 +766,110 @@ func (x *SendMagicLinkResponse) GetMessage() string {
 	return ""
 }
 
+type ChangePasswordRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Email           string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+	CurrentPassword string                 `protobuf:"bytes,2,opt,name=current_password,json=currentPassword,proto3" json:"current_password,omitempty"`
+	NewPassword     string                 `protobuf:"bytes,3,opt,name=new_password,json=newPassword,proto3" json:"new_password,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *ChangePasswordRequest) Reset() {
+	*x = ChangePasswordRequest{}
+	mi := &file_user_service_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChangePasswordRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChangePasswordRequest) ProtoMessage() {}
+
+func (x *ChangePasswordRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_user_service_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChangePasswordRequest.ProtoReflect.Descriptor instead.
+func (*ChangePasswordRequest) Descriptor() ([]byte, []int) {
+	return file_user_service_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *ChangePasswordRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *ChangePasswordRequest) GetCurrentPassword() string {
+	if x != nil {
+		return x.CurrentPassword
+	}
+	return ""
+}
+
+func (x *ChangePasswordRequest) GetNewPassword() string {
+	if x != nil {
+		return x.NewPassword
+	}
+	return ""
+}
+
+type ChangePasswordResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChangePasswordResponse) Reset() {
+	*x = ChangePasswordResponse{}
+	mi := &file_user_service_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChangePasswordResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChangePasswordResponse) ProtoMessage() {}
+
+func (x *ChangePasswordResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_user_service_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChangePasswordResponse.ProtoReflect.Descriptor instead.
+func (*ChangePasswordResponse) Descriptor() ([]byte, []int) {
+	return file_user_service_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *ChangePasswordResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 var File_user_service_proto protoreflect.FileDescriptor
 
 const file_user_service_proto_rawDesc = "" +
@@ -816,14 +920,21 @@ const file_user_service_proto_rawDesc = "" +
 	"\x0emagic_link_url\x18\x03 \x01(\tR\fmagicLinkUrl\x12&\n" +
 	"\x0fexpires_at_unix\x18\x04 \x01(\x03R\rexpiresAtUnix\"1\n" +
 	"\x15SendMagicLinkResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage2\xdc\x04\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"{\n" +
+	"\x15ChangePasswordRequest\x12\x14\n" +
+	"\x05email\x18\x01 \x01(\tR\x05email\x12)\n" +
+	"\x10current_password\x18\x02 \x01(\tR\x0fcurrentPassword\x12!\n" +
+	"\fnew_password\x18\x03 \x01(\tR\vnewPassword\"2\n" +
+	"\x16ChangePasswordResponse\x12\x18\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage2\xc1\x05\n" +
 	"\vUserService\x12]\n" +
 	"\fRegisterUser\x12$.user_service.v1.RegisterUserRequest\x1a%.user_service.v1.RegisterUserResponse\"\x00\x12T\n" +
 	"\tLoginUser\x12!.user_service.v1.LoginUserRequest\x1a\".user_service.v1.LoginUserResponse\"\x00\x12i\n" +
 	"\x10SendVerification\x12(.user_service.v1.SendVerificationRequest\x1a).user_service.v1.SendVerificationResponse\"\x00\x12`\n" +
 	"\rVerifyAccount\x12%.user_service.v1.VerifyAccountRequest\x1a&.user_service.v1.VerifyAccountResponse\"\x00\x12i\n" +
 	"\x10RequestMagicLink\x12(.user_service.v1.RequestMagicLinkRequest\x1a).user_service.v1.RequestMagicLinkResponse\"\x00\x12`\n" +
-	"\x0fVerifyMagicLink\x12'.user_service.v1.VerifyMagicLinkRequest\x1a\".user_service.v1.LoginUserResponse\"\x00B\x16Z\x14gen/user-service-genb\x06proto3"
+	"\x0fVerifyMagicLink\x12'.user_service.v1.VerifyMagicLinkRequest\x1a\".user_service.v1.LoginUserResponse\"\x00\x12c\n" +
+	"\x0eChangePassword\x12&.user_service.v1.ChangePasswordRequest\x1a'.user_service.v1.ChangePasswordResponse\"\x00B\x16Z\x14gen/user-service-genb\x06proto3"
 
 var (
 	file_user_service_proto_rawDescOnce sync.Once
@@ -837,7 +948,7 @@ func file_user_service_proto_rawDescGZIP() []byte {
 	return file_user_service_proto_rawDescData
 }
 
-var file_user_service_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_user_service_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_user_service_proto_goTypes = []any{
 	(*UserProfile)(nil),              // 0: user_service.v1.UserProfile
 	(*RegisterUserRequest)(nil),      // 1: user_service.v1.RegisterUserRequest
@@ -853,10 +964,12 @@ var file_user_service_proto_goTypes = []any{
 	(*VerifyMagicLinkRequest)(nil),   // 11: user_service.v1.VerifyMagicLinkRequest
 	(*SendMagicLinkRequest)(nil),     // 12: user_service.v1.SendMagicLinkRequest
 	(*SendMagicLinkResponse)(nil),    // 13: user_service.v1.SendMagicLinkResponse
-	(*date.Date)(nil),                // 14: google.type.Date
+	(*ChangePasswordRequest)(nil),    // 14: user_service.v1.ChangePasswordRequest
+	(*ChangePasswordResponse)(nil),   // 15: user_service.v1.ChangePasswordResponse
+	(*date.Date)(nil),                // 16: google.type.Date
 }
 var file_user_service_proto_depIdxs = []int32{
-	14, // 0: user_service.v1.UserProfile.password_valid:type_name -> google.type.Date
+	16, // 0: user_service.v1.UserProfile.password_valid:type_name -> google.type.Date
 	0,  // 1: user_service.v1.RegisterUserResponse.user:type_name -> user_service.v1.UserProfile
 	0,  // 2: user_service.v1.LoginUserResponse.user:type_name -> user_service.v1.UserProfile
 	1,  // 3: user_service.v1.UserService.RegisterUser:input_type -> user_service.v1.RegisterUserRequest
@@ -865,14 +978,16 @@ var file_user_service_proto_depIdxs = []int32{
 	7,  // 6: user_service.v1.UserService.VerifyAccount:input_type -> user_service.v1.VerifyAccountRequest
 	9,  // 7: user_service.v1.UserService.RequestMagicLink:input_type -> user_service.v1.RequestMagicLinkRequest
 	11, // 8: user_service.v1.UserService.VerifyMagicLink:input_type -> user_service.v1.VerifyMagicLinkRequest
-	2,  // 9: user_service.v1.UserService.RegisterUser:output_type -> user_service.v1.RegisterUserResponse
-	4,  // 10: user_service.v1.UserService.LoginUser:output_type -> user_service.v1.LoginUserResponse
-	6,  // 11: user_service.v1.UserService.SendVerification:output_type -> user_service.v1.SendVerificationResponse
-	8,  // 12: user_service.v1.UserService.VerifyAccount:output_type -> user_service.v1.VerifyAccountResponse
-	10, // 13: user_service.v1.UserService.RequestMagicLink:output_type -> user_service.v1.RequestMagicLinkResponse
-	4,  // 14: user_service.v1.UserService.VerifyMagicLink:output_type -> user_service.v1.LoginUserResponse
-	9,  // [9:15] is the sub-list for method output_type
-	3,  // [3:9] is the sub-list for method input_type
+	14, // 9: user_service.v1.UserService.ChangePassword:input_type -> user_service.v1.ChangePasswordRequest
+	2,  // 10: user_service.v1.UserService.RegisterUser:output_type -> user_service.v1.RegisterUserResponse
+	4,  // 11: user_service.v1.UserService.LoginUser:output_type -> user_service.v1.LoginUserResponse
+	6,  // 12: user_service.v1.UserService.SendVerification:output_type -> user_service.v1.SendVerificationResponse
+	8,  // 13: user_service.v1.UserService.VerifyAccount:output_type -> user_service.v1.VerifyAccountResponse
+	10, // 14: user_service.v1.UserService.RequestMagicLink:output_type -> user_service.v1.RequestMagicLinkResponse
+	4,  // 15: user_service.v1.UserService.VerifyMagicLink:output_type -> user_service.v1.LoginUserResponse
+	15, // 16: user_service.v1.UserService.ChangePassword:output_type -> user_service.v1.ChangePasswordResponse
+	10, // [10:17] is the sub-list for method output_type
+	3,  // [3:10] is the sub-list for method input_type
 	3,  // [3:3] is the sub-list for extension type_name
 	3,  // [3:3] is the sub-list for extension extendee
 	0,  // [0:3] is the sub-list for field type_name
@@ -889,7 +1004,7 @@ func file_user_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_user_service_proto_rawDesc), len(file_user_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

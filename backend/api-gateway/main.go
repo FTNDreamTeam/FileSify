@@ -41,6 +41,10 @@ func (s *server) VerifyMagicLink(ctx context.Context, request *userpb.VerifyMagi
 	return s.userClient.VerifyMagicLink(ctx, request)
 }
 
+func (s *server) ChangePassword(ctx context.Context, request *userpb.ChangePasswordRequest) (*userpb.ChangePasswordResponse, error) {
+	return s.userClient.ChangePassword(ctx, request)
+}
+
 func main() {
 	// Internal gRPC listener (only reachable from inside the Docker network)
 	lis, err := net.Listen("tcp", "api-gateway:"+os.Getenv("GATEWAY_PORT"))

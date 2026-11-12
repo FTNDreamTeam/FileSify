@@ -145,12 +145,95 @@
         </div>
 
         <div class="dialog-footer flex-wrap gap-2">
-            <button type="button" class="btn btn-outline-brand rounded-pill px-3" data-dialog-close>Cancel</button>
             <button type="button" class="btn btn-brand rounded-pill px-3" id="forgottenPasswordBtn">
                 <i class="bi bi-question-circle me-1"></i> Forgotten password
             </button>
             <button type="button" class="btn btn-brand rounded-pill px-3" id="expiredPasswordBtn">
                 <i class="bi bi-clock-history me-1"></i> Expired password
+            </button>
+            <button type="button" class="btn btn-outline-brand rounded-pill px-3" data-dialog-close>Cancel</button>
+        </div>
+    </dialog>
+
+    <!-- Second dialog: change password (opened from "Expired password") -->
+    <dialog class="dialog" id="changePasswordDialog" aria-labelledby="changePwTitle" aria-describedby="changePwDesc" style="max-width:480px;">
+        <div class="dialog-header">
+            <h2 class="dialog-title" id="changePwTitle">Change password</h2>
+            <button type="button" class="dialog-close" data-dialog-close aria-label="Close">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="dialog-body" id="changePwDesc" style="text-align:left;">
+            <p class="mb-3" style="font-size:.9rem;">
+                Your current password has expired. Confirm your identity and choose a new password to regain access.
+            </p>
+
+            <div id="changePwAlert" class="alert d-none mb-3" role="alert" aria-live="polite"></div>
+
+            <div class="mb-3">
+                <label for="cpEmail" class="form-label">Email address</label>
+                <input type="email" class="form-control" id="cpEmail" name="email"
+                       autocomplete="username" placeholder="you@example.com" maxlength="254" required>
+                <div class="invalid-feedback" id="cpEmailFeedback">Please enter a valid email address.</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="cpCurrentPassword" class="form-label">Current password</label>
+                <div class="pw-wrap">
+                    <input type="password" class="form-control" id="cpCurrentPassword" name="currentPassword"
+                           autocomplete="current-password" placeholder="Your current password" required>
+                    <button type="button" class="pw-toggle" id="cpPwToggle1"
+                            aria-label="Show current password" aria-pressed="false">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+                <div class="invalid-feedback">Please enter your current password.</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="cpNewPassword" class="form-label">New password</label>
+                <div class="pw-wrap">
+                    <input type="password" class="form-control" id="cpNewPassword" name="newPassword"
+                           autocomplete="new-password" placeholder="Create a strong new password" required
+                           aria-describedby="cpRuleList">
+                    <button type="button" class="pw-toggle" id="cpPwToggle2"
+                            aria-label="Show new password" aria-pressed="false">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+                <div class="invalid-feedback">Your new password does not meet all requirements below.</div>
+                <div class="strength-track" aria-hidden="true">
+                    <div class="strength-fill" id="cpStrengthFill"></div>
+                </div>
+                <div class="strength-label" id="cpStrengthLabel">Password strength</div>
+                <ul class="rule-list" id="cpRuleList">
+                    <li data-rule="length"><i class="bi bi-circle"></i> At least 12 characters</li>
+                    <li data-rule="upper"><i class="bi bi-circle"></i> At least one uppercase letter (A–Z)</li>
+                    <li data-rule="lower"><i class="bi bi-circle"></i> At least one lowercase letter (a–z)</li>
+                    <li data-rule="digit"><i class="bi bi-circle"></i> At least one number (0–9)</li>
+                    <li data-rule="special"><i class="bi bi-circle"></i> At least one special character (! ? @ # % &amp; …)</li>
+                </ul>
+            </div>
+
+            <div class="mb-0">
+                <label for="cpConfirmPassword" class="form-label">Confirm new password</label>
+                <div class="pw-wrap">
+                    <input type="password" class="form-control" id="cpConfirmPassword" name="confirmPassword"
+                           autocomplete="new-password" placeholder="Repeat your new password" required>
+                    <button type="button" class="pw-toggle" id="cpPwToggle3"
+                            aria-label="Show confirmation" aria-pressed="false">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+                <div class="invalid-feedback">The two passwords do not match.</div>
+            </div>
+        </div>
+
+        <div class="dialog-footer">
+            <button type="button" class="btn btn-outline-brand rounded-pill px-3" data-dialog-close>Cancel</button>
+            <button type="button" class="btn btn-brand rounded-pill px-3" id="cpSubmitBtn">
+                <i class="bi bi-check2-circle me-1"></i> Change password
             </button>
         </div>
     </dialog>

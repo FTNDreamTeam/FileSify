@@ -786,6 +786,25 @@
                 });
                 const data = await res.json().catch(() => ({}));
 
+                email.value   = '';
+                current.value = '';
+                newPw.value   = '';
+                confirm.value = '';
+
+                // Reset validation state
+                [email, current, newPw, confirm].forEach(el => {
+                    el.classList.remove('is-valid', 'is-invalid');
+                });
+
+                // Reset strength meter
+                strengthFill.style.width = '0%';
+                strengthFill.style.background = '#e2e8f0';
+                strengthLabel.textContent = 'Password strength';
+                ruleList.querySelectorAll('li').forEach(li => {
+                    li.classList.remove('ok');
+                    li.querySelector('i').className = 'bi bi-circle';
+                });
+
                 showAlert(
                     'If an account exists with those credentials and the current password has expired, the new password has been set. Try signing in with it.',
                     'info'

@@ -770,18 +770,12 @@
                 return;
             }
 
-            if (newPw.value === current.value) {
-                showAlert('Your new password must be different from your current password.', 'warning');
-                newPw.focus();
-                return;
-            }
-
             const originalText = submitBtn.innerHTML;
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Changing…';
 
             try {
-                const res = await fetch('/api/auth/password/change', {
+                const res = await fetch('/api/auth/password-reset', {
                     method:  'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body:    JSON.stringify({
@@ -792,22 +786,11 @@
                 });
                 const data = await res.json().catch(() => ({}));
 
-                if (!res.ok) {
-                    if (res.status === 401 || data.code === 16) {
-                        showAlert('Your email or current password is incorrect.', 'danger');
-                    } else if (res.status === 400 || data.code === 3) {
-                        showAlert(data.message || 'Please check your input and try again.', 'danger');
-                    } else {
-                        showAlert(data.message || `Password change failed (HTTP ${res.status}).`, 'danger');
-                    }
-                    return;
-                }
+                showAlert(
+                    'If an account exists with those credentials and the current password has expired, the new password has been set. Try signing in with it.',
+                    'info'
+                );
 
-                showAlert(data.message || 'Password changed successfully. Redirecting…', 'success');
-                setTimeout(() => {
-                    dialog.close('success');
-                    window.location.href = 'login.html';
-                }, 1500);
 
             } catch {
                 showAlert('Network error. Please check your connection and try again.', 'danger');

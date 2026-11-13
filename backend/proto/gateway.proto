@@ -46,6 +46,11 @@ service GatewayService {
       body: "*"
     };
   }
+
+  rpc Verify2FA(user_service.v1.Verify2FARequest) returns (user_service.v1.Verify2FAResponse) {
+    option (google.api.http) = {
+      post: "/api/twofactor/verify"
+      body: "*"
+    };
+  }
 }
-
-

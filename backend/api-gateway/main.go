@@ -45,6 +45,10 @@ func (s *server) ChangePassword(ctx context.Context, request *userpb.ChangePassw
 	return s.userClient.ChangePassword(ctx, request)
 }
 
+func (s *server) Verify2FA(ctx context.Context, request *userpb.Verify2FARequest) (*userpb.Verify2FAResponse, error) {
+	return s.userClient.Verify2FA(ctx, request)
+}
+
 func main() {
 	// Internal gRPC listener (only reachable from inside the Docker network)
 	lis, err := net.Listen("tcp", "api-gateway:"+os.Getenv("GATEWAY_PORT"))

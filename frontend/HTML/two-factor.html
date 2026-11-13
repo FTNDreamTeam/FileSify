@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Verify code — FileSify</title>
+    <meta name="description" content="Enter your FileSify verification code.">
+    <meta name="referrer" content="no-referrer">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../CSS/styles.css">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg fixed-top navbar-glass py-2">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="index.html">
+            <span class="brand-mark"><i class="bi bi-cloud-fill"></i></span>
+            <span>FileSify</span>
+        </a>
+    </div>
+</nav>
+
+<main class="auth-wrap">
+    <div class="container">
+        <div class="row justify-content-center align-items-center">
+            <div class="col-lg-6 col-xl-5">
+                <div class="form-card">
+                    <span class="pill-badge mb-3"><i class="bi bi-shield-lock"></i> Second factor</span>
+                    <h1 class="h3 mb-2">Enter verification code</h1>
+                    <p class="text-soft mb-4" style="font-size:.94rem;">
+                        We sent a 6-digit code to
+                        <strong id="tfTargetEmail" style="color:var(--ink);"></strong>.
+                        It expires in 5 minutes.
+                    </p>
+
+                    <form id="twoFactorForm" novalidate>
+                        <div id="tfAlert" class="alert d-none mb-3" role="alert" aria-live="polite"></div>
+
+                        <div class="mb-3">
+                            <label for="tfCode" class="form-label">Verification code</label>
+                            <input type="text" class="form-control" id="tfCode" name="code"
+                                   inputmode="numeric" autocomplete="one-time-code"
+                                   placeholder="000000" maxlength="6" pattern="\d{6}" required
+                                   style="letter-spacing:.5rem; text-align:center; font-size:1.4rem; font-weight:600;">
+                            <div class="invalid-feedback">Please enter the 6-digit code from your email.</div>
+                        </div>
+
+                        <button type="submit" class="btn btn-brand btn-lg rounded-pill w-100">Verify code</button>
+
+                        <p class="text-soft text-center mt-3 mb-0" style="font-size:.85rem;">
+                            <a href="#" id="tfBackLink" class="text-decoration-none fw-semibold"
+                               style="color:var(--brand);">Use a different account</a>
+                        </p>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-6 col-xl-5">
+                <div class="info-card mb-4">
+                    <h2 class="h6 mb-1">Why a second code?</h2>
+                    <p class="text-soft mb-3" style="font-size:.85rem;">
+                        Password alone is the first factor. The code from your email is the second factor — an attacker who steals your password still can't sign in without it.
+                    </p>
+                    <ul class="rule-list" style="margin-top:0">
+                        <li class="ok"><i class="bi bi-check-circle-fill"></i> Codes are 6 digits, expire in 5 minutes</li>
+                        <li class="ok"><i class="bi bi-check-circle-fill"></i> Each code is single-use</li>
+                        <li class="ok"><i class="bi bi-check-circle-fill"></i> 5 wrong attempts invalidate the code</li>
+                    </ul>
+                </div>
+
+                <div class="mini-note">
+                    <i class="bi bi-envelope-check-fill"></i>
+                    <span>Didn't get the email? Check your spam folder. If the code has expired, sign in again to receive a new one.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+            <a href="index.html" class="d-inline-flex align-items-center gap-2 fw-bold text-white">
+                <span class="brand-mark"><i class="bi bi-cloud-fill"></i></span>
+                <span>FileSify</span>
+            </a>
+            <span class="small">&copy; 2025 FileSify. Academic project.</span>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../JS/app.js"></script>
+</body>
+</html>

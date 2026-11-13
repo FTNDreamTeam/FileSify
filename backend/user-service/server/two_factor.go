@@ -144,6 +144,7 @@ func (s *TwoFactorService) CompleteChallenge(ctx context.Context, pendingToken s
 	if err := json.Unmarshal([]byte(rawSession), &session); err != nil {
 		return nil, status.Errorf(codes.Internal, "[user-service/two-factor] Error unmarshaling session:%s", err)
 	}
+	coolDownKey := fmt.Sprintf("otp:cooldown:%s", session.UserID)
 
 	valid, err := s.VerifyOTP(ctx, session.UserID, submittedCode)
 	if err != nil {
@@ -154,6 +155,7 @@ func (s *TwoFactorService) CompleteChallenge(ctx context.Context, pendingToken s
 	}
 
 	s.rdb.Del(ctx, pendingKey)
+	s.rdb.Del(ctx, coolDownKey)
 
 	return &session, nil
 }

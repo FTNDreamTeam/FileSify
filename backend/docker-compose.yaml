@@ -116,6 +116,8 @@ services:
       timeout: 3s
       retries: 5
       start_period: 10s
+    networks:
+      - user-network
 
 networks:
   user-network: #isolated user network

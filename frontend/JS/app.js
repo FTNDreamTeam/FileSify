@@ -248,15 +248,55 @@
                 const data = await res.json().catch(() => ({}));
 
                 if (!res.ok) {
+                    const raw = (data.message || '').toLowerCase();
                     if (res.status === 401 || data.code === 16) {
                         showLoginAlert('Invalid email or password.', 'danger');
                     } else if (data.code === 9) {
                         showLoginAlert('Your password expired or account is not verified after registration.', 'warning');
                     } else if (res.status === 400 || data.code === 3) {
                         showLoginAlert(data.message || 'Please enter your email and password.', 'danger');
-                    } else {
+                    }else if (raw.includes('60 seconds') || raw.includes('before requesting')) {
+                        showLoginAlert(
+                            'A verification code was just sent to your email. Because you did not use it, please wait 60 seconds and try signing in again.', 'warning');
+                    }  else {
                         showLoginAlert(data.message || `Sign-in failed (HTTP ${res.status}).`, 'danger');
                     }
+                    return;
+                }
+
+                if (!res.ok) {
+                    const raw = (data.message || '').toLowerCase();
+
+                    if (res.status === 401 || data.code === 16) {
+                        showLoginAlert('Invalid email or password.', 'danger');
+                    } else if (data.code === 9) {
+                        if (raw.includes('not verified')) {
+                            showLoginAlert('Your email is not verified yet. Check your inbox for the verification link.', 'warning');
+                        } else if (raw.includes('expired')) {
+                            showLoginAlert('Your password has expired. Click "Problem with password?" below to reset it.', 'warning');
+                        } else {
+                            showLoginAlert('Sign-in blocked. Please check your account status.', 'warning');
+                        }
+                    } else if (raw.includes('60 seconds') || raw.includes('before requesting')) {
+                        // Cooldown: OTP was just sent and not used
+                        showLoginAlert(
+                            'A verification code was just sent to your email. Because you did not use it, please wait 60 seconds and try signing in again.',
+                            'warning'
+                        );
+                    } else if (res.status === 400 || data.code === 3) {
+                        showLoginAlert(data.message || 'Please enter your email and password.', 'danger');
+                    } else if (data.code === 13 || res.status >= 500) {
+                        showLoginAlert('Server error. Please try again in a moment.', 'danger');
+                    } else {
+                        showLoginAlert('Sign-in failed. Please try again.', 'danger');
+                    }
+                    return;
+                }
+
+                if (data.twoFactor === true) {
+                    sessionStorage.setItem('pending_token', data.token);
+                    sessionStorage.setItem('pending_email', email.value.trim());
+                    window.location.href = '/HTML/two-factor.html';
                     return;
                 }
 
@@ -816,6 +856,166 @@
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalText;
+            }
+        });
+    })();
+
+    // ============================================================
+    // TWO-FACTOR VERIFICATION PAGE (two-factor.html only)
+    // ============================================================
+    (function initTwoFactorPage() {
+        const form = document.getElementById('twoFactorForm');
+        if (!form) return;
+
+        const codeInput   = document.getElementById('tfCode');
+        const targetEmail = document.getElementById('tfTargetEmail');
+        const alertEl     = document.getElementById('tfAlert');
+        const backLink    = document.getElementById('tfBackLink');
+
+        const pendingToken = sessionStorage.getItem('pending_token');
+        const pendingEmail = sessionStorage.getItem('pending_email');
+
+        // No pending session → user shouldn't be here
+        if (!pendingToken) {
+            window.location.replace('login.html');
+            return;
+        }
+
+        if (pendingEmail && targetEmail) {
+            targetEmail.textContent = pendingEmail;
+        }
+
+        function showAlert(message, type) {
+            alertEl.textContent = message;
+            alertEl.className = `alert alert-${type} mb-3`;
+            alertEl.classList.remove('d-none');
+            alertEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        function hideAlert() {
+            alertEl.classList.add('d-none');
+            alertEl.textContent = '';
+        }
+        function validateCode() {
+            const v = codeInput.value.trim();
+            return mark(codeInput, /^\d{6}$/.test(v));
+        }
+
+        codeInput.addEventListener('input', () => {
+            codeInput.value = codeInput.value.replace(/\D/g, '').slice(0, 6);
+            if (codeInput.classList.contains('is-invalid')) validateCode();
+        });
+        codeInput.addEventListener('blur', validateCode);
+
+        backLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            sessionStorage.removeItem('pending_token');
+            sessionStorage.removeItem('pending_email');
+            window.location.href = 'login.html';
+        });
+
+        setTimeout(() => codeInput.focus(), 100);
+
+        function decodeJwtPayload(jwt) {
+            try {
+                const parts = jwt.split('.');
+                if (parts.length !== 3) return {};
+                let b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+                while (b64.length % 4) b64 += '=';
+                return JSON.parse(atob(b64));
+            } catch { return {}; }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideAlert();
+            if (!validateCode()) { codeInput.focus(); return; }
+
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Verifying…';
+
+            try {
+                const res = await fetch('/api/twofactor/verify', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({
+                        pendingToken: pendingToken,
+                        code:         codeInput.value.trim()
+                    })
+                });
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    const raw  = (data.message || '').toLowerCase();
+                    const isSessionExpired  = res.status === 404 || data.code === 5 ||
+                        raw.includes('session expired') ||
+                        raw.includes('login session');
+                    const isTooManyAttempts = raw.includes('too many');
+                    const isCodeExpired     = raw.includes('code expired') ||
+                        raw.includes('not found');
+                    const isWrongCode       = raw.includes('do not match') ||
+                        raw.includes('invalid verification code');
+
+                    if (isSessionExpired) {
+                        sessionStorage.removeItem('pending_token');
+                        sessionStorage.removeItem('pending_email');
+                        showAlert('Your login session expired. Redirecting to sign in…', 'warning');
+                        setTimeout(() => { window.location.href = 'login.html'; }, 2000);
+
+                    } else if (isTooManyAttempts) {
+                        sessionStorage.removeItem('pending_token');
+                        sessionStorage.removeItem('pending_email');
+                        showAlert('Too many incorrect attempts. Redirecting to sign in for a new code…', 'warning');
+                        setTimeout(() => { window.location.href = 'login.html'; }, 2500);
+
+                    } else if (isCodeExpired) {
+                        sessionStorage.removeItem('pending_token');
+                        sessionStorage.removeItem('pending_email');
+                        showAlert('Your code has expired. Please sign in again for a new code.', 'warning');
+                        setTimeout(() => { window.location.href = 'login.html'; }, 2000);
+
+                    } else if (isWrongCode) {
+                        showAlert('Incorrect code. Check the 6 digits and try again.', 'danger');
+                        codeInput.select();
+
+                    } else if (res.status >= 500 || data.code === 13) {
+                        showAlert('Server error. Please try again in a moment.', 'danger');
+
+                    } else {
+                        showAlert('Verification failed. Please try again.', 'danger');
+                    }
+                    return;
+                }
+
+                if (!data.token) {
+                    showAlert('Unexpected server response. Please try again.', 'danger');
+                    return;
+                }
+
+                const claims = decodeJwtPayload(data.token);
+                const userObj = {
+                    id:        claims.sub   || '',
+                    email:     claims.email || pendingEmail || '',
+                    firstName: '',
+                    lastName:  '',
+                    passwordValid: null
+                };
+
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(userObj));
+
+                sessionStorage.removeItem('pending_token');
+                sessionStorage.removeItem('pending_email');
+
+                showAlert('Signed in. Redirecting…', 'success');
+                setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
+
+            } catch {
+                showAlert('Network error. Please check your connection and try again.', 'danger');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
             }
         });
     })();

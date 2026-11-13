@@ -66,19 +66,10 @@ func main() {
 	}
 	mailClient := mailpb.NewMailServiceClient(mailConn)
 
-	redisOTP := redis.NewClient(&redis.Options{
-		Addr:     "redis-otp:" + os.Getenv("REDIS_PORT"),
-		Password: "",
-		DB:       0, // default db
-	})
-	defer redisOTP.Close()
-
-	if err := redisOTP.Ping(ctx).Err(); err != nil {
-		log.Printf("[user-service] Could not connect to redis: %v", err)
-	}
+	twoFactorService := server.NewTFAService(redis.NewClient(&redis.Options{Addr: "redis-otp:" + os.Getenv("REDIS_PORT"), Username: "", Password: ""}), []byte(os.Getenv("HMAC_SERCRET")))
 
 	grpcServer := grpc.NewServer()
-	userServer := server.NewUserServer(userCollection, verificationCollection, magicLinkCollection, mailClient, redisOTP)
+	userServer := server.NewUserServer(userCollection, verificationCollection, magicLinkCollection, mailClient, twoFactorService)
 	userpb.RegisterUserServiceServer(grpcServer, userServer)
 	reflection.Register(grpcServer)
 

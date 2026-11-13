@@ -27,6 +27,7 @@ const (
 	UserService_VerifyMagicLink_FullMethodName  = "/user_service.v1.UserService/VerifyMagicLink"
 	UserService_ChangePassword_FullMethodName   = "/user_service.v1.UserService/ChangePassword"
 	UserService_SendTwoFactor_FullMethodName    = "/user_service.v1.UserService/SendTwoFactor"
+	UserService_Verify2FA_FullMethodName        = "/user_service.v1.UserService/Verify2FA"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -41,6 +42,7 @@ type UserServiceClient interface {
 	VerifyMagicLink(ctx context.Context, in *VerifyMagicLinkRequest, opts ...grpc.CallOption) (*LoginUserResponse, error)
 	ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error)
 	SendTwoFactor(ctx context.Context, in *SendTwoFactorRequest, opts ...grpc.CallOption) (*SendTwoFactorResponse, error)
+	Verify2FA(ctx context.Context, in *Verify2FARequest, opts ...grpc.CallOption) (*Verify2FAResponse, error)
 }
 
 type userServiceClient struct {
@@ -131,6 +133,16 @@ func (c *userServiceClient) SendTwoFactor(ctx context.Context, in *SendTwoFactor
 	return out, nil
 }
 
+func (c *userServiceClient) Verify2FA(ctx context.Context, in *Verify2FARequest, opts ...grpc.CallOption) (*Verify2FAResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Verify2FAResponse)
+	err := c.cc.Invoke(ctx, UserService_Verify2FA_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -143,6 +155,7 @@ type UserServiceServer interface {
 	VerifyMagicLink(context.Context, *VerifyMagicLinkRequest) (*LoginUserResponse, error)
 	ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error)
 	SendTwoFactor(context.Context, *SendTwoFactorRequest) (*SendTwoFactorResponse, error)
+	Verify2FA(context.Context, *Verify2FARequest) (*Verify2FAResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -176,6 +189,9 @@ func (UnimplementedUserServiceServer) ChangePassword(context.Context, *ChangePas
 }
 func (UnimplementedUserServiceServer) SendTwoFactor(context.Context, *SendTwoFactorRequest) (*SendTwoFactorResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SendTwoFactor not implemented")
+}
+func (UnimplementedUserServiceServer) Verify2FA(context.Context, *Verify2FARequest) (*Verify2FAResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Verify2FA not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -342,6 +358,24 @@ func _UserService_SendTwoFactor_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_Verify2FA_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Verify2FARequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).Verify2FA(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_Verify2FA_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).Verify2FA(ctx, req.(*Verify2FARequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -380,6 +414,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SendTwoFactor",
 			Handler:    _UserService_SendTwoFactor_Handler,
+		},
+		{
+			MethodName: "Verify2FA",
+			Handler:    _UserService_Verify2FA_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

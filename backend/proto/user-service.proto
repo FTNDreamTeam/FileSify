@@ -15,6 +15,7 @@ service UserService {
   rpc VerifyMagicLink(VerifyMagicLinkRequest) returns (LoginUserResponse) {}
   rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse) {}
   rpc SendTwoFactor(SendTwoFactorRequest) returns (SendTwoFactorResponse) {}
+  rpc Verify2FA(Verify2FARequest) returns (Verify2FAResponse) {}
 }
 
 message UserProfile {
@@ -102,9 +103,19 @@ message ChangePasswordResponse {
 
 message SendTwoFactorRequest {
   string email = 1;
-  string code = 3;
+  string code = 2;
+  string name = 3;
 }
 
 message SendTwoFactorResponse {
   string message = 1;
+}
+
+message Verify2FARequest {
+  string pending_token = 1;
+  string code = 2;
+}
+
+message Verify2FAResponse {
+  string token = 1;
 }

@@ -881,7 +881,8 @@ func (x *ChangePasswordResponse) GetMessage() string {
 type SendTwoFactorRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
-	Code          string                 `protobuf:"bytes,3,opt,name=code,proto3" json:"code,omitempty"`
+	Code          string                 `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -930,6 +931,13 @@ func (x *SendTwoFactorRequest) GetCode() string {
 	return ""
 }
 
+func (x *SendTwoFactorRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
 type SendTwoFactorResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
@@ -970,6 +978,102 @@ func (*SendTwoFactorResponse) Descriptor() ([]byte, []int) {
 func (x *SendTwoFactorResponse) GetMessage() string {
 	if x != nil {
 		return x.Message
+	}
+	return ""
+}
+
+type Verify2FARequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PendingToken  string                 `protobuf:"bytes,1,opt,name=pending_token,json=pendingToken,proto3" json:"pending_token,omitempty"`
+	Code          string                 `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Verify2FARequest) Reset() {
+	*x = Verify2FARequest{}
+	mi := &file_user_service_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Verify2FARequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Verify2FARequest) ProtoMessage() {}
+
+func (x *Verify2FARequest) ProtoReflect() protoreflect.Message {
+	mi := &file_user_service_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Verify2FARequest.ProtoReflect.Descriptor instead.
+func (*Verify2FARequest) Descriptor() ([]byte, []int) {
+	return file_user_service_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *Verify2FARequest) GetPendingToken() string {
+	if x != nil {
+		return x.PendingToken
+	}
+	return ""
+}
+
+func (x *Verify2FARequest) GetCode() string {
+	if x != nil {
+		return x.Code
+	}
+	return ""
+}
+
+type Verify2FAResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Verify2FAResponse) Reset() {
+	*x = Verify2FAResponse{}
+	mi := &file_user_service_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Verify2FAResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Verify2FAResponse) ProtoMessage() {}
+
+func (x *Verify2FAResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_user_service_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Verify2FAResponse.ProtoReflect.Descriptor instead.
+func (*Verify2FAResponse) Descriptor() ([]byte, []int) {
+	return file_user_service_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *Verify2FAResponse) GetToken() string {
+	if x != nil {
+		return x.Token
 	}
 	return ""
 }
@@ -1032,12 +1136,18 @@ const file_user_service_proto_rawDesc = "" +
 	"\x10current_password\x18\x02 \x01(\tR\x0fcurrentPassword\x12!\n" +
 	"\fnew_password\x18\x03 \x01(\tR\vnewPassword\"2\n" +
 	"\x16ChangePasswordResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"@\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"T\n" +
 	"\x14SendTwoFactorRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x12\n" +
-	"\x04code\x18\x03 \x01(\tR\x04code\"1\n" +
+	"\x04code\x18\x02 \x01(\tR\x04code\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\"1\n" +
 	"\x15SendTwoFactorResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage2\xa3\x06\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"K\n" +
+	"\x10Verify2FARequest\x12#\n" +
+	"\rpending_token\x18\x01 \x01(\tR\fpendingToken\x12\x12\n" +
+	"\x04code\x18\x02 \x01(\tR\x04code\")\n" +
+	"\x11Verify2FAResponse\x12\x14\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token2\xf9\x06\n" +
 	"\vUserService\x12]\n" +
 	"\fRegisterUser\x12$.user_service.v1.RegisterUserRequest\x1a%.user_service.v1.RegisterUserResponse\"\x00\x12T\n" +
 	"\tLoginUser\x12!.user_service.v1.LoginUserRequest\x1a\".user_service.v1.LoginUserResponse\"\x00\x12i\n" +
@@ -1046,7 +1156,8 @@ const file_user_service_proto_rawDesc = "" +
 	"\x10RequestMagicLink\x12(.user_service.v1.RequestMagicLinkRequest\x1a).user_service.v1.RequestMagicLinkResponse\"\x00\x12`\n" +
 	"\x0fVerifyMagicLink\x12'.user_service.v1.VerifyMagicLinkRequest\x1a\".user_service.v1.LoginUserResponse\"\x00\x12c\n" +
 	"\x0eChangePassword\x12&.user_service.v1.ChangePasswordRequest\x1a'.user_service.v1.ChangePasswordResponse\"\x00\x12`\n" +
-	"\rSendTwoFactor\x12%.user_service.v1.SendTwoFactorRequest\x1a&.user_service.v1.SendTwoFactorResponse\"\x00B\x16Z\x14gen/user-service-genb\x06proto3"
+	"\rSendTwoFactor\x12%.user_service.v1.SendTwoFactorRequest\x1a&.user_service.v1.SendTwoFactorResponse\"\x00\x12T\n" +
+	"\tVerify2FA\x12!.user_service.v1.Verify2FARequest\x1a\".user_service.v1.Verify2FAResponse\"\x00B\x16Z\x14gen/user-service-genb\x06proto3"
 
 var (
 	file_user_service_proto_rawDescOnce sync.Once
@@ -1060,7 +1171,7 @@ func file_user_service_proto_rawDescGZIP() []byte {
 	return file_user_service_proto_rawDescData
 }
 
-var file_user_service_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_user_service_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_user_service_proto_goTypes = []any{
 	(*UserProfile)(nil),              // 0: user_service.v1.UserProfile
 	(*RegisterUserRequest)(nil),      // 1: user_service.v1.RegisterUserRequest
@@ -1080,10 +1191,12 @@ var file_user_service_proto_goTypes = []any{
 	(*ChangePasswordResponse)(nil),   // 15: user_service.v1.ChangePasswordResponse
 	(*SendTwoFactorRequest)(nil),     // 16: user_service.v1.SendTwoFactorRequest
 	(*SendTwoFactorResponse)(nil),    // 17: user_service.v1.SendTwoFactorResponse
-	(*date.Date)(nil),                // 18: google.type.Date
+	(*Verify2FARequest)(nil),         // 18: user_service.v1.Verify2FARequest
+	(*Verify2FAResponse)(nil),        // 19: user_service.v1.Verify2FAResponse
+	(*date.Date)(nil),                // 20: google.type.Date
 }
 var file_user_service_proto_depIdxs = []int32{
-	18, // 0: user_service.v1.UserProfile.password_valid:type_name -> google.type.Date
+	20, // 0: user_service.v1.UserProfile.password_valid:type_name -> google.type.Date
 	0,  // 1: user_service.v1.RegisterUserResponse.user:type_name -> user_service.v1.UserProfile
 	0,  // 2: user_service.v1.LoginUserResponse.user:type_name -> user_service.v1.UserProfile
 	1,  // 3: user_service.v1.UserService.RegisterUser:input_type -> user_service.v1.RegisterUserRequest
@@ -1094,16 +1207,18 @@ var file_user_service_proto_depIdxs = []int32{
 	11, // 8: user_service.v1.UserService.VerifyMagicLink:input_type -> user_service.v1.VerifyMagicLinkRequest
 	14, // 9: user_service.v1.UserService.ChangePassword:input_type -> user_service.v1.ChangePasswordRequest
 	16, // 10: user_service.v1.UserService.SendTwoFactor:input_type -> user_service.v1.SendTwoFactorRequest
-	2,  // 11: user_service.v1.UserService.RegisterUser:output_type -> user_service.v1.RegisterUserResponse
-	4,  // 12: user_service.v1.UserService.LoginUser:output_type -> user_service.v1.LoginUserResponse
-	6,  // 13: user_service.v1.UserService.SendVerification:output_type -> user_service.v1.SendVerificationResponse
-	8,  // 14: user_service.v1.UserService.VerifyAccount:output_type -> user_service.v1.VerifyAccountResponse
-	10, // 15: user_service.v1.UserService.RequestMagicLink:output_type -> user_service.v1.RequestMagicLinkResponse
-	4,  // 16: user_service.v1.UserService.VerifyMagicLink:output_type -> user_service.v1.LoginUserResponse
-	15, // 17: user_service.v1.UserService.ChangePassword:output_type -> user_service.v1.ChangePasswordResponse
-	17, // 18: user_service.v1.UserService.SendTwoFactor:output_type -> user_service.v1.SendTwoFactorResponse
-	11, // [11:19] is the sub-list for method output_type
-	3,  // [3:11] is the sub-list for method input_type
+	18, // 11: user_service.v1.UserService.Verify2FA:input_type -> user_service.v1.Verify2FARequest
+	2,  // 12: user_service.v1.UserService.RegisterUser:output_type -> user_service.v1.RegisterUserResponse
+	4,  // 13: user_service.v1.UserService.LoginUser:output_type -> user_service.v1.LoginUserResponse
+	6,  // 14: user_service.v1.UserService.SendVerification:output_type -> user_service.v1.SendVerificationResponse
+	8,  // 15: user_service.v1.UserService.VerifyAccount:output_type -> user_service.v1.VerifyAccountResponse
+	10, // 16: user_service.v1.UserService.RequestMagicLink:output_type -> user_service.v1.RequestMagicLinkResponse
+	4,  // 17: user_service.v1.UserService.VerifyMagicLink:output_type -> user_service.v1.LoginUserResponse
+	15, // 18: user_service.v1.UserService.ChangePassword:output_type -> user_service.v1.ChangePasswordResponse
+	17, // 19: user_service.v1.UserService.SendTwoFactor:output_type -> user_service.v1.SendTwoFactorResponse
+	19, // 20: user_service.v1.UserService.Verify2FA:output_type -> user_service.v1.Verify2FAResponse
+	12, // [12:21] is the sub-list for method output_type
+	3,  // [3:12] is the sub-list for method input_type
 	3,  // [3:3] is the sub-list for extension type_name
 	3,  // [3:3] is the sub-list for extension extendee
 	0,  // [0:3] is the sub-list for field type_name
@@ -1120,7 +1235,7 @@ func file_user_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_user_service_proto_rawDesc), len(file_user_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   18,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

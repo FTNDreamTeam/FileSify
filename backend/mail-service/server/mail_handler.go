@@ -46,6 +46,35 @@ const verificationEmailTemplate = `
 </html>
 `
 
+const twoFAEmailTemplate = `
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<style>
+		body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+		.container { max-width: 600px; margin: 20px auto; background: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+		h2 { color: #333333; }
+		p { color: #555555; line-height: 1.6; }
+		.button { display: inline-block; background-color: #4CAF50; color: white !important; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 15px; }
+		.footer { margin-top: 30px; font-size: 12px; color: #999999; border-top: 1px solid #eeeeee; padding-top: 10px; }
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h2>Welcome back to FileSify, {{.FirstName}}!</h2>
+		<p>Please enter the code below to complete login:</p>
+		<p>
+			<b>{{.Code}}</b>
+		</p>
+		<div class="footer">
+			This code is unique to your login request.
+		</div>
+	</div>
+</body>
+</html>
+`
+
 const magicLinkEmailTemplate = `
 <!DOCTYPE html>
 <html>
@@ -89,7 +118,7 @@ func NewMailServer(userClient userpb.UserServiceClient) *MailServer {
 type EmailPayload struct {
 	To      []string
 	Subject string
-	Body    string
+	Body    bytes.Buffer
 }
 
 type VerificationTemplateData struct {
@@ -100,6 +129,25 @@ type VerificationTemplateData struct {
 type MagicLinkTemplateData struct {
 	Username     string
 	MagicLinkUrl string
+}
+
+type TwoFactorTemplateData struct {
+	FirstName string
+	Code      string
+}
+
+func SendMail(ctx context.Context, payload EmailPayload) error {
+	smtpAddress := os.Getenv("SMTP_ADDRESS")
+	if smtpAddress == "" {
+		smtpAddress = "mailhog:1025"
+	}
+
+	err := smtp.SendMail(smtpAddress, nil, "noreply@filesify.com", payload.To, payload.Body.Bytes())
+	if err != nil {
+		log.Printf("Failed to route mail to MailHog: %v", err)
+		return status.Errorf(codes.Unavailable, "failed to send email via mail relay: %v", err)
+	}
+	return nil
 }
 
 func (s *MailServer) SendVerification(ctx context.Context, req *userpb.SendVerificationRequest) (*userpb.SendVerificationResponse, error) {
@@ -123,32 +171,27 @@ func (s *MailServer) SendVerification(ctx context.Context, req *userpb.SendVerif
 		log.Printf("[MailService] Failed to execute template payload: %v", err)
 		return nil, status.Errorf(codes.Internal, "failed to inject template data: %v", err)
 	}
-	smtpAddress := os.Getenv("SMTP_ADDRESS")
-	if smtpAddress == "" {
-		smtpAddress = "mailhog:1025"
-	}
 
 	email := &EmailPayload{
-		To:      []string{req.GetEmail()},
 		Subject: "Verify Mail",
-		Body:    "Thank you for your registration please verify your mail here! " + req.GetVerificationUrl(),
 	}
 
 	from := "noreply@filesify.com"
+	to := []string{req.GetEmail()}
 
 	var rawMessage bytes.Buffer
 	fmt.Fprintf(&rawMessage, "From: %s\r\n", from)
-	fmt.Fprintf(&rawMessage, "To: %s\r\n", email.To[0])
+	fmt.Fprintf(&rawMessage, "To: %s\r\n", to)
 	fmt.Fprintf(&rawMessage, "Subject: %s\r\n", email.Subject)
 	rawMessage.WriteString("MIME-Version: 1.0\r\n")
 	rawMessage.WriteString("Content-Type: text/html; charset=\"utf-8\"\r\n")
 	rawMessage.WriteString("\r\n")
 	rawMessage.Write(bodyBuffer.Bytes())
 
-	err = smtp.SendMail(smtpAddress, nil, from, email.To, rawMessage.Bytes())
-	if err != nil {
-		log.Printf("Failed to route mail to MailHog: %v", err)
-		return nil, status.Errorf(codes.Unavailable, "failed to send email via mail relay: %v", err)
+	email.Body = rawMessage
+	email.To = to
+	if err := SendMail(ctx, *email); err != nil {
+		return nil, err
 	}
 
 	return &userpb.SendVerificationResponse{
@@ -204,5 +247,53 @@ func (s *MailServer) SendMagicLink(ctx context.Context, req *userpb.SendMagicLin
 
 	return &userpb.SendMagicLinkResponse{
 		Message: "Magic link email sent successfully.",
+	}, nil
+}
+
+func (s *MailServer) SendTwoFactor(ctx context.Context, req *userpb.SendTwoFactorRequest) (*userpb.SendTwoFactorResponse, error) {
+	if req.GetCode() == "" || req.GetEmail() == "" {
+		return nil, status.Error(codes.InvalidArgument, "[mail-service/send-2FA] Email and OTP are required fields")
+	}
+
+	tmpl, err := template.New("two-factor").Parse(twoFAEmailTemplate)
+	if err != nil {
+		log.Printf("[MailService] Failed to parse two-factor template: %v", err)
+		return nil, status.Errorf(codes.Internal, "failed to parse template: %v", err)
+	}
+
+	data := TwoFactorTemplateData{
+		FirstName: req.Name,
+		Code:      req.GetCode(),
+	}
+
+	var bodyBuffer bytes.Buffer
+	if err := tmpl.Execute(&bodyBuffer, data); err != nil {
+		return nil, status.Errorf(codes.Internal, "[mail-service] Failed to create email body")
+	}
+
+	email := EmailPayload{
+		Subject: "Two Factor Authentication",
+	}
+
+	to := []string{req.GetEmail()}
+	from := "noreply@filesify.com"
+
+	var rawMessage bytes.Buffer
+	fmt.Fprintf(&rawMessage, "From: %s\r\n", from)
+	fmt.Fprintf(&rawMessage, "To: %s\r\n", to)
+	fmt.Fprintf(&rawMessage, "Subject: %s\r\n", email.Subject)
+	rawMessage.WriteString("MIME-Version: 1.0\r\n")
+	rawMessage.WriteString("Content-Type: text/html; charset=\"utf-8\"\r\n")
+	rawMessage.WriteString("\r\n")
+	rawMessage.Write(bodyBuffer.Bytes())
+
+	email.Body = rawMessage
+	email.To = to
+	if err := SendMail(ctx, email); err != nil {
+		return nil, err
+	}
+
+	return &userpb.SendTwoFactorResponse{
+		Message: "OTP sent to mail",
 	}, nil
 }

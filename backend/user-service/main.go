@@ -12,6 +12,7 @@ import (
 
 	"github.com/FTNDreamTeam/FileSify/backend/user-service/logger"
 	"github.com/FTNDreamTeam/FileSify/backend/user-service/server"
+	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
@@ -29,11 +30,11 @@ func main() {
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoUri))
 	if err != nil {
-		log.Fatalf("Failed to initialize MongoDB client: %v", err)
+		log.Printf("Failed to initialize MongoDB client: %v", err)
 	}
 
 	if err := client.Ping(ctx, nil); err != nil {
-		log.Fatalf("Failed to ping MongoDB: %v", err)
+		log.Printf("Failed to ping MongoDB: %v", err)
 	}
 
 	userCollection := client.Database("users_metadata").Collection("users")
@@ -41,19 +42,19 @@ func main() {
 	magicLinkCollection := client.Database("authentication_db").Collection("magic_link_tokens")
 
 	if err := server.EnsureTTLIndex(ctx, verificationCollection); err != nil {
-		log.Fatalf("Verification TTL index creation error: %v", err)
+		log.Printf("Verification TTL index creation error: %v", err)
 	}
 	if err := server.EnsureTTLIndex(ctx, magicLinkCollection); err != nil {
-		log.Fatalf("Magic link TTL index creation error: %v", err)
+		log.Printf("Magic link TTL index creation error: %v", err)
 	}
 
 	if os.Getenv("JWT_SECRET") == "" {
-		log.Fatalf("JWT_SECRET is not set")
+		log.Printf("JWT_SECRET is not set")
 	}
 
 	lis, err := net.Listen("tcp", ":"+os.Getenv("PORT"))
 	if err != nil {
-		log.Fatalf("Failed to listen on port 8082: %v", err)
+		log.Printf("Failed to listen on port 8082: %v", err)
 	}
 
 	mailConn, err := grpc.NewClient(
@@ -65,12 +66,14 @@ func main() {
 	}
 	mailClient := mailpb.NewMailServiceClient(mailConn)
 
+	twoFactorService := server.NewTFAService(redis.NewClient(&redis.Options{Addr: "redis-otp:" + os.Getenv("REDIS_PORT"), Username: "", Password: ""}), []byte(os.Getenv("HMAC_SERCRET")))
+
 	grpcServer := grpc.NewServer()
-	userServer := server.NewUserServer(userCollection, verificationCollection, magicLinkCollection, mailClient)
+	userServer := server.NewUserServer(userCollection, verificationCollection, magicLinkCollection, mailClient, twoFactorService)
 	userpb.RegisterUserServiceServer(grpcServer, userServer)
 	reflection.Register(grpcServer)
 
 	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Failed to serve gRPC: %v", err)
+		log.Printf("Failed to serve gRPC: %v", err)
 	}
 }

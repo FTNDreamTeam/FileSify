@@ -106,6 +106,19 @@ services:
     networks:
       - mail-network
 
+  redis-otp:
+    image: redis:7-alpine
+    container_name: redis-otp
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1m
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - user-network
+
 networks:
   user-network: #isolated user network
   storage-network: #isolated storage network

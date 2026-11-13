@@ -32,6 +32,7 @@ type UserServer struct {
 	verificationCollection *mongo.Collection
 	magicLinkCollection    *mongo.Collection
 	mailClient             mailpb.MailServiceClient
+	twoFactorService       *TwoFactorService
 }
 
 func NewUserServer(
@@ -39,12 +40,14 @@ func NewUserServer(
 	verificationCollection *mongo.Collection,
 	magicLinkCollection *mongo.Collection,
 	mailClient mailpb.MailServiceClient,
+	twoFactorService *TwoFactorService,
 ) *UserServer {
 	return &UserServer{
 		dbCollection:           collection,
 		verificationCollection: verificationCollection,
 		magicLinkCollection:    magicLinkCollection,
 		mailClient:             mailClient,
+		twoFactorService:       twoFactorService,
 	}
 }
 
@@ -382,21 +385,43 @@ func (s *UserServer) LoginUser(ctx context.Context, req *userpb.LoginUserRequest
 		return nil, status.Error(codes.Unauthenticated, "invalid email or password")
 	}
 
+	if time.Since(user.PasswordActive.Time()) > passwordMaxAge() {
+		slog.Warn("login_failure", "event", "auth.login.failed", "reason", "password_expired", "user_id", user.ID.Hex(), "status", "failure")
+		return nil, status.Error(codes.FailedPrecondition, "your password has expired; please reset it to continue")
+	}
+
+	if user.TwoFactor {
+		pendingToken, code, err := s.twoFactorService.StartChallenge(ctx, user.ID.Hex(), user.Email)
+		if err != nil {
+			return nil, err
+		}
+		_, err = s.mailClient.SendTwoFactor(ctx, &userpb.SendTwoFactorRequest{
+			Email: user.Email,
+			Code:  code,
+			Name:  user.FirstName,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return &userpb.LoginUserResponse{
+			Token:     pendingToken,
+			TwoFactor: true,
+			User:      nil,
+		}, nil
+	}
+
 	token, err := GenerateToken(user.ID.Hex(), user.Email)
 	if err != nil {
 		slog.Error("login_failure", "event", "auth.login.failed", "reason", "token_generation_failed", "user_id", user.ID.Hex(), "status", "failure", "error", err.Error())
 		return nil, status.Errorf(codes.Internal, "failed to issue token: %v", err)
 	}
 
-	if time.Since(user.PasswordActive.Time()) > passwordMaxAge() {
-		slog.Warn("login_failure", "event", "auth.login.failed", "reason", "password_expired", "user_id", user.ID.Hex(), "status", "failure")
-		return nil, status.Error(codes.FailedPrecondition, "your password has expired; please reset it to continue")
-	}
-
 	slog.Info("login_success", "event", "auth.login", "user_id", user.ID.Hex(), "status", "success")
 
 	return &userpb.LoginUserResponse{
-		Token: token,
+		Token:     token,
+		TwoFactor: false,
 		User: &userpb.UserProfile{
 			Id:        user.ID.Hex(),
 			Email:     user.Email,
@@ -469,4 +494,20 @@ func (s *UserServer) ChangePassword(ctx context.Context, req *userpb.ChangePassw
 
 	slog.Info("change_pw_success", "event", "auth.change_password", "user_id", user.ID.Hex(), "status", "success")
 	return genericResponse, nil
+}
+
+func (s *UserServer) Verify2FA(ctx context.Context, req *userpb.Verify2FARequest) (*userpb.Verify2FAResponse, error) {
+	session, err := s.twoFactorService.CompleteChallenge(ctx, req.GetPendingToken(), req.GetCode())
+	if err != nil {
+		slog.Error("verify_2fa", "event", "auth.verify_2fa", "status", "failed_challenge", "error", err.Error())
+		return nil, status.Errorf(codes.PermissionDenied, "[user-service] Error while completing challenge:%s", err)
+	}
+
+	token, err := GenerateToken(session.UserID, session.Email)
+	if err != nil {
+		slog.Error("verify_2fa", "event", "auth.verify_2fa", "status", "token_gen_failed", "error", err.Error())
+		return nil, status.Errorf(codes.PermissionDenied, "[user-service] Error while generating token:%s", err)
+	}
+
+	return &userpb.Verify2FAResponse{Token: token}, nil
 }

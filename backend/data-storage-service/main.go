@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"time"
 
 	"github.com/FTNDreamTeam/FileSify/backend/data-storage-service/internal/server"
 	"github.com/FTNDreamTeam/FileSify/backend/data-storage-service/internal/storage"
@@ -19,25 +20,39 @@ func main() {
 	accessKey := os.Getenv("MINIO_ROOT_USER")
 	secretKey := os.Getenv("MINIO_ROOT_PASSWORD")
 
-	// Initialize Silo Object Store
-	store, err := storage.NewSiloStore(endpoint, accessKey, secretKey, false)
-	if err != nil {
-		log.Fatalf("Failed to initialize Silo client: %v", err)
-	}
-	// Ensure the bucket exists
-	ctx := context.Background()
-	if err := store.CreateBucket(ctx, "filesify"); err != nil {
-		log.Fatalf("Failed to ensure bucket exists: %v", err)
+	var store *storage.SiloStore
+	var err error
+
+	// Keep trying to connect to Silo until successful
+	for {
+		store, err = storage.NewSiloStore(endpoint, accessKey, secretKey, false)
+		if err == nil {
+			ctx := context.Background()
+			err = store.CreateBucket(ctx, "filesify")
+			if err == nil {
+				break
+			}
+		}
+
+		log.Printf("WARNING: Failed to connect to Silo: %v. Retrying in 5 seconds...", err)
+		time.Sleep(5 * time.Second)
 	}
 	log.Println("Successfully connected to Silo!")
 
 	// gRPC Server Setup
 	port := os.Getenv("STORAGE_PORT")
-	lis, err := net.Listen("tcp", ":"+port)
-	if err != nil {
-		log.Printf("Failed to listen on port %s: %v", port, err)
-		os.Exit(1)
+
+	// Keep trying to bind to the port until successful
+	var lis net.Listener
+	for {
+		lis, err = net.Listen("tcp", ":"+port)
+		if err == nil {
+			break
+		}
+		log.Printf("WARNING: Failed to listen on port %s: %v. Retrying in 5 seconds...", port, err)
+		time.Sleep(5 * time.Second)
 	}
+
 	grpcServer := grpc.NewServer()
 
 	// Register Services
@@ -50,6 +65,5 @@ func main() {
 	// Start the gRPC server
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Printf("gRPC server failed unexpectedly: %v", err)
-		os.Exit(1)
 	}
 }

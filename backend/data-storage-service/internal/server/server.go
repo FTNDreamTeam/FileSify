@@ -6,8 +6,9 @@ import (
 	"log"
 	"strings"
 
+	pb "gen/data-storage-service-gen"
+
 	"github.com/FTNDreamTeam/FileSify/backend/data-storage-service/internal/storage"
-	pb "github.com/FTNDreamTeam/FileSify/backend/gen/data-storage-service-gen"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

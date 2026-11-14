@@ -7,9 +7,10 @@ import (
 	"os"
 	"time"
 
+	pb "gen/data-storage-service-gen"
+
 	"github.com/FTNDreamTeam/FileSify/backend/data-storage-service/internal/server"
 	"github.com/FTNDreamTeam/FileSify/backend/data-storage-service/internal/storage"
-	pb "github.com/FTNDreamTeam/FileSify/backend/gen/data-storage-service-gen"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )

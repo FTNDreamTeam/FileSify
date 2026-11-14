@@ -2,8 +2,9 @@ module github.com/FTNDreamTeam/FileSify/backend/data-storage-service
 
 go 1.27.3
 
+require gen v0.0.1
+
 require (
-	github.com/FTNDreamTeam/FileSify/backend/gen v0.0.0-00010101000000-000000000000
 	github.com/minio/minio-go/v7 v7.4.1
 	google.golang.org/grpc v1.85.0
 )
@@ -31,4 +32,4 @@ require (
 	gopkg.in/ini.v1 v1.67.3 // indirect
 )
 
-replace github.com/FTNDreamTeam/FileSify/backend/gen => ../gen
+replace gen => ../gen

@@ -16,5 +16,3 @@ require (
 	golang.org/x/text v0.43.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20261019180522-ce908d29299b // indirect
 )
-
-require github.com/FTNDreamTeam/FileSify/backend/gen/data-storage-service-gen v0.0.0

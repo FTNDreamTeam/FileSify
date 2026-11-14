@@ -8,6 +8,7 @@ services:
       - ./api-gateway/.env
     ports:
       - "${GATEWAY_PORT}:${GATEWAY_PORT}"
+      - "${UI_PORT}:${UI_PORT}"
     depends_on:
       - user-service
     networks:

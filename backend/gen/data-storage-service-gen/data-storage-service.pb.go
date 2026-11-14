@@ -67,8 +67,6 @@ func (x *CreateFolderRequest) GetPath() string {
 
 type CreateFolderResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -103,30 +101,14 @@ func (*CreateFolderResponse) Descriptor() ([]byte, []int) {
 	return file_data_storage_service_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *CreateFolderResponse) GetSuccess() bool {
-	if x != nil {
-		return x.Success
-	}
-	return false
-}
-
-func (x *CreateFolderResponse) GetMessage() string {
-	if x != nil {
-		return x.Message
-	}
-	return ""
-}
-
 var File_data_storage_service_proto protoreflect.FileDescriptor
 
 const file_data_storage_service_proto_rawDesc = "" +
 	"\n" +
 	"\x1adata-storage-service.proto\x12\astorage\")\n" +
 	"\x13CreateFolderRequest\x12\x12\n" +
-	"\x04path\x18\x01 \x01(\tR\x04path\"J\n" +
-	"\x14CreateFolderResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage2]\n" +
+	"\x04path\x18\x01 \x01(\tR\x04path\"\x16\n" +
+	"\x14CreateFolderResponse2]\n" +
 	"\x0eStorageService\x12K\n" +
 	"\fCreateFolder\x12\x1c.storage.CreateFolderRequest\x1a\x1d.storage.CreateFolderResponseB6Z4github.com/FTNDreamTeam/FileSify/backend/gen/storageb\x06proto3"
 

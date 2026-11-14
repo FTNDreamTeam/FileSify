@@ -8,6 +8,8 @@ import (
 
 	"github.com/FTNDreamTeam/FileSify/backend/data-storage-service/internal/storage"
 	pb "github.com/FTNDreamTeam/FileSify/backend/gen/data-storage-service-gen"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type StorageServer struct {
@@ -22,7 +24,7 @@ func NewStorageServer(store storage.ObjectStore) *StorageServer {
 func (s *StorageServer) CreateFolder(ctx context.Context, req *pb.CreateFolderRequest) (*pb.CreateFolderResponse, error) {
 	folderPath := req.GetPath()
 	if folderPath == "" {
-		return &pb.CreateFolderResponse{Success: false, Message: "Path cannot be empty"}, nil
+		return nil, status.Error(codes.InvalidArgument, "path cannot be empty")
 	}
 
 	// Folders in Silo must end with a slash
@@ -36,9 +38,10 @@ func (s *StorageServer) CreateFolder(ctx context.Context, req *pb.CreateFolderRe
 	err := s.Store.Put(ctx, "filesify", folderPath, emptyReader, 0, "application/x-directory")
 	if err != nil {
 		log.Printf("Create folder error: %v", err)
-		return &pb.CreateFolderResponse{Success: false, Message: "Failed to create folder in Silo"}, nil
+		return nil, status.Error(codes.Internal, "failed to create folder in Silo")
 	}
 
 	log.Printf("Successfully created folder: %s", folderPath)
-	return &pb.CreateFolderResponse{Success: true, Message: "Folder created successfully"}, nil
+
+	return &pb.CreateFolderResponse{}, nil
 }

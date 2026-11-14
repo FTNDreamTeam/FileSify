@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package storage;
+
+option go_package = "github.com/FTNDreamTeam/FileSify/backend/gen/storage";
+
+service StorageService {
+  rpc CreateFolder(CreateFolderRequest) returns (CreateFolderResponse);
+}
+
+message CreateFolderRequest {
+  string path = 1;
+}
+
+message CreateFolderResponse {
+}

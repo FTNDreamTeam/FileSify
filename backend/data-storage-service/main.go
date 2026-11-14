@@ -2,48 +2,68 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"net"
 	"os"
-	"os/signal"
-	"syscall"
+	"time"
 
+	"github.com/FTNDreamTeam/FileSify/backend/data-storage-service/internal/server"
 	"github.com/FTNDreamTeam/FileSify/backend/data-storage-service/internal/storage"
+	pb "github.com/FTNDreamTeam/FileSify/backend/gen/data-storage-service-gen"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 func main() {
-	// Endpoint: "localhost:9000" when running on host,
-	// "silo:9000" when running inside the compose network.
+	// Silo Storage Setup
 	endpoint := os.Getenv("SILO_ENDPOINT")
-	if endpoint == "" {
-		endpoint = "localhost:9000"
-	}
-
 	accessKey := os.Getenv("MINIO_ROOT_USER")
 	secretKey := os.Getenv("MINIO_ROOT_PASSWORD")
-	if accessKey == "" || secretKey == "" {
-		log.Fatal("MINIO_ROOT_USER and MINIO_ROOT_PASSWORD must be set")
+
+	var store *storage.SiloStore
+	var err error
+
+	// Keep trying to connect to Silo until successful
+	for {
+		store, err = storage.NewSiloStore(endpoint, accessKey, secretKey, false)
+		if err == nil {
+			ctx := context.Background()
+			err = store.CreateBucket(ctx, "filesify")
+			if err == nil {
+				break
+			}
+		}
+
+		log.Printf("WARNING: Failed to connect to Silo: %v. Retrying in 5 seconds...", err)
+		time.Sleep(5 * time.Second)
+	}
+	log.Println("Successfully connected to Silo!")
+
+	// gRPC Server Setup
+	port := os.Getenv("STORAGE_PORT")
+
+	// Keep trying to bind to the port until successful
+	var lis net.Listener
+	for {
+		lis, err = net.Listen("tcp", ":"+port)
+		if err == nil {
+			break
+		}
+		log.Printf("WARNING: Failed to listen on port %s: %v. Retrying in 5 seconds...", port, err)
+		time.Sleep(5 * time.Second)
 	}
 
-	store, err := storage.NewSiloStore(endpoint, accessKey, secretKey, false)
-	if err != nil {
-		log.Fatalf("Failed to create Silo store: %v", err)
+	grpcServer := grpc.NewServer()
+
+	// Register Services
+	storageServer := server.NewStorageServer(store)
+	pb.RegisterStorageServiceServer(grpcServer, storageServer)
+	reflection.Register(grpcServer)
+
+	log.Printf("gRPC Data Storage Service server is running on port :%s", lis.Addr().String())
+
+	// Start the gRPC server
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Printf("gRPC server failed unexpectedly: %v", err)
 	}
-	log.Println("Connected to Silo at", endpoint)
-
-	ctx := context.Background()
-
-	bucketName := "filesify"
-	if err := store.CreateBucket(ctx, bucketName); err != nil {
-		log.Fatalf("Failed to ensure bucket exists: %v", err)
-	}
-	log.Printf("Bucket %s is ready", bucketName)
-
-	fmt.Println("Data Storage Service is running. Press Ctrl+C to exit.")
-
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-
-	<-stop
-	log.Println("Shutting down Data Storage Service gracefully...")
 }

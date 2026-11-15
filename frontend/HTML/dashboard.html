@@ -172,7 +172,7 @@
                 <p class="text-soft mb-0" style="font-size:.9rem;">All your files and folders in one place.</p>
             </div>
             <div class="d-flex gap-2">
-                <button class="btn btn-outline-brand rounded-pill px-3"><i class="bi bi-folder-plus me-1"></i> New folder</button>
+                <button class="btn btn-outline-brand rounded-pill px-3" id="newFolderButton"><i class="bi bi-folder-plus me-1"></i> New folder</button>
                 <button class="btn btn-brand rounded-pill px-3"><i class="bi bi-cloud-arrow-up me-1"></i> Upload</button>
             </div>
         </div>
@@ -298,6 +298,27 @@
         <button type="button" class="btn btn-outline-brand rounded-pill px-3" data-dialog-close>Cancel</button>
         <button type="button" class="btn btn-brand rounded-pill px-3" id="logoutConfirm">
             <i class="bi bi-box-arrow-right me-1"></i> Sign out
+        </button>
+    </div>
+</dialog>
+
+<!-- Create Folder Dialog -->
+<dialog class="dialog" id="createFolderDialog" aria-labelledby="createFolderTitle">
+    <div class="dialog-header">
+        <h2 class="dialog-title" id="createFolderTitle">New Folder</h2>
+        <button type="button" class="dialog-close" data-dialog-close aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <div class="dialog-body" style="text-align: left;">
+        <div id="folderAlert" class="alert d-none mb-3" role="alert"></div>
+        <label for="folderNameInput" class="form-label">Folder name</label>
+        <input type="text" class="form-control" id="folderNameInput" placeholder="e.g., Projects" required>
+    </div>
+    <div class="dialog-footer">
+        <button type="button" class="btn btn-outline-brand rounded-pill px-3" data-dialog-close>Cancel</button>
+        <button type="button" class="btn btn-brand rounded-pill px-3" id="createFolderConfirm">
+            <i class="bi bi-folder-plus me-1"></i> Create
         </button>
     </div>
 </dialog>

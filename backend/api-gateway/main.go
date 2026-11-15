@@ -67,7 +67,7 @@ func main() {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
-		log.Fatalln("Failed to dial user-service:", err)
+		log.Println("Failed to dial user-service:", err)
 	}
 	userClient := userpb.NewUserServiceClient(userConn)
 
@@ -77,7 +77,7 @@ func main() {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
-		log.Fatalln("Failed to dial data-storage-service:", err)
+		log.Println("Failed to dial data-storage-service:", err)
 	}
 	storageClient := storagepb.NewStorageServiceClient(storageConn)
 
@@ -86,7 +86,7 @@ func main() {
 	pb.RegisterGatewayServiceServer(grpcServer, &server{userClient: userClient, storageClient: storageClient})
 	reflection.Register(grpcServer)
 	go func() {
-		log.Fatalln(grpcServer.Serve(lis))
+		log.Println(grpcServer.Serve(lis))
 	}()
 
 	// Dial the gateway's own gRPC server, so gwmux can forward REST → gRPC
@@ -95,12 +95,12 @@ func main() {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
-		log.Fatalln("Failed to dial gateway gRPC:", err)
+		log.Println("Failed to dial gateway gRPC:", err)
 	}
 
 	gwmux := runtime.NewServeMux()
 	if err := pb.RegisterGatewayServiceHandler(context.Background(), gwmux, gwConn); err != nil {
-		log.Fatalln("Failed to register gateway:", err)
+		log.Println("Failed to register gateway:", err)
 	}
 
 	// ONE public port: /api/* goes to gwmux, everything else to the file server

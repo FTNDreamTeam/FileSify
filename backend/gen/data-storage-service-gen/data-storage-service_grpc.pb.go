@@ -4,7 +4,7 @@
 // - protoc             v3.21.12
 // source: data-storage-service.proto
 
-package storage
+package data_storage_service_gen
 
 import (
 	context "context"
@@ -19,7 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	StorageService_CreateFolder_FullMethodName = "/storage.StorageService/CreateFolder"
+	StorageService_CreateFolder_FullMethodName = "/storage.v1.StorageService/CreateFolder"
 )
 
 // StorageServiceClient is the client API for StorageService service.
@@ -108,7 +108,7 @@ func _StorageService_CreateFolder_Handler(srv interface{}, ctx context.Context, 
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var StorageService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "storage.StorageService",
+	ServiceName: "storage.v1.StorageService",
 	HandlerType: (*StorageServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

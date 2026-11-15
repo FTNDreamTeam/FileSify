@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package gateway.v1;
 
+import "data-storage-service.proto";
 import "google/api/annotations.proto";
 import "user-service.proto";
 
@@ -50,6 +51,13 @@ service GatewayService {
   rpc Verify2FA(user_service.v1.Verify2FARequest) returns (user_service.v1.Verify2FAResponse) {
     option (google.api.http) = {
       post: "/api/twofactor/verify"
+      body: "*"
+    };
+  }
+
+  rpc CreateFolder(storage.v1.CreateFolderRequest) returns (storage.v1.CreateFolderResponse) {
+    option (google.api.http) = {
+      post: "/api/storage/folder"
       body: "*"
     };
   }

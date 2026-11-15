@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	storagepb "gen/data-storage-service-gen"
 	pb "gen/gateway"
 	userpb "gen/user-service-gen"
 
@@ -18,7 +19,8 @@ import (
 
 type server struct {
 	pb.UnimplementedGatewayServiceServer
-	userClient userpb.UserServiceClient
+	userClient    userpb.UserServiceClient
+	storageClient storagepb.StorageServiceClient
 }
 
 func (s *server) RegisterUser(ctx context.Context, request *userpb.RegisterUserRequest) (*userpb.RegisterUserResponse, error) {
@@ -48,6 +50,9 @@ func (s *server) ChangePassword(ctx context.Context, request *userpb.ChangePassw
 func (s *server) Verify2FA(ctx context.Context, request *userpb.Verify2FARequest) (*userpb.Verify2FAResponse, error) {
 	return s.userClient.Verify2FA(ctx, request)
 }
+func (s *server) CreateFolder(ctx context.Context, request *storagepb.CreateFolderRequest) (*storagepb.CreateFolderResponse, error) {
+	return s.storageClient.CreateFolder(ctx, request)
+}
 
 func main() {
 	// Internal gRPC listener (only reachable from inside the Docker network)
@@ -66,9 +71,19 @@ func main() {
 	}
 	userClient := userpb.NewUserServiceClient(userConn)
 
+	// Dial data-storage-service
+	storageConn, err := grpc.NewClient(
+		"data-storage-service:"+os.Getenv("STORAGE_PORT"),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatalln("Failed to dial data-storage-service:", err)
+	}
+	storageClient := storagepb.NewStorageServiceClient(storageConn)
+
 	// Start internal gRPC server
 	grpcServer := grpc.NewServer()
-	pb.RegisterGatewayServiceServer(grpcServer, &server{userClient: userClient})
+	pb.RegisterGatewayServiceServer(grpcServer, &server{userClient: userClient, storageClient: storageClient})
 	reflection.Register(grpcServer)
 	go func() {
 		log.Fatalln(grpcServer.Serve(lis))

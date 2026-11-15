@@ -3,7 +3,7 @@ module github.com/FTNDreamTeam/FileSify/backend/api-gateway
 go 1.27.3
 
 require (
-	gen v0.0.0-00010101000000-000000000000
+	gen v0.0.1
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.33.0
 	google.golang.org/grpc v1.85.0
 )

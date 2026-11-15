@@ -1019,4 +1019,76 @@
             }
         });
     })();
+    // ============================================================
+    // CREATE FOLDER DIALOG
+    // ============================================================
+    (function initCreateFolderDialog() {
+        const trigger = document.getElementById('newFolderButton');
+        const dialog  = document.getElementById('createFolderDialog');
+        if (!trigger || !dialog) return;
+
+        const input      = document.getElementById('folderNameInput');
+        const confirmBtn = document.getElementById('createFolderConfirm');
+        const alertEl    = document.getElementById('folderAlert');
+
+        trigger.addEventListener('click', (e) => {
+            e.preventDefault();
+            input.value = '';
+            alertEl.classList.add('d-none');
+            dialog.showModal();
+            setTimeout(() => input.focus(), 100);
+        });
+
+        dialog.querySelectorAll('[data-dialog-close]').forEach(btn => {
+            btn.addEventListener('click', () => dialog.close('cancel'));
+        });
+
+        dialog.addEventListener('click', (e) => {
+            const r = dialog.getBoundingClientRect();
+            const outside = e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+            if (outside) dialog.close('cancel');
+        });
+
+        confirmBtn.addEventListener('click', async () => {
+            const folderName = input.value.trim();
+            if (!folderName) {
+                alertEl.textContent = 'Please enter a folder name.';
+                alertEl.className = 'alert alert-danger mb-3';
+                alertEl.classList.remove('d-none');
+                return;
+            }
+
+            const originalText = confirmBtn.innerHTML;
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Creating…';
+            alertEl.classList.add('d-none');
+
+            try {
+                const res = await fetch('/api/storage/folder', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    },
+                    body: JSON.stringify({ path: folderName })
+                });
+
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    throw new Error(data.message || 'Failed to create folder');
+                }
+
+                dialog.close('success');
+                window.location.reload(); 
+
+            } catch (err) {
+                alertEl.textContent = err.message;
+                alertEl.className = 'alert alert-danger mb-3';
+                alertEl.classList.remove('d-none');
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = originalText;
+            }
+        });
+    })();
 })();

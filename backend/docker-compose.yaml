@@ -52,7 +52,7 @@ services:
     container_name: filesify-silo
     command: server /data --console-address ":9001"
     ports:
-      - "9001:9001"
+      - "${SILO_CONSOLE_PORT}:${SILO_CONSOLE_PORT}"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}

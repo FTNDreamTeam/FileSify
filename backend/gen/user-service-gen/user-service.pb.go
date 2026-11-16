@@ -1078,6 +1078,94 @@ func (x *Verify2FAResponse) GetToken() string {
 	return ""
 }
 
+type ValidateTokenRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ValidateTokenRequest) Reset() {
+	*x = ValidateTokenRequest{}
+	mi := &file_user_service_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ValidateTokenRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ValidateTokenRequest) ProtoMessage() {}
+
+func (x *ValidateTokenRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_user_service_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ValidateTokenRequest.ProtoReflect.Descriptor instead.
+func (*ValidateTokenRequest) Descriptor() ([]byte, []int) {
+	return file_user_service_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *ValidateTokenRequest) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+type ValidateTokenResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ValidateTokenResponse) Reset() {
+	*x = ValidateTokenResponse{}
+	mi := &file_user_service_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ValidateTokenResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ValidateTokenResponse) ProtoMessage() {}
+
+func (x *ValidateTokenResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_user_service_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ValidateTokenResponse.ProtoReflect.Descriptor instead.
+func (*ValidateTokenResponse) Descriptor() ([]byte, []int) {
+	return file_user_service_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *ValidateTokenResponse) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
 var File_user_service_proto protoreflect.FileDescriptor
 
 const file_user_service_proto_rawDesc = "" +
@@ -1147,7 +1235,11 @@ const file_user_service_proto_rawDesc = "" +
 	"\rpending_token\x18\x01 \x01(\tR\fpendingToken\x12\x12\n" +
 	"\x04code\x18\x02 \x01(\tR\x04code\")\n" +
 	"\x11Verify2FAResponse\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token2\xf9\x06\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\",\n" +
+	"\x14ValidateTokenRequest\x12\x14\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\"0\n" +
+	"\x15ValidateTokenResponse\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId2\xdb\a\n" +
 	"\vUserService\x12]\n" +
 	"\fRegisterUser\x12$.user_service.v1.RegisterUserRequest\x1a%.user_service.v1.RegisterUserResponse\"\x00\x12T\n" +
 	"\tLoginUser\x12!.user_service.v1.LoginUserRequest\x1a\".user_service.v1.LoginUserResponse\"\x00\x12i\n" +
@@ -1157,7 +1249,8 @@ const file_user_service_proto_rawDesc = "" +
 	"\x0fVerifyMagicLink\x12'.user_service.v1.VerifyMagicLinkRequest\x1a\".user_service.v1.LoginUserResponse\"\x00\x12c\n" +
 	"\x0eChangePassword\x12&.user_service.v1.ChangePasswordRequest\x1a'.user_service.v1.ChangePasswordResponse\"\x00\x12`\n" +
 	"\rSendTwoFactor\x12%.user_service.v1.SendTwoFactorRequest\x1a&.user_service.v1.SendTwoFactorResponse\"\x00\x12T\n" +
-	"\tVerify2FA\x12!.user_service.v1.Verify2FARequest\x1a\".user_service.v1.Verify2FAResponse\"\x00B\x16Z\x14gen/user-service-genb\x06proto3"
+	"\tVerify2FA\x12!.user_service.v1.Verify2FARequest\x1a\".user_service.v1.Verify2FAResponse\"\x00\x12`\n" +
+	"\rValidateToken\x12%.user_service.v1.ValidateTokenRequest\x1a&.user_service.v1.ValidateTokenResponse\"\x00B\x16Z\x14gen/user-service-genb\x06proto3"
 
 var (
 	file_user_service_proto_rawDescOnce sync.Once
@@ -1171,7 +1264,7 @@ func file_user_service_proto_rawDescGZIP() []byte {
 	return file_user_service_proto_rawDescData
 }
 
-var file_user_service_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_user_service_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_user_service_proto_goTypes = []any{
 	(*UserProfile)(nil),              // 0: user_service.v1.UserProfile
 	(*RegisterUserRequest)(nil),      // 1: user_service.v1.RegisterUserRequest
@@ -1193,10 +1286,12 @@ var file_user_service_proto_goTypes = []any{
 	(*SendTwoFactorResponse)(nil),    // 17: user_service.v1.SendTwoFactorResponse
 	(*Verify2FARequest)(nil),         // 18: user_service.v1.Verify2FARequest
 	(*Verify2FAResponse)(nil),        // 19: user_service.v1.Verify2FAResponse
-	(*date.Date)(nil),                // 20: google.type.Date
+	(*ValidateTokenRequest)(nil),     // 20: user_service.v1.ValidateTokenRequest
+	(*ValidateTokenResponse)(nil),    // 21: user_service.v1.ValidateTokenResponse
+	(*date.Date)(nil),                // 22: google.type.Date
 }
 var file_user_service_proto_depIdxs = []int32{
-	20, // 0: user_service.v1.UserProfile.password_valid:type_name -> google.type.Date
+	22, // 0: user_service.v1.UserProfile.password_valid:type_name -> google.type.Date
 	0,  // 1: user_service.v1.RegisterUserResponse.user:type_name -> user_service.v1.UserProfile
 	0,  // 2: user_service.v1.LoginUserResponse.user:type_name -> user_service.v1.UserProfile
 	1,  // 3: user_service.v1.UserService.RegisterUser:input_type -> user_service.v1.RegisterUserRequest
@@ -1208,17 +1303,19 @@ var file_user_service_proto_depIdxs = []int32{
 	14, // 9: user_service.v1.UserService.ChangePassword:input_type -> user_service.v1.ChangePasswordRequest
 	16, // 10: user_service.v1.UserService.SendTwoFactor:input_type -> user_service.v1.SendTwoFactorRequest
 	18, // 11: user_service.v1.UserService.Verify2FA:input_type -> user_service.v1.Verify2FARequest
-	2,  // 12: user_service.v1.UserService.RegisterUser:output_type -> user_service.v1.RegisterUserResponse
-	4,  // 13: user_service.v1.UserService.LoginUser:output_type -> user_service.v1.LoginUserResponse
-	6,  // 14: user_service.v1.UserService.SendVerification:output_type -> user_service.v1.SendVerificationResponse
-	8,  // 15: user_service.v1.UserService.VerifyAccount:output_type -> user_service.v1.VerifyAccountResponse
-	10, // 16: user_service.v1.UserService.RequestMagicLink:output_type -> user_service.v1.RequestMagicLinkResponse
-	4,  // 17: user_service.v1.UserService.VerifyMagicLink:output_type -> user_service.v1.LoginUserResponse
-	15, // 18: user_service.v1.UserService.ChangePassword:output_type -> user_service.v1.ChangePasswordResponse
-	17, // 19: user_service.v1.UserService.SendTwoFactor:output_type -> user_service.v1.SendTwoFactorResponse
-	19, // 20: user_service.v1.UserService.Verify2FA:output_type -> user_service.v1.Verify2FAResponse
-	12, // [12:21] is the sub-list for method output_type
-	3,  // [3:12] is the sub-list for method input_type
+	20, // 12: user_service.v1.UserService.ValidateToken:input_type -> user_service.v1.ValidateTokenRequest
+	2,  // 13: user_service.v1.UserService.RegisterUser:output_type -> user_service.v1.RegisterUserResponse
+	4,  // 14: user_service.v1.UserService.LoginUser:output_type -> user_service.v1.LoginUserResponse
+	6,  // 15: user_service.v1.UserService.SendVerification:output_type -> user_service.v1.SendVerificationResponse
+	8,  // 16: user_service.v1.UserService.VerifyAccount:output_type -> user_service.v1.VerifyAccountResponse
+	10, // 17: user_service.v1.UserService.RequestMagicLink:output_type -> user_service.v1.RequestMagicLinkResponse
+	4,  // 18: user_service.v1.UserService.VerifyMagicLink:output_type -> user_service.v1.LoginUserResponse
+	15, // 19: user_service.v1.UserService.ChangePassword:output_type -> user_service.v1.ChangePasswordResponse
+	17, // 20: user_service.v1.UserService.SendTwoFactor:output_type -> user_service.v1.SendTwoFactorResponse
+	19, // 21: user_service.v1.UserService.Verify2FA:output_type -> user_service.v1.Verify2FAResponse
+	21, // 22: user_service.v1.UserService.ValidateToken:output_type -> user_service.v1.ValidateTokenResponse
+	13, // [13:23] is the sub-list for method output_type
+	3,  // [3:13] is the sub-list for method input_type
 	3,  // [3:3] is the sub-list for extension type_name
 	3,  // [3:3] is the sub-list for extension extendee
 	0,  // [0:3] is the sub-list for field type_name
@@ -1235,7 +1332,7 @@ func file_user_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_user_service_proto_rawDesc), len(file_user_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   20,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

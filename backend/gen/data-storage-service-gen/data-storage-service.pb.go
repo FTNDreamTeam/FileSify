@@ -4,7 +4,7 @@
 // 	protoc        v3.21.12
 // source: data-storage-service.proto
 
-package storage
+package data_storage_service_gen
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -105,12 +105,13 @@ var File_data_storage_service_proto protoreflect.FileDescriptor
 
 const file_data_storage_service_proto_rawDesc = "" +
 	"\n" +
-	"\x1adata-storage-service.proto\x12\astorage\")\n" +
+	"\x1adata-storage-service.proto\x12\n" +
+	"storage.v1\")\n" +
 	"\x13CreateFolderRequest\x12\x12\n" +
 	"\x04path\x18\x01 \x01(\tR\x04path\"\x16\n" +
-	"\x14CreateFolderResponse2]\n" +
-	"\x0eStorageService\x12K\n" +
-	"\fCreateFolder\x12\x1c.storage.CreateFolderRequest\x1a\x1d.storage.CreateFolderResponseB6Z4github.com/FTNDreamTeam/FileSify/backend/gen/storageb\x06proto3"
+	"\x14CreateFolderResponse2c\n" +
+	"\x0eStorageService\x12Q\n" +
+	"\fCreateFolder\x12\x1f.storage.v1.CreateFolderRequest\x1a .storage.v1.CreateFolderResponseB\x1eZ\x1cgen/data-storage-service-genb\x06proto3"
 
 var (
 	file_data_storage_service_proto_rawDescOnce sync.Once
@@ -126,12 +127,12 @@ func file_data_storage_service_proto_rawDescGZIP() []byte {
 
 var file_data_storage_service_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_data_storage_service_proto_goTypes = []any{
-	(*CreateFolderRequest)(nil),  // 0: storage.CreateFolderRequest
-	(*CreateFolderResponse)(nil), // 1: storage.CreateFolderResponse
+	(*CreateFolderRequest)(nil),  // 0: storage.v1.CreateFolderRequest
+	(*CreateFolderResponse)(nil), // 1: storage.v1.CreateFolderResponse
 }
 var file_data_storage_service_proto_depIdxs = []int32{
-	0, // 0: storage.StorageService.CreateFolder:input_type -> storage.CreateFolderRequest
-	1, // 1: storage.StorageService.CreateFolder:output_type -> storage.CreateFolderResponse
+	0, // 0: storage.v1.StorageService.CreateFolder:input_type -> storage.v1.CreateFolderRequest
+	1, // 1: storage.v1.StorageService.CreateFolder:output_type -> storage.v1.CreateFolderResponse
 	1, // [1:2] is the sub-list for method output_type
 	0, // [0:1] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name

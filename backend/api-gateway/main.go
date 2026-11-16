@@ -11,6 +11,7 @@ import (
 	pb "gen/gateway"
 	userpb "gen/user-service-gen"
 
+	infrastructure "github.com/FTNDreamTeam/FileSify/backend/api-gateway/infrastructure"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -107,6 +108,9 @@ func main() {
 	root := http.NewServeMux()
 	root.Handle("/api/", gwmux)
 	root.Handle("/", http.FileServer(http.Dir("./frontend")))
+	if err := infrastructure.RegisterFileUploadRoute(gwmux, storageClient, userClient); err != nil { //Register the upload route for files
+		log.Printf("Failed to route to /api/file:%s", err)
+	}
 
 	httpServer := &http.Server{
 		Addr:    ":8080",

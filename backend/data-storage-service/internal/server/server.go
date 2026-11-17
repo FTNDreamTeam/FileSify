@@ -35,19 +35,19 @@ func (s *StorageServer) CreateFolder(ctx context.Context, req *pb.CreateFolderRe
 	if !strings.HasSuffix(folderPath, "/") {
 		folderPath += "/"
 	}
-	if req.GetToken() != "" {
-		valResponse, err := s.UserClient.ValidateToken(ctx, &userpb.ValidateTokenRequest{
+	if req.GetToken() != "" { //Checks if request has token
+		//If it does it means it is a user created folder
+		valResponse, err := s.UserClient.ValidateToken(ctx, &userpb.ValidateTokenRequest{ //Validate token
 			Token: req.GetToken(),
 		})
 		if err != nil {
 			log.Printf("Error validating token:%v", err)
 			return nil, status.Errorf(codes.Unauthenticated, "No token present:%v", err)
 		}
-		finalPath := valResponse.GetUserId() + "/" + folderPath
+		finalPath := valResponse.GetUserId() + "/" + folderPath // Folders in Silo must end with a slash
 		folderPath = finalPath
 	}
-
-	// Folders in Silo must end with a slash
+	//If it doesn't it means it is a root folder created after verification
 
 	// Create a 0-byte object
 	emptyReader := bytes.NewReader([]byte{})

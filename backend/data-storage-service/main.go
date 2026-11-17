@@ -8,10 +8,12 @@ import (
 	"time"
 
 	pb "gen/data-storage-service-gen"
+	userpb "gen/user-service-gen"
 
 	"github.com/FTNDreamTeam/FileSify/backend/data-storage-service/internal/server"
 	"github.com/FTNDreamTeam/FileSify/backend/data-storage-service/internal/storage"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -57,7 +59,10 @@ func main() {
 	grpcServer := grpc.NewServer()
 
 	// Register Services
-	storageServer := server.NewStorageServer(store)
+	userConn, err := grpc.NewClient("user-service:"+os.Getenv("USER_SERVICE_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	userClient := userpb.NewUserServiceClient(userConn)
+	storageServer := server.NewStorageServer(store, userClient)
+
 	pb.RegisterStorageServiceServer(grpcServer, storageServer)
 	reflection.Register(grpcServer)
 

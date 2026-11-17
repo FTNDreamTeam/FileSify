@@ -26,6 +26,7 @@ const (
 type CreateFolderRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Path          string                 `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+	Token         *string                `protobuf:"bytes,2,opt,name=token,proto3,oneof" json:"token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -63,6 +64,13 @@ func (*CreateFolderRequest) Descriptor() ([]byte, []int) {
 func (x *CreateFolderRequest) GetPath() string {
 	if x != nil {
 		return x.Path
+	}
+	return ""
+}
+
+func (x *CreateFolderRequest) GetToken() string {
+	if x != nil && x.Token != nil {
+		return *x.Token
 	}
 	return ""
 }
@@ -310,9 +318,11 @@ var File_data_storage_service_proto protoreflect.FileDescriptor
 const file_data_storage_service_proto_rawDesc = "" +
 	"\n" +
 	"\x1adata-storage-service.proto\x12\n" +
-	"storage.v1\x1a\x11google/date.proto\x1a\x1fgoogle/protobuf/timestamp.proto\")\n" +
+	"storage.v1\x1a\x11google/date.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"N\n" +
 	"\x13CreateFolderRequest\x12\x12\n" +
-	"\x04path\x18\x01 \x01(\tR\x04path\"\x16\n" +
+	"\x04path\x18\x01 \x01(\tR\x04path\x12\x19\n" +
+	"\x05token\x18\x02 \x01(\tH\x00R\x05token\x88\x01\x01B\b\n" +
+	"\x06_token\"\x16\n" +
 	"\x14CreateFolderResponse\"\xeb\x01\n" +
 	"\fFileMetaData\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1b\n" +
@@ -373,6 +383,7 @@ func file_data_storage_service_proto_init() {
 	if File_data_storage_service_proto != nil {
 		return
 	}
+	file_data_storage_service_proto_msgTypes[0].OneofWrappers = []any{}
 	file_data_storage_service_proto_msgTypes[3].OneofWrappers = []any{
 		(*UploadFileRequest_Metadata)(nil),
 		(*UploadFileRequest_Content)(nil),

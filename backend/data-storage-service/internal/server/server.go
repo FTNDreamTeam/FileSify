@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	pb "gen/data-storage-service-gen"
+	userpb "gen/user-service-gen"
 
 	"github.com/FTNDreamTeam/FileSify/backend/data-storage-service/internal/storage"
 	"google.golang.org/grpc/codes"
@@ -17,23 +18,36 @@ import (
 
 type StorageServer struct {
 	pb.UnimplementedStorageServiceServer
-	Store storage.ObjectStore
+	Store      storage.ObjectStore
+	UserClient userpb.UserServiceClient
 }
 
-func NewStorageServer(store storage.ObjectStore) *StorageServer {
-	return &StorageServer{Store: store}
+func NewStorageServer(store storage.ObjectStore, userClient userpb.UserServiceClient) *StorageServer {
+	return &StorageServer{Store: store, UserClient: userClient}
 }
 
 func (s *StorageServer) CreateFolder(ctx context.Context, req *pb.CreateFolderRequest) (*pb.CreateFolderResponse, error) {
 	folderPath := req.GetPath()
 	if folderPath == "" {
+		log.Print("Folder path emtpy")
 		return nil, status.Error(codes.InvalidArgument, "path cannot be empty")
 	}
-
-	// Folders in Silo must end with a slash
 	if !strings.HasSuffix(folderPath, "/") {
 		folderPath += "/"
 	}
+	if req.GetToken() != "" {
+		valResponse, err := s.UserClient.ValidateToken(ctx, &userpb.ValidateTokenRequest{
+			Token: req.GetToken(),
+		})
+		if err != nil {
+			log.Printf("Error validating token:%v", err)
+			return nil, status.Errorf(codes.Unauthenticated, "No token present:%v", err)
+		}
+		finalPath := valResponse.GetUserId() + "/" + folderPath
+		folderPath = finalPath
+	}
+
+	// Folders in Silo must end with a slash
 
 	// Create a 0-byte object
 	emptyReader := bytes.NewReader([]byte{})

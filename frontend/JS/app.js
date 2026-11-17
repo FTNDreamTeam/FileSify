@@ -12,47 +12,142 @@
         input.classList.remove('is-valid', 'is-invalid');
     }
 
-    // ============================================================
-    // LOGIN PAGE
-    // ============================================================
+    // ---------- Email validation ----------
+    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    function emailError(value) {
+        const v = (value || '').trim();
+        if (v.length === 0) return 'Please enter your email address.';
+        if (v.length > 254 || !EMAIL_RE.test(v)) return 'Please enter a valid email address.';
+        return '';
+    }
+
+    // ---------- Password rules ----------
+    const PASSWORD_RULES = {
+        length : v => v.length >= 12,
+        upper  : v => /[A-Z]/.test(v),
+        lower  : v => /[a-z]/.test(v),
+        digit  : v => /[0-9]/.test(v),
+        special: v => /[^A-Za-z0-9]/.test(v)
+    };
+    function passwordMeetsAll(v) {
+        return Object.keys(PASSWORD_RULES).every(k => PASSWORD_RULES[k](v));
+    }
+    function computeStrength(value) {
+        let met = 0;
+        for (const k of Object.keys(PASSWORD_RULES)) if (PASSWORD_RULES[k](value)) met++;
+        let label = 'Password strength';
+        let color = '#e2e8f0';
+        if (value.length > 0) {
+            if (met <= 2)       { label = 'Weak';   color = '#dc3545'; }
+            else if (met <= 3)  { label = 'Fair';   color = '#f59e0b'; }
+            else if (met === 4) { label = 'Good';   color = '#0ea5e9'; }
+            else                { label = 'Strong'; color = '#16a34a'; }
+        }
+        return { met, label, color };
+    }
+    function renderStrength(ruleListEl, fillEl, labelEl, value) {
+        const { met, label, color } = computeStrength(value);
+        ruleListEl.querySelectorAll('li').forEach(li => {
+            const rule = li.getAttribute('data-rule');
+            const ok = PASSWORD_RULES[rule](value);
+            li.classList.toggle('ok', ok);
+            li.querySelector('i').className = ok ? 'bi bi-check-circle-fill' : 'bi bi-circle';
+        });
+        fillEl.style.width = ((met / 5) * 100) + '%';
+        fillEl.style.background = color;
+        labelEl.textContent = label;
+    }
+
+    // ---------- Alert helpers ----------
+    function setAlert(el, message, type, extraClass) {
+        el.textContent = message;
+        el.className = `alert alert-${type} ${extraClass || 'mb-3'}`;
+        el.classList.remove('d-none');
+    }
+    function clearAlert(el) {
+        el.classList.add('d-none');
+        el.textContent = '';
+    }
+
+    // ---------- JWT decoder ----------
+    function decodeJwtPayload(jwt) {
+        try {
+            const parts = jwt.split('.');
+            if (parts.length !== 3) return {};
+            let b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+            while (b64.length % 4) b64 += '=';
+            return JSON.parse(atob(b64));
+        } catch { return {}; }
+    }
+
+    // ---------- Password toggle ----------
+    function bindPasswordToggle(buttonId, input) {
+        const btn = document.getElementById(buttonId);
+        if (!btn) return;
+        btn.addEventListener('click', () => {
+            const show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            btn.setAttribute('aria-pressed', String(show));
+            btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+            btn.querySelector('i').className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+        });
+    }
+
+    // ---------- Live validation binder ----------
+    function createLiveBinder() {
+        const touched = new WeakSet();
+        return function bindLive(input, validator) {
+            input.addEventListener('blur', () => { touched.add(input); validator(); });
+            input.addEventListener('input', () => { if (touched.has(input)) validator(); });
+        };
+    }
+
+    // ---------- Dialog wiring ----------
+    function wireDialogClose(dialog) {
+        dialog.querySelectorAll('[data-dialog-close]').forEach(btn => {
+            btn.addEventListener('click', () => dialog.close('cancel'));
+        });
+        dialog.addEventListener('click', (e) => {
+            const r = dialog.getBoundingClientRect();
+            const outside = e.clientX < r.left || e.clientX > r.right ||
+                e.clientY < r.top  || e.clientY > r.bottom;
+            if (outside) dialog.close('cancel');
+        });
+    }
+
+    // ---------- Login ----------
     (function initLogin() {
+        // Login form definition
         const form = document.getElementById('loginForm');
         if (!form) return;
 
         const email         = document.getElementById('loginEmail');
         const password      = document.getElementById('loginPassword');
-        const pwToggle      = document.getElementById('loginPwToggle');
         const emailFeedback = email.parentElement.querySelector('.invalid-feedback');
         const problemLink    = document.getElementById('passwordProblemLink');
         const loginAlert = document.getElementById('loginAlert');
 
+        // Login alert
         function showLoginAlert(message, type) {
-            loginAlert.textContent = message;
-            loginAlert.className = `alert alert-${type} mb-3`;
-            loginAlert.classList.remove('d-none');
+            setAlert(loginAlert, message, type);
             loginAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
-        function hideLoginAlert() {
-            loginAlert.classList.add('d-none');
-            loginAlert.textContent = '';
-        }
+        function hideLoginAlert() { clearAlert(loginAlert); }
 
+        // Email validation
         function validateEmail() {
-            const v = email.value.trim();
-            const ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) && v.length <= 254;
-            emailFeedback.textContent = ok
-                ? ''
-                : (v.length === 0
-                    ? 'Please enter your email address.'
-                    : 'Please enter a valid email address.');
-            return mark(email, ok);
+            const msg = emailError(email.value);
+            emailFeedback.textContent = msg;
+            return mark(email, msg === '');
         }
 
+        // Password validation
         function validatePassword() {
             return mark(password, password.value.length > 0);
         }
 
+        // Fill out watching
         const touched = new WeakSet();
         function bindLive(input, validator) {
             input.addEventListener('blur', () => {
@@ -64,25 +159,26 @@
             });
         }
 
+        // Validation on every change
         bindLive(email, validateEmail);
         bindLive(password, validatePassword);
 
+        // Hide field errors on empty
         [email, password].forEach(input => {
             input.addEventListener('input', () => {
                 if (input.value.length === 0 && !touched.has(input)) clearMark(input);
             });
         });
 
-        pwToggle.addEventListener('click', () => {
-            const show = password.type === 'password';
-            password.type = show ? 'text' : 'password';
-            pwToggle.setAttribute('aria-pressed', String(show));
-            pwToggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
-            pwToggle.querySelector('i').className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
-        });
+        // Password show and hide
+        bindPasswordToggle('loginPwToggle', password);
 
+        // Problem link click
         problemLink.addEventListener('click', (e) => {
+            // Form submitting turn off
             e.preventDefault();
+
+            // Problem form definition
             const dlg = document.getElementById('passwordHelpDialog');
             if (!dlg) return;
 
@@ -101,10 +197,9 @@
             setTimeout(() => dialogEmail.focus(), 100);
         });
 
-        // ============================================================
-        // PASSWORD HELP DIALOG (login page only)
-        // ============================================================
+        // Password help dialog
         (function initPasswordHelpDialog() {
+            // Password help dialog element definition
             const dialog = document.getElementById('passwordHelpDialog');
             if (!dialog) return;
 
@@ -114,39 +209,19 @@
             const forgottenBtn     = document.getElementById('forgottenPasswordBtn');
             const expiredBtn       = document.getElementById('expiredPasswordBtn');
 
-            function showAlert(message, type) {
-                alertEl.textContent = message;
-                alertEl.className = `alert alert-${type} mb-0`;
-                alertEl.classList.remove('d-none');
-            }
-            function hideAlert() {
-                alertEl.classList.add('d-none');
-                alertEl.textContent = '';
-            }
+            // Dialog alert
+            function showAlert(message, type) { setAlert(alertEl, message, type, 'mb-0'); }
+            function hideAlert() { clearAlert(alertEl); }
+
+            // Email validation
             function validateEmail() {
-                const v = dialogEmail.value.trim();
-                const ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) && v.length <= 254;
-                dialogEmail.classList.toggle('is-valid', ok);
-                dialogEmail.classList.toggle('is-invalid', !ok);
-                feedback.textContent = ok ? '' :
-                    (v.length === 0 ? 'Please enter your email address.' : 'Please enter a valid email address.');
-                feedback.style.display = ok ? 'none' : 'block';
-                return ok;
+                const msg = emailError(dialogEmail.value);
+                feedback.textContent = msg;
+                feedback.style.display = msg ? 'block' : 'none';
+                return mark(dialogEmail, msg === '');
             }
 
-            // Close buttons (X and Cancel)
-            dialog.querySelectorAll('[data-dialog-close]').forEach(btn => {
-                btn.addEventListener('click', () => dialog.close('cancel'));
-            });
-
-            // Backdrop click
-            dialog.addEventListener('click', (e) => {
-                const r = dialog.getBoundingClientRect();
-                const outside =
-                    e.clientX < r.left || e.clientX > r.right ||
-                    e.clientY < r.top  || e.clientY > r.bottom;
-                if (outside) dialog.close('cancel');
-            });
+            wireDialogClose(dialog);
 
             // Live validation on blur and re-validation on input if already invalid
             dialogEmail.addEventListener('blur', validateEmail);
@@ -154,6 +229,7 @@
                 if (dialogEmail.classList.contains('is-invalid')) validateEmail();
             });
 
+            // Magic link sending for forgotten pasword
             async function sendMagicLink(btn, reasonLabel) {
                 hideAlert();
                 if (!validateEmail()) {
@@ -194,8 +270,10 @@
                 }
             }
 
+            // Forgotten password button
             forgottenBtn.addEventListener('click', () => sendMagicLink(forgottenBtn, 'forgotten'));
 
+            // Expired password dialog open
             expiredBtn.addEventListener('click', () => {
                 if (!validateEmail()) {
                     dialogEmail.focus();
@@ -215,10 +293,13 @@
             });
         })();
 
+        // Login form submit
         form.addEventListener('submit', async function (e) {
+            // Login form element definition
             e.preventDefault();
             hideLoginAlert();
 
+            // Validation
             const okEmail = validateEmail();
             const okPw    = validatePassword();
             if (!okEmail || !okPw) {
@@ -235,6 +316,7 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'Signing in…';
 
+            // Send login credentials
             try {
                 const res = await fetch('/api/login', {
                     method:  'POST',
@@ -245,24 +327,8 @@
                     })
                 });
 
+                // Response checking
                 const data = await res.json().catch(() => ({}));
-
-                if (!res.ok) {
-                    const raw = (data.message || '').toLowerCase();
-                    if (res.status === 401 || data.code === 16) {
-                        showLoginAlert('Invalid email or password.', 'danger');
-                    } else if (data.code === 9) {
-                        showLoginAlert('Your password expired or account is not verified after registration.', 'warning');
-                    } else if (res.status === 400 || data.code === 3) {
-                        showLoginAlert(data.message || 'Please enter your email and password.', 'danger');
-                    }else if (raw.includes('60 seconds') || raw.includes('before requesting')) {
-                        showLoginAlert(
-                            'A verification code was just sent to your email. Because you did not use it, please wait 60 seconds and try signing in again.', 'warning');
-                    }  else {
-                        showLoginAlert(data.message || `Sign-in failed (HTTP ${res.status}).`, 'danger');
-                    }
-                    return;
-                }
 
                 if (!res.ok) {
                     const raw = (data.message || '').toLowerCase();
@@ -293,6 +359,7 @@
                     return;
                 }
 
+                // Checking for second verification need + redirect
                 if (data.twoFactor === true) {
                     sessionStorage.setItem('pending_token', data.token);
                     sessionStorage.setItem('pending_email', email.value.trim());
@@ -300,11 +367,13 @@
                     return;
                 }
 
+                // Token storing
                 localStorage.setItem('token', data.token);
                 if (data.user) {
                     localStorage.setItem('user', JSON.stringify(data.user));
                 }
 
+                // Login succes message + redirect
                 showLoginAlert('Signed in. Redirecting…', 'success');
                 setTimeout(() => {
                     window.location.href = '/HTML/dashboard.html';
@@ -319,10 +388,9 @@
         });
     })();
 
-    // ============================================================
-    // REGISTER PAGE
-    // ============================================================
+    // ---------- Register ----------
     (function initRegister() {
+        // Register form definition
         const form = document.getElementById('registerForm');
         if (!form) return;
 
@@ -340,46 +408,25 @@
 
         const registerAlert = document.getElementById('registerAlert');
 
-        function showAlert(message, type) {
-            registerAlert.textContent = message;
-            registerAlert.className = `alert alert-${type} mb-3`;
-            registerAlert.classList.remove('d-none');
-        }
+        // Register alert
+        function showAlert(message, type) { setAlert(registerAlert, message, type); }
+        function hideAlert() { clearAlert(registerAlert); }
 
-        function hideAlert() {
-            registerAlert.classList.add('d-none');
-            registerAlert.textContent = '';
-        }
-
+        // Name validation
         function validateName(input) {
             const v = input.value.trim();
             const ok = v.length >= 2 && v.length <= 50 && /^[\p{L}][\p{L}\s'’.-]*$/u.test(v);
             return mark(input, ok);
         }
 
+        // Email validation
         function validateEmail() {
-            const v = email.value.trim();
-            const ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) && v.length <= 254;
-            emailFeedback.textContent = ok
-                ? ''
-                : (v.length === 0
-                    ? 'Please enter your email address.'
-                    : 'Please enter a valid email address.');
-            return mark(email, ok);
+            const msg = emailError(email.value);
+            emailFeedback.textContent = msg;
+            return mark(email, msg === '');
         }
 
-        const RULES = {
-            length : v => v.length >= 12,
-            upper  : v => /[A-Z]/.test(v),
-            lower  : v => /[a-z]/.test(v),
-            digit  : v => /[0-9]/.test(v),
-            special: v => /[^A-Za-z0-9]/.test(v)
-        };
-
-        function passwordMeetsAll(v) {
-            return Object.keys(RULES).every(k => RULES[k](v));
-        }
-
+        // Password validation
         function validatePassword() {
             return mark(password, passwordMeetsAll(password.value));
         }
@@ -388,33 +435,16 @@
             return mark(confirm, confirm.value.length > 0 && confirm.value === password.value);
         }
 
+        // Terms validation
         function validateTerms() {
             const ok = terms.checked;
             terms.classList.toggle('is-invalid', !ok);
             return ok;
         }
 
+        // Password success bar
         function updatePasswordUI() {
-            const v = password.value;
-            let met = 0;
-            ruleList.querySelectorAll('li').forEach(li => {
-                const rule = li.getAttribute('data-rule');
-                const ok = RULES[rule](v);
-                if (ok) met++;
-                li.classList.toggle('ok', ok);
-                li.querySelector('i').className = ok ? 'bi bi-check-circle-fill' : 'bi bi-circle';
-            });
-            strengthFill.style.width = ((met / 5) * 100) + '%';
-            let label = 'Password strength';
-            let color = '#e2e8f0';
-            if (v.length > 0) {
-                if (met <= 2)      { label = 'Weak';   color = '#dc3545'; }
-                else if (met <= 3) { label = 'Fair';   color = '#f59e0b'; }
-                else if (met === 4){ label = 'Good';   color = '#0ea5e9'; }
-                else               { label = 'Strong'; color = '#16a34a'; }
-            }
-            strengthFill.style.background = color;
-            strengthLabel.textContent = label;
+            renderStrength(ruleList, strengthFill, strengthLabel, password.value);
             if (confirm.value.length > 0) validateConfirm();
         }
 
@@ -429,34 +459,29 @@
             });
         }
 
+        // Validation on every change
         bindLive(firstName, () => validateName(firstName));
         bindLive(lastName,  () => validateName(lastName));
         bindLive(email,     validateEmail);
         bindLive(password,  validatePassword);
         bindLive(confirm,   validateConfirm);
 
+        // Password bar update on change
         password.addEventListener('input', updatePasswordUI);
         password.addEventListener('blur', updatePasswordUI);
 
         terms.addEventListener('change', () => { touched.add(terms); validateTerms(); });
 
-        function bindToggle(buttonId, input) {
-            const btn = document.getElementById(buttonId);
-            btn.addEventListener('click', () => {
-                const show = input.type === 'password';
-                input.type = show ? 'text' : 'password';
-                btn.setAttribute('aria-pressed', String(show));
-                btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
-                btn.querySelector('i').className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
-            });
-        }
-        bindToggle('pwToggle', password);
-        bindToggle('pwToggle2', confirm);
+        // Password show and hide
+        bindPasswordToggle('pwToggle', password);
+        bindPasswordToggle('pwToggle2', confirm);
 
+        // Register form submit button
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
             hideAlert();
 
+            // Input error/validation check
             const results = [
                 validateName(firstName),
                 validateName(lastName),
@@ -480,6 +505,7 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'Creating account…';
 
+            // Send register credentials
             try {
                 const payload = {
                     email:     email.value.trim(),
@@ -494,6 +520,7 @@
                     body:    JSON.stringify(payload)
                 });
 
+                // Response check
                 const data = await res.json().catch(() => ({}));
 
                 if (!res.ok) {
@@ -511,6 +538,7 @@
                     return;
                 }
 
+                // Succesfull message + redirect
                 showAlert(data.message || 'User registration successful. Redirecting…', 'success');
                 setTimeout(() => { window.location.href = 'login.html'; }, 1200);
 
@@ -522,6 +550,7 @@
             }
         });
 
+        // Hide field errors on empty
         [firstName, lastName, email, password, confirm].forEach(input => {
             input.addEventListener('input', () => {
                 if (input.value.length === 0 && !touched.has(input)) clearMark(input);
@@ -531,10 +560,9 @@
         updatePasswordUI();
     })();
 
-    // ============================================================
-    // EMAIL VERIFICATION PAGE
-    // ============================================================
+    // ---------- Email verification for registration ----------
     (function initVerifyEmail() {
+        // Verification page element definition
         const elLoading = document.getElementById('state-loading');
         if (!elLoading) return;
 
@@ -555,6 +583,7 @@
             return;
         }
 
+        // Token sending for verification
         fetch('/api/verify/' + encodeURIComponent(token))
             .then(async (res) => {
                 const data = await res.json().catch(() => ({}));
@@ -578,10 +607,9 @@
             });
     })();
 
-    // ============================================================
-// LOGOUT CONFIRMATION DIALOG (dashboard only)
-// ============================================================
+    // ---------- Logout dialog ----------
     (function initLogoutDialog() {
+        // Dialog element definition
         const trigger = document.getElementById('logoutTrigger');
         const dialog  = document.getElementById('logoutDialog');
         if (!trigger || !dialog) return;
@@ -594,19 +622,8 @@
             dialog.showModal();
         });
 
-        // Cancel via the X button and the Cancel button
-        dialog.querySelectorAll('[data-dialog-close]').forEach((btn) => {
-            btn.addEventListener('click', () => dialog.close('cancel'));
-        });
-
-        // Backdrop click
-        dialog.addEventListener('click', (e) => {
-            const r = dialog.getBoundingClientRect();
-            const outside =
-                e.clientX < r.left || e.clientX > r.right ||
-                e.clientY < r.top  || e.clientY > r.bottom;
-            if (outside) dialog.close('cancel');
-        });
+        // Cancel + backdrop
+        wireDialogClose(dialog);
 
         // Confirm
         confirmBtn.addEventListener('click', () => dialog.close('confirm'));
@@ -620,10 +637,9 @@
         });
     })();
 
-    // ============================================================
-    // MAGIC LINK LOGIN PAGE
-    // ============================================================
+    // ---------- Magic link verifying page ----------
     (function initMagicLogin() {
+        // Element definition
         const elLoading = document.getElementById('magic-loading');
         if (!elLoading) return;
 
@@ -636,6 +652,7 @@
             el.classList.remove('d-none');
         }
 
+        // Token definition
         const token = new URLSearchParams(window.location.search).get('token');
 
         if (!token) {
@@ -643,6 +660,7 @@
             return;
         }
 
+        // Send token
         fetch('/api/auth/magic-link/verify', {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -660,9 +678,11 @@
 
                 localStorage.setItem('token', data.token);
                 if (data.user) {
+                    // Store token
                     localStorage.setItem('user', JSON.stringify(data.user));
                 }
 
+                // Succes dialog + redirect to dashboard with user data
                 show(elSuccess);
                 setTimeout(() => { window.location.replace('dashboard.html'); }, 300);
             })
@@ -673,10 +693,9 @@
             });
     })();
 
-    // ============================================================
-    // CHANGE PASSWORD DIALOG (opened from "Expired password")
-    // ============================================================
+    // ---------- Password change dialog ----------
     (function initChangePasswordDialog() {
+        // Element definition
         const dialog = document.getElementById('changePasswordDialog');
         if (!dialog) return;
 
@@ -691,108 +710,53 @@
         const alertEl        = document.getElementById('changePwAlert');
         const submitBtn      = document.getElementById('cpSubmitBtn');
 
-        function showAlert(message, type) {
-            alertEl.textContent = message;
-            alertEl.className = `alert alert-${type} mb-3`;
-            alertEl.classList.remove('d-none');
-        }
-        function hideAlert() {
-            alertEl.classList.add('d-none');
-            alertEl.textContent = '';
+        // Password change alert
+        function showAlert(message, type) { setAlert(alertEl, message, type); }
+        function hideAlert() { clearAlert(alertEl); }
+
+        // Email validation
+        function validateEmail() {
+            const msg = emailError(email.value);
+            emailFeedback.textContent = msg;
+            return mark(email, msg === '');
         }
 
-        function validateEmail() {
-            const v = email.value.trim();
-            const ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) && v.length <= 254;
-            emailFeedback.textContent = ok ? '' :
-                (v.length === 0 ? 'Please enter your email address.' : 'Please enter a valid email address.');
-            return mark(email, ok);
-        }
+        // Password validation
         function validateCurrent() {
             return mark(current, current.value.length > 0);
         }
 
-        const RULES = {
-            length : v => v.length >= 12,
-            upper  : v => /[A-Z]/.test(v),
-            lower  : v => /[a-z]/.test(v),
-            digit  : v => /[0-9]/.test(v),
-            special: v => /[^A-Za-z0-9]/.test(v)
-        };
-        function passwordMeetsAll(v) { return Object.keys(RULES).every(k => RULES[k](v)); }
         function validateNewPw()      { return mark(newPw, passwordMeetsAll(newPw.value)); }
         function validateConfirm()    { return mark(confirm, confirm.value.length > 0 && confirm.value === newPw.value); }
 
+        // Password progress bar
         function updatePasswordUI() {
-            const v = newPw.value;
-            let met = 0;
-            ruleList.querySelectorAll('li').forEach(li => {
-                const rule = li.getAttribute('data-rule');
-                const ok = RULES[rule](v);
-                if (ok) met++;
-                li.classList.toggle('ok', ok);
-                li.querySelector('i').className = ok ? 'bi bi-check-circle-fill' : 'bi bi-circle';
-            });
-            strengthFill.style.width = ((met / 5) * 100) + '%';
-            let label = 'Password strength';
-            let color = '#e2e8f0';
-            if (v.length > 0) {
-                if (met <= 2)       { label = 'Weak';   color = '#dc3545'; }
-                else if (met <= 3)  { label = 'Fair';   color = '#f59e0b'; }
-                else if (met === 4) { label = 'Good';   color = '#0ea5e9'; }
-                else                { label = 'Strong'; color = '#16a34a'; }
-            }
-            strengthFill.style.background = color;
-            strengthLabel.textContent = label;
+            renderStrength(ruleList, strengthFill, strengthLabel, newPw.value);
             if (confirm.value.length > 0) validateConfirm();
         }
 
-        const touched = new WeakSet();
-        function bindLive(input, validator) {
-            input.addEventListener('blur', () => { touched.add(input); validator(); });
-            input.addEventListener('input', () => { if (touched.has(input)) validator(); });
-        }
+        const bindLive = createLiveBinder();
+
+        // Validation on every change
         bindLive(email,   validateEmail);
         bindLive(current, validateCurrent);
         bindLive(newPw,   validateNewPw);
         bindLive(confirm, validateConfirm);
 
+        // Password bar update on change
         newPw.addEventListener('input', updatePasswordUI);
         newPw.addEventListener('blur',  updatePasswordUI);
 
-        // Close buttons
-        dialog.querySelectorAll('[data-dialog-close]').forEach(btn => {
-            btn.addEventListener('click', () => dialog.close('cancel'));
-        });
-
-        // Backdrop click
-        dialog.addEventListener('click', (e) => {
-            const r = dialog.getBoundingClientRect();
-            const outside =
-                e.clientX < r.left || e.clientX > r.right ||
-                e.clientY < r.top  || e.clientY > r.bottom;
-            if (outside) dialog.close('cancel');
-        });
+        // Cancel + backdrop
+        wireDialogClose(dialog);
 
         // Password show/hide toggles
-        function bindToggle(buttonId, input) {
-            const btn = document.getElementById(buttonId);
-            if (!btn) return;
-            btn.addEventListener('click', () => {
-                const show = input.type === 'password';
-                input.type = show ? 'text' : 'password';
-                btn.setAttribute('aria-pressed', String(show));
-                btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
-                btn.querySelector('i').className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
-            });
-        }
-        bindToggle('cpPwToggle1', current);
-        bindToggle('cpPwToggle2', newPw);
-        bindToggle('cpPwToggle3', confirm);
+        bindPasswordToggle('cpPwToggle1', current);
+        bindPasswordToggle('cpPwToggle2', newPw);
+        bindPasswordToggle('cpPwToggle3', confirm);
 
         // Reset state every time the dialog opens (email comes pre-filled from dialog 1)
         dialog.addEventListener('close', () => {
-            // Reset alerts and validators, but keep email if reopening
             hideAlert();
         });
 
@@ -802,6 +766,7 @@
         submitBtn.addEventListener('click', async () => {
             hideAlert();
 
+            // Validation check
             const results = [ validateEmail(), validateCurrent(), validateNewPw(), validateConfirm() ];
             updatePasswordUI();
             if (results.includes(false)) {
@@ -814,6 +779,7 @@
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Changing…';
 
+            // Send data
             try {
                 const res = await fetch('/api/auth/password-reset', {
                     method:  'POST',
@@ -860,10 +826,9 @@
         });
     })();
 
-    // ============================================================
-    // TWO-FACTOR VERIFICATION PAGE (two-factor.html only)
-    // ============================================================
+    // ---------- 2FA page ----------
     (function initTwoFactorPage() {
+        // Element definition
         const form = document.getElementById('twoFactorForm');
         if (!form) return;
 
@@ -875,7 +840,7 @@
         const pendingToken = sessionStorage.getItem('pending_token');
         const pendingEmail = sessionStorage.getItem('pending_email');
 
-        // No pending session → user shouldn't be here
+        // Token check
         if (!pendingToken) {
             window.location.replace('login.html');
             return;
@@ -885,16 +850,14 @@
             targetEmail.textContent = pendingEmail;
         }
 
+        // 2FA alert
         function showAlert(message, type) {
-            alertEl.textContent = message;
-            alertEl.className = `alert alert-${type} mb-3`;
-            alertEl.classList.remove('d-none');
+            setAlert(alertEl, message, type);
             alertEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
-        function hideAlert() {
-            alertEl.classList.add('d-none');
-            alertEl.textContent = '';
-        }
+        function hideAlert() { clearAlert(alertEl); }
+
+        // Code validation
         function validateCode() {
             const v = codeInput.value.trim();
             return mark(codeInput, /^\d{6}$/.test(v));
@@ -906,6 +869,7 @@
         });
         codeInput.addEventListener('blur', validateCode);
 
+        // Use different account
         backLink.addEventListener('click', (e) => {
             e.preventDefault();
             sessionStorage.removeItem('pending_token');
@@ -915,16 +879,7 @@
 
         setTimeout(() => codeInput.focus(), 100);
 
-        function decodeJwtPayload(jwt) {
-            try {
-                const parts = jwt.split('.');
-                if (parts.length !== 3) return {};
-                let b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-                while (b64.length % 4) b64 += '=';
-                return JSON.parse(atob(b64));
-            } catch { return {}; }
-        }
-
+        // Submit
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             hideAlert();
@@ -935,6 +890,7 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'Verifying…';
 
+            // Send code
             try {
                 const res = await fetch('/api/twofactor/verify', {
                     method:  'POST',
@@ -944,6 +900,8 @@
                         code:         codeInput.value.trim()
                     })
                 });
+
+                // Response check
                 const data = await res.json().catch(() => ({}));
 
                 if (!res.ok) {
@@ -993,6 +951,7 @@
                     return;
                 }
 
+                // Decode JWT
                 const claims = decodeJwtPayload(data.token);
                 const userObj = {
                     id:        claims.sub   || '',
@@ -1002,12 +961,15 @@
                     passwordValid: null
                 };
 
+                // Set token and user
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(userObj));
 
+                // Remove pending data
                 sessionStorage.removeItem('pending_token');
                 sessionStorage.removeItem('pending_email');
 
+                // Succes message + redirect
                 showAlert('Signed in. Redirecting…', 'success');
                 setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
 
@@ -1019,10 +981,10 @@
             }
         });
     })();
-    // ============================================================
-    // CREATE FOLDER DIALOG
-    // ============================================================
+
+    // ---------- Folder creating dialog----------
     (function initCreateFolderDialog() {
+        // Element definition
         const trigger = document.getElementById('newFolderButton');
         const dialog  = document.getElementById('createFolderDialog');
         if (!trigger || !dialog) return;
@@ -1039,17 +1001,11 @@
             setTimeout(() => input.focus(), 100);
         });
 
-        dialog.querySelectorAll('[data-dialog-close]').forEach(btn => {
-            btn.addEventListener('click', () => dialog.close('cancel'));
-        });
-
-        dialog.addEventListener('click', (e) => {
-            const r = dialog.getBoundingClientRect();
-            const outside = e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
-            if (outside) dialog.close('cancel');
-        });
+        // Cancel + backdrop
+        wireDialogClose(dialog);
 
         confirmBtn.addEventListener('click', async () => {
+            // Validation
             const folderName = input.value.trim();
             if (!folderName) {
                 alertEl.textContent = 'Please enter a folder name.';
@@ -1063,10 +1019,11 @@
             confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Creating…';
             alertEl.classList.add('d-none');
 
+            // Send data for folder creation
             try {
                 const res = await fetch('/api/storage/folder', {
                     method: 'POST',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + localStorage.getItem('token')
                     },
@@ -1079,7 +1036,7 @@
                 }
 
                 dialog.close('success');
-                window.location.reload(); 
+                window.location.reload();
 
             } catch (err) {
                 alertEl.textContent = err.message;
@@ -1092,10 +1049,9 @@
         });
     })();
 
-    // ============================================================
-    // UPLOAD FILE DIALOG (dashboard)
-    // ============================================================
+    // ---------- File uploading dialog----------
     (function initUploadFileDialog() {
+        // Element definition
         const dialog = document.getElementById('uploadFileDialog');
         if (!dialog) return;
 
@@ -1120,15 +1076,11 @@
             return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
         }
 
-        function showAlert(message, type) {
-            alertEl.textContent = message;
-            alertEl.className = `alert alert-${type} mb-3`;
-            alertEl.classList.remove('d-none');
-        }
-        function hideAlert() {
-            alertEl.classList.add('d-none');
-            alertEl.textContent = '';
-        }
+        // upload alert
+        function showAlert(message, type) { setAlert(alertEl, message, type); }
+        function hideAlert() { clearAlert(alertEl); }
+
+        // Dialog reset
         function resetDialog() {
             hideAlert();
             fileInput.value = '';
@@ -1142,27 +1094,22 @@
             submitBtn.innerHTML = '<i class="bi bi-cloud-arrow-up me-1"></i> Upload';
         }
 
+        // Open dialog
         function openDialog(e) {
             if (e) e.preventDefault();
             resetDialog();
             dialog.showModal();
             setTimeout(() => fileInput.focus(), 100);
         }
+
+        // Opening button click
         if (triggerNavbar) triggerNavbar.addEventListener('click', openDialog);
         if (triggerPage)   triggerPage.addEventListener('click', openDialog);
 
-        dialog.querySelectorAll('[data-dialog-close]').forEach(btn => {
-            btn.addEventListener('click', () => dialog.close('cancel'));
-        });
+        // Cancel + backdrop
+        wireDialogClose(dialog);
 
-        dialog.addEventListener('click', (e) => {
-            const r = dialog.getBoundingClientRect();
-            const outside =
-                e.clientX < r.left || e.clientX > r.right ||
-                e.clientY < r.top  || e.clientY > r.bottom;
-            if (outside) dialog.close('cancel');
-        });
-
+        // File validation
         fileInput.addEventListener('change', () => {
             hideAlert();
             const file = fileInput.files && fileInput.files[0];
@@ -1185,9 +1132,11 @@
             fileInfo.classList.remove('d-none');
         });
 
-        submitBtn.addEventListener('click', () => {
+        // Upload
+        submitBtn.addEventListener('click', async () => {
             hideAlert();
 
+            // Validation
             const file = fileInput.files && fileInput.files[0];
             if (!file) {
                 fileInput.classList.add('is-invalid');
@@ -1202,78 +1151,59 @@
             const originalHtml = submitBtn.innerHTML;
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Uploading…';
-            progressWrap.classList.remove('d-none');
-            progressBar.classList.remove('bg-danger');
-            progressBar.style.width = '0%';
-            progressText.textContent = 'Uploading… 0%';
 
             const formData = new FormData();
             formData.append('file', file);
 
             const token = localStorage.getItem('token');
-            const xhr = new XMLHttpRequest();
 
-            xhr.upload.addEventListener('progress', (evt) => {
-                if (evt.lengthComputable) {
-                    const pct = Math.round((evt.loaded / evt.total) * 100);
-                    progressBar.style.width = pct + '%';
-                    progressText.textContent = `Uploading… ${pct}%`;
-                }
-            });
+            // Send file
+            try {
+                const res = await fetch('/api/storage/file', {
+                    method:  'POST',
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+                    body:    formData
+                });
 
-            xhr.addEventListener('load', () => {
-                let data = {};
-                try { data = JSON.parse(xhr.responseText); } catch {}
-
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    progressBar.style.width = '100%';
-                    progressText.textContent = 'Upload complete.';
-                    showAlert('File uploaded successfully.', 'success');
-                    setTimeout(() => {
-                        dialog.close('uploaded');
-                        // window.location.reload();
-                    }, 1200);
-
-                } else if (xhr.status === 401) {
-                    progressBar.classList.add('bg-danger');
-                    showAlert('Your session has expired. Redirecting to sign in…', 'danger');
-                    setTimeout(() => { window.location.href = 'login.html'; }, 2000);
-
-                } else if (xhr.status === 400) {
-                    progressBar.classList.add('bg-danger');
-                    showAlert('Invalid upload request. Please select a file and try again.', 'danger');
-
-                } else if (xhr.status === 413) {
-                    progressBar.classList.add('bg-danger');
-                    showAlert('File is too large for the server. Try a smaller file.', 'danger');
-
-                } else if (xhr.status === 502) {
-                    progressBar.classList.add('bg-danger');
-                    showAlert('Storage service is temporarily unavailable. Please try again in a moment.', 'danger');
-
-                } else if (xhr.status >= 500) {
-                    progressBar.classList.add('bg-danger');
-                    showAlert('Server error while uploading. Please try again in a moment.', 'danger');
-
-                } else {
-                    progressBar.classList.add('bg-danger');
+                // Response check
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        showAlert('Your session has expired. Redirecting to sign in…', 'danger');
+                        setTimeout(() => { window.location.href = 'login.html'; }, 2000);
+                        return;
+                    }
+                    if (res.status === 400) {
+                        showAlert('Invalid upload request. Please select a file and try again.', 'danger');
+                        return;
+                    }
+                    if (res.status === 413) {
+                        showAlert('File is too large for the server. Try a smaller file.', 'danger');
+                        return;
+                    }
+                    if (res.status === 502) {
+                        showAlert('Storage service is temporarily unavailable. Please try again in a moment.', 'danger');
+                        return;
+                    }
+                    if (res.status >= 500) {
+                        showAlert('Server error while uploading. Please try again in a moment.', 'danger');
+                        return;
+                    }
                     showAlert('Upload failed. Please try again.', 'danger');
+                    return;
                 }
 
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalHtml;
-            });
+                // Success message + close
+                showAlert('File uploaded successfully.', 'success');
+                setTimeout(() => {
+                    dialog.close('uploaded');
+                }, 1200);
 
-            xhr.addEventListener('error', () => {
-                progressBar.classList.add('bg-danger');
+            } catch {
                 showAlert('Network error during upload. Please check your connection and try again.', 'danger');
+            } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalHtml;
-            });
-
-            xhr.open('POST', '/api/storage/file');
-            if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-            xhr.send(formData);
+            }
         });
     })();
 })();

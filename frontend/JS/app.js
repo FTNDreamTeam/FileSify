@@ -1091,4 +1091,189 @@
             }
         });
     })();
+
+    // ============================================================
+    // UPLOAD FILE DIALOG (dashboard)
+    // ============================================================
+    (function initUploadFileDialog() {
+        const dialog = document.getElementById('uploadFileDialog');
+        if (!dialog) return;
+
+        const triggerNavbar = document.getElementById('uploadButtonNavbar');
+        const triggerPage   = document.getElementById('uploadButtonPage');
+        const fileInput     = document.getElementById('uploadFileInput');
+        const alertEl       = document.getElementById('uploadAlert');
+        const fileInfo      = document.getElementById('uploadFileInfo');
+        const fileNameEl    = document.getElementById('uploadFileName');
+        const fileSizeEl    = document.getElementById('uploadFileSize');
+        const progressWrap  = document.getElementById('uploadProgressWrap');
+        const progressBar   = document.getElementById('uploadProgressBar');
+        const progressText  = document.getElementById('uploadProgressText');
+        const submitBtn     = document.getElementById('uploadFileConfirm');
+
+        const MAX_SIZE = 100 * 1024 * 1024; // 100 MB
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+            return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+        }
+
+        function showAlert(message, type) {
+            alertEl.textContent = message;
+            alertEl.className = `alert alert-${type} mb-3`;
+            alertEl.classList.remove('d-none');
+        }
+        function hideAlert() {
+            alertEl.classList.add('d-none');
+            alertEl.textContent = '';
+        }
+        function resetDialog() {
+            hideAlert();
+            fileInput.value = '';
+            fileInput.classList.remove('is-valid', 'is-invalid');
+            fileInfo.classList.add('d-none');
+            progressWrap.classList.add('d-none');
+            progressBar.style.width = '0%';
+            progressBar.classList.remove('bg-danger');
+            progressText.textContent = 'Uploading… 0%';
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-cloud-arrow-up me-1"></i> Upload';
+        }
+
+        function openDialog(e) {
+            if (e) e.preventDefault();
+            resetDialog();
+            dialog.showModal();
+            setTimeout(() => fileInput.focus(), 100);
+        }
+        if (triggerNavbar) triggerNavbar.addEventListener('click', openDialog);
+        if (triggerPage)   triggerPage.addEventListener('click', openDialog);
+
+        dialog.querySelectorAll('[data-dialog-close]').forEach(btn => {
+            btn.addEventListener('click', () => dialog.close('cancel'));
+        });
+
+        dialog.addEventListener('click', (e) => {
+            const r = dialog.getBoundingClientRect();
+            const outside =
+                e.clientX < r.left || e.clientX > r.right ||
+                e.clientY < r.top  || e.clientY > r.bottom;
+            if (outside) dialog.close('cancel');
+        });
+
+        fileInput.addEventListener('change', () => {
+            hideAlert();
+            const file = fileInput.files && fileInput.files[0];
+            if (!file) {
+                fileInfo.classList.add('d-none');
+                fileInput.classList.remove('is-valid', 'is-invalid');
+                return;
+            }
+            if (file.size > MAX_SIZE) {
+                fileInput.classList.add('is-invalid');
+                fileInput.classList.remove('is-valid');
+                fileInfo.classList.add('d-none');
+                showAlert(`File is too large (${formatSize(file.size)}). Maximum allowed size is ${formatSize(MAX_SIZE)}.`, 'danger');
+                return;
+            }
+            fileInput.classList.remove('is-invalid');
+            fileInput.classList.add('is-valid');
+            fileNameEl.textContent = file.name;
+            fileSizeEl.textContent = formatSize(file.size);
+            fileInfo.classList.remove('d-none');
+        });
+
+        submitBtn.addEventListener('click', () => {
+            hideAlert();
+
+            const file = fileInput.files && fileInput.files[0];
+            if (!file) {
+                fileInput.classList.add('is-invalid');
+                showAlert('Please select a file to upload.', 'danger');
+                return;
+            }
+            if (file.size > MAX_SIZE) {
+                showAlert(`File is too large (${formatSize(file.size)}). Maximum allowed size is ${formatSize(MAX_SIZE)}.`, 'danger');
+                return;
+            }
+
+            const originalHtml = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Uploading…';
+            progressWrap.classList.remove('d-none');
+            progressBar.classList.remove('bg-danger');
+            progressBar.style.width = '0%';
+            progressText.textContent = 'Uploading… 0%';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const token = localStorage.getItem('token');
+            const xhr = new XMLHttpRequest();
+
+            xhr.upload.addEventListener('progress', (evt) => {
+                if (evt.lengthComputable) {
+                    const pct = Math.round((evt.loaded / evt.total) * 100);
+                    progressBar.style.width = pct + '%';
+                    progressText.textContent = `Uploading… ${pct}%`;
+                }
+            });
+
+            xhr.addEventListener('load', () => {
+                let data = {};
+                try { data = JSON.parse(xhr.responseText); } catch {}
+
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    progressBar.style.width = '100%';
+                    progressText.textContent = 'Upload complete.';
+                    showAlert('File uploaded successfully.', 'success');
+                    setTimeout(() => {
+                        dialog.close('uploaded');
+                        // window.location.reload();
+                    }, 1200);
+
+                } else if (xhr.status === 401) {
+                    progressBar.classList.add('bg-danger');
+                    showAlert('Your session has expired. Redirecting to sign in…', 'danger');
+                    setTimeout(() => { window.location.href = 'login.html'; }, 2000);
+
+                } else if (xhr.status === 400) {
+                    progressBar.classList.add('bg-danger');
+                    showAlert('Invalid upload request. Please select a file and try again.', 'danger');
+
+                } else if (xhr.status === 413) {
+                    progressBar.classList.add('bg-danger');
+                    showAlert('File is too large for the server. Try a smaller file.', 'danger');
+
+                } else if (xhr.status === 502) {
+                    progressBar.classList.add('bg-danger');
+                    showAlert('Storage service is temporarily unavailable. Please try again in a moment.', 'danger');
+
+                } else if (xhr.status >= 500) {
+                    progressBar.classList.add('bg-danger');
+                    showAlert('Server error while uploading. Please try again in a moment.', 'danger');
+
+                } else {
+                    progressBar.classList.add('bg-danger');
+                    showAlert('Upload failed. Please try again.', 'danger');
+                }
+
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalHtml;
+            });
+
+            xhr.addEventListener('error', () => {
+                progressBar.classList.add('bg-danger');
+                showAlert('Network error during upload. Please check your connection and try again.', 'danger');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalHtml;
+            });
+
+            xhr.open('POST', '/api/storage/file');
+            if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+            xhr.send(formData);
+        });
+    })();
 })();

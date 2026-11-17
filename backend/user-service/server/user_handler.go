@@ -12,6 +12,7 @@ import (
 	"time"
 	"uuid"
 
+	storagepb "gen/data-storage-service-gen"
 	mailpb "gen/mail-service"
 	userpb "gen/user-service-gen"
 
@@ -33,6 +34,7 @@ type UserServer struct {
 	magicLinkCollection    *mongo.Collection
 	mailClient             mailpb.MailServiceClient
 	twoFactorService       *TwoFactorService
+	storageClient          storagepb.StorageServiceClient
 }
 
 func NewUserServer(
@@ -41,6 +43,7 @@ func NewUserServer(
 	magicLinkCollection *mongo.Collection,
 	mailClient mailpb.MailServiceClient,
 	twoFactorService *TwoFactorService,
+	storageClient storagepb.StorageServiceClient,
 ) *UserServer {
 	return &UserServer{
 		dbCollection:           collection,
@@ -48,6 +51,7 @@ func NewUserServer(
 		magicLinkCollection:    magicLinkCollection,
 		mailClient:             mailClient,
 		twoFactorService:       twoFactorService,
+		storageClient:          storageClient,
 	}
 }
 
@@ -124,6 +128,10 @@ func (s *UserServer) VerifyAccount(ctx context.Context, req *userpb.VerifyAccoun
 	}
 
 	slog.Info("verification_success", "event", "auth.verify", "user_id", verificationToken.UserId, "status", "success")
+
+	if _, err = s.storageClient.CreateFolder(ctx, &storagepb.CreateFolderRequest{Path: verificationToken.UserId}); err != nil {
+		slog.Error("verification_failure", "event", "auth.verify.failed", "reason", "silo_error", "status", "failure", "error", err.Error())
+	}
 
 	return &userpb.VerifyAccountResponse{
 		Message: "User Verification Successful",
@@ -370,7 +378,7 @@ func (s *UserServer) LoginUser(ctx context.Context, req *userpb.LoginUserRequest
 			slog.Warn("login_failure", "event", "auth.login.failed", "reason", "no_user", "status", "failure")
 			return nil, status.Error(codes.Unauthenticated, "invalid email or password")
 		}
-		log.Fatalf("Database error: %v", err)
+		log.Printf("Database error: %v", err)
 		return nil, status.Errorf(codes.Internal, "login lookup failed: %v", err)
 
 	}
@@ -381,7 +389,7 @@ func (s *UserServer) LoginUser(ctx context.Context, req *userpb.LoginUserRequest
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		log.Fatalf("Token generating error: %v", err)
+		log.Printf("Token generating error: %v", err)
 		return nil, status.Error(codes.Unauthenticated, "invalid email or password")
 	}
 
@@ -510,4 +518,15 @@ func (s *UserServer) Verify2FA(ctx context.Context, req *userpb.Verify2FARequest
 	}
 
 	return &userpb.Verify2FAResponse{Token: token}, nil
+}
+
+func (s *UserServer) ValidateToken(ctx context.Context, req *userpb.ValidateTokenRequest) (*userpb.ValidateTokenResponse, error) {
+	userId, err := ParseAndValidateToken(req.GetToken())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Invalid token")
+	}
+
+	return &userpb.ValidateTokenResponse{
+		UserId: userId,
+	}, nil
 }

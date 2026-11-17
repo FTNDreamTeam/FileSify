@@ -16,6 +16,7 @@ service UserService {
   rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse) {}
   rpc SendTwoFactor(SendTwoFactorRequest) returns (SendTwoFactorResponse) {}
   rpc Verify2FA(Verify2FARequest) returns (Verify2FAResponse) {}
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse) {}
 }
 
 message UserProfile {
@@ -118,4 +119,12 @@ message Verify2FARequest {
 
 message Verify2FAResponse {
   string token = 1;
+}
+
+message ValidateTokenRequest {
+  string token = 1;
+}
+
+message ValidateTokenResponse {
+  string user_id = 1;
 }

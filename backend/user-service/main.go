@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	storagepb "gen/data-storage-service-gen"
 	mailpb "gen/mail-service"
 	userpb "gen/user-service-gen"
 
@@ -68,8 +69,14 @@ func main() {
 
 	twoFactorService := server.NewTFAService(redis.NewClient(&redis.Options{Addr: "redis-otp:" + os.Getenv("REDIS_PORT"), Username: "", Password: ""}), []byte(os.Getenv("HMAC_SERCRET")))
 
+	storageConn, err := grpc.NewClient(
+		"filesify-storage:"+os.Getenv("STORAGE_PORT"),
+		grpc.WithTransportCredentials(insecure.NewCredentials()))
+
+	storageClient := storagepb.NewStorageServiceClient(storageConn)
+
 	grpcServer := grpc.NewServer()
-	userServer := server.NewUserServer(userCollection, verificationCollection, magicLinkCollection, mailClient, twoFactorService)
+	userServer := server.NewUserServer(userCollection, verificationCollection, magicLinkCollection, mailClient, twoFactorService, storageClient)
 	userpb.RegisterUserServiceServer(grpcServer, userServer)
 	reflection.Register(grpcServer)
 

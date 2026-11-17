@@ -2,10 +2,14 @@ syntax = "proto3";
 
 package storage.v1;
 
+import "google/date.proto";
+import "google/protobuf/timestamp.proto";
+
 option go_package = "gen/data-storage-service-gen";
 
 service StorageService {
   rpc CreateFolder(CreateFolderRequest) returns (CreateFolderResponse);
+  rpc UploadFile(stream UploadFileRequest) returns (UploadFileResponse);
 }
 
 message CreateFolderRequest {
@@ -13,3 +17,21 @@ message CreateFolderRequest {
 }
 
 message CreateFolderResponse {}
+
+message FileMetaData {
+  string name = 1;
+  string mime_type = 2;
+  string path = 3;
+  google.type.Date date_created_at = 4;
+  google.protobuf.Timestamp time_created_at = 5;
+  string user_id = 6;
+}
+
+message UploadFileRequest {
+  oneof data {
+    FileMetaData metadata = 1;
+    bytes content = 2;
+  }
+}
+
+message UploadFileResponse {}

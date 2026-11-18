@@ -313,6 +313,146 @@ func (*UploadFileResponse) Descriptor() ([]byte, []int) {
 	return file_data_storage_service_proto_rawDescGZIP(), []int{4}
 }
 
+type ChangeQuotaRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Amount        int32                  `protobuf:"varint,1,opt,name=amount,proto3" json:"amount,omitempty"`
+	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChangeQuotaRequest) Reset() {
+	*x = ChangeQuotaRequest{}
+	mi := &file_data_storage_service_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChangeQuotaRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChangeQuotaRequest) ProtoMessage() {}
+
+func (x *ChangeQuotaRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_data_storage_service_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChangeQuotaRequest.ProtoReflect.Descriptor instead.
+func (*ChangeQuotaRequest) Descriptor() ([]byte, []int) {
+	return file_data_storage_service_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ChangeQuotaRequest) GetAmount() int32 {
+	if x != nil {
+		return x.Amount
+	}
+	return 0
+}
+
+func (x *ChangeQuotaRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type CheckStorageQuotaRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CheckStorageQuotaRequest) Reset() {
+	*x = CheckStorageQuotaRequest{}
+	mi := &file_data_storage_service_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CheckStorageQuotaRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckStorageQuotaRequest) ProtoMessage() {}
+
+func (x *CheckStorageQuotaRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_data_storage_service_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckStorageQuotaRequest.ProtoReflect.Descriptor instead.
+func (*CheckStorageQuotaRequest) Descriptor() ([]byte, []int) {
+	return file_data_storage_service_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *CheckStorageQuotaRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type CheckStorageQuotaResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Quota         int32                  `protobuf:"varint,1,opt,name=quota,proto3" json:"quota,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CheckStorageQuotaResponse) Reset() {
+	*x = CheckStorageQuotaResponse{}
+	mi := &file_data_storage_service_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CheckStorageQuotaResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckStorageQuotaResponse) ProtoMessage() {}
+
+func (x *CheckStorageQuotaResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_data_storage_service_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckStorageQuotaResponse.ProtoReflect.Descriptor instead.
+func (*CheckStorageQuotaResponse) Descriptor() ([]byte, []int) {
+	return file_data_storage_service_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *CheckStorageQuotaResponse) GetQuota() int32 {
+	if x != nil {
+		return x.Quota
+	}
+	return 0
+}
+
 var File_data_storage_service_proto protoreflect.FileDescriptor
 
 const file_data_storage_service_proto_rawDesc = "" +
@@ -335,7 +475,14 @@ const file_data_storage_service_proto_rawDesc = "" +
 	"\bmetadata\x18\x01 \x01(\v2\x18.storage.v1.FileMetaDataH\x00R\bmetadata\x12\x1a\n" +
 	"\acontent\x18\x02 \x01(\fH\x00R\acontentB\x06\n" +
 	"\x04data\"\x14\n" +
-	"\x12UploadFileResponse2\xb2\x01\n" +
+	"\x12UploadFileResponse\"E\n" +
+	"\x12ChangeQuotaRequest\x12\x16\n" +
+	"\x06amount\x18\x01 \x01(\x05R\x06amount\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\"3\n" +
+	"\x18CheckStorageQuotaRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"1\n" +
+	"\x19CheckStorageQuotaResponse\x12\x14\n" +
+	"\x05quota\x18\x01 \x01(\x05R\x05quota2\xb2\x01\n" +
 	"\x0eStorageService\x12Q\n" +
 	"\fCreateFolder\x12\x1f.storage.v1.CreateFolderRequest\x1a .storage.v1.CreateFolderResponse\x12M\n" +
 	"\n" +
@@ -353,19 +500,22 @@ func file_data_storage_service_proto_rawDescGZIP() []byte {
 	return file_data_storage_service_proto_rawDescData
 }
 
-var file_data_storage_service_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_data_storage_service_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_data_storage_service_proto_goTypes = []any{
-	(*CreateFolderRequest)(nil),   // 0: storage.v1.CreateFolderRequest
-	(*CreateFolderResponse)(nil),  // 1: storage.v1.CreateFolderResponse
-	(*FileMetaData)(nil),          // 2: storage.v1.FileMetaData
-	(*UploadFileRequest)(nil),     // 3: storage.v1.UploadFileRequest
-	(*UploadFileResponse)(nil),    // 4: storage.v1.UploadFileResponse
-	(*date.Date)(nil),             // 5: google.type.Date
-	(*timestamppb.Timestamp)(nil), // 6: google.protobuf.Timestamp
+	(*CreateFolderRequest)(nil),       // 0: storage.v1.CreateFolderRequest
+	(*CreateFolderResponse)(nil),      // 1: storage.v1.CreateFolderResponse
+	(*FileMetaData)(nil),              // 2: storage.v1.FileMetaData
+	(*UploadFileRequest)(nil),         // 3: storage.v1.UploadFileRequest
+	(*UploadFileResponse)(nil),        // 4: storage.v1.UploadFileResponse
+	(*ChangeQuotaRequest)(nil),        // 5: storage.v1.ChangeQuotaRequest
+	(*CheckStorageQuotaRequest)(nil),  // 6: storage.v1.CheckStorageQuotaRequest
+	(*CheckStorageQuotaResponse)(nil), // 7: storage.v1.CheckStorageQuotaResponse
+	(*date.Date)(nil),                 // 8: google.type.Date
+	(*timestamppb.Timestamp)(nil),     // 9: google.protobuf.Timestamp
 }
 var file_data_storage_service_proto_depIdxs = []int32{
-	5, // 0: storage.v1.FileMetaData.date_created_at:type_name -> google.type.Date
-	6, // 1: storage.v1.FileMetaData.time_created_at:type_name -> google.protobuf.Timestamp
+	8, // 0: storage.v1.FileMetaData.date_created_at:type_name -> google.type.Date
+	9, // 1: storage.v1.FileMetaData.time_created_at:type_name -> google.protobuf.Timestamp
 	2, // 2: storage.v1.UploadFileRequest.metadata:type_name -> storage.v1.FileMetaData
 	0, // 3: storage.v1.StorageService.CreateFolder:input_type -> storage.v1.CreateFolderRequest
 	3, // 4: storage.v1.StorageService.UploadFile:input_type -> storage.v1.UploadFileRequest
@@ -394,7 +544,7 @@ func file_data_storage_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_data_storage_service_proto_rawDesc), len(file_data_storage_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

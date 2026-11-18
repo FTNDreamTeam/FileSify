@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"log"
+	"math"
 	"path"
 	"strings"
 	"time"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/FTNDreamTeam/FileSify/backend/data-storage-service/internal/db"
 	"github.com/FTNDreamTeam/FileSify/backend/data-storage-service/internal/storage"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc/codes"
@@ -98,6 +100,22 @@ func (s *StorageServer) UploadFile(stream pb.StorageService_UploadFileServer) er
 		return status.Errorf(codes.InvalidArgument, "First message must contain file metadata: %v", err)
 	}
 
+	resp, err := s.UserClient.CheckStorageQuota(stream.Context(), &pb.CheckStorageQuotaRequest{
+		UserId: meta.GetUserId(),
+	})
+
+	if err != nil {
+		log.Printf("Error checking storage quota:%v", err)
+		return status.Errorf(codes.Internal, "Error checking storage quota:%v", err)
+	}
+
+	remainingQuota := resp.GetQuota()
+
+	if remainingQuota <= 0 {
+		log.Printf("Remaining storage quota:%d", remainingQuota)
+		return status.Error(codes.InvalidArgument, "There is no remaining storage quota")
+	}
+
 	safeUserID := path.Base(meta.GetUserId())                                     //Determine users root folder
 	cleanSubFolder := strings.Trim(path.Clean("/"+meta.GetPath()), "/")           //Determine path to the file
 	objectKey := path.Join(safeUserID, cleanSubFolder, path.Base(meta.GetName())) //Make object key
@@ -127,13 +145,7 @@ func (s *StorageServer) UploadFile(stream pb.StorageService_UploadFileServer) er
 		log.Printf("Couldn't parse ObjectID from string:%v", err)
 	}
 
-	_, err = s.FileMeta.InsertOne(stream.Context(), db.FileMeta{
-		Name:  meta.GetName(),
-		Date:  *meta.GetDateCreatedAt(),
-		Time:  primitive.Timestamp{},
-		Owner: metaUserId,
-	})
-
+	var totalBytes int32
 	for {
 		req, err := stream.Recv() //Begin receiveing through stream
 		if err == io.EOF {
@@ -147,15 +159,63 @@ func (s *StorageServer) UploadFile(stream pb.StorageService_UploadFileServer) er
 
 		chunk := req.GetContent() //Get part of file through stream
 		if len(chunk) > 0 {
-			if _, writeErr := pipeWriter.Write(chunk); writeErr != nil {
+			n, writeErr := pipeWriter.Write(chunk)
+			if writeErr != nil {
 				pipeWriter.CloseWithError(writeErr)
 				return status.Errorf(codes.Internal, "Error writing to Silo stream: %v", writeErr)
 			}
+			totalBytes += int32(n)
 		}
 	}
 
 	if err := <-uploadErrCh; err != nil {
 		return status.Errorf(codes.Internal, "Failed to save file to Silo: %v", err)
+	}
+
+	megaBytes := int32(math.Ceil(float64(totalBytes) / (1024 * 1024)))
+
+	var existingFile db.FileMeta
+	err = s.FileMeta.FindOne(stream.Context(), bson.M{"path": objectKey}).Decode(&existingFile)
+	if err != nil || err == mongo.ErrNoDocuments {
+		log.Printf("Error looking for existing files in metadb:%v", err)
+	}
+
+	megaBytes = megaBytes - existingFile.Size
+
+	if remainingQuota-megaBytes < 0 {
+		err := s.Store.Delete(stream.Context(), "filesify", objectKey)
+		if err != nil {
+			return status.Errorf(codes.Internal, "Failed to delete object after checking remaining quota:%v", err)
+		}
+		return status.Error(codes.InvalidArgument, "The file is larger than the remaining storage quota")
+	}
+	if existingFile.Size >= 1 {
+		_, err = s.FileMeta.UpdateByID(stream.Context(), existingFile.ID,
+			bson.M{
+				"$set": bson.M{
+					"size": existingFile.Size + megaBytes,
+					"date": *meta.GetDateCreatedAt(),
+					"time": primitive.Timestamp{},
+				},
+			})
+	} else {
+		_, err = s.FileMeta.InsertOne(stream.Context(), db.FileMeta{
+			Name:  meta.GetName(),
+			Date:  *meta.GetDateCreatedAt(),
+			Time:  primitive.Timestamp{},
+			Owner: metaUserId,
+			Path:  objectKey,
+			Size:  megaBytes,
+		})
+	}
+
+	_, err = s.UserClient.ChangeUsedQuota(stream.Context(), &pb.ChangeQuotaRequest{
+		Amount: megaBytes,
+		UserId: meta.GetUserId(),
+	})
+
+	if err != nil {
+		return status.Errorf(codes.Internal, "Failed to decrease storage quota")
 	}
 
 	return stream.SendAndClose(&pb.UploadFileResponse{})

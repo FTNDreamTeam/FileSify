@@ -16,6 +16,7 @@ type UserDBModel struct {
 	Verified       bool               `bson:"verified"`
 	TwoFactor      bool               `bson:"two_factor"`
 	StorageQuota   int32              `bson:"storage_quota"`
+	UsedQuota      int32              `bson:"used_quota"`
 }
 
 type VerificationTokenModel struct {

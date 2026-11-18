@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package user_service.v1;
 
+import "data-storage-service.proto";
 import "google/date.proto";
 
 option go_package = "gen/user-service-gen";
@@ -17,6 +18,10 @@ service UserService {
   rpc SendTwoFactor(SendTwoFactorRequest) returns (SendTwoFactorResponse) {}
   rpc Verify2FA(Verify2FARequest) returns (Verify2FAResponse) {}
   rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse) {}
+  rpc IncreaseStorageQuota(storage.v1.ChangeQuotaRequest) returns (EmptyResponse) {} //Admin accepts users storage expansion request
+  rpc DecreaseStorageQuota(storage.v1.ChangeQuotaRequest) returns (EmptyResponse) {} //When admin decides to decrease users storage quota
+  rpc ChangeUsedQuota(storage.v1.ChangeQuotaRequest) returns (EmptyResponse) {} //When file gets uploaded/deleted changes the amount of storage used by user
+  rpc CheckStorageQuota(storage.v1.CheckStorageQuotaRequest) returns (storage.v1.CheckStorageQuotaResponse) {} //Checks users remaining storage quota
 }
 
 message UserProfile {
@@ -26,6 +31,7 @@ message UserProfile {
   string last_name = 4;
   google.type.Date password_valid = 6;
   int32 storage_quota = 7;
+  int32 used_quota = 8;
 }
 
 message RegisterUserRequest {
@@ -129,3 +135,5 @@ message ValidateTokenRequest {
 message ValidateTokenResponse {
   string user_id = 1;
 }
+
+message EmptyResponse {}

@@ -254,6 +254,7 @@ func (s *UserServer) VerifyMagicLink(ctx context.Context, req *userpb.VerifyMagi
 				Day:   int32(user.PasswordActive.Time().Day()),
 			},
 			StorageQuota: user.StorageQuota,
+			UsedQuota:    user.UsedQuota,
 		},
 	}, nil
 }
@@ -300,6 +301,7 @@ func (s *UserServer) RegisterUser(ctx context.Context, req *userpb.RegisterUserR
 		PasswordActive: primitive.NewDateTimeFromTime(time.Now()),
 		Verified:       false,
 		StorageQuota:   2000,
+		UsedQuota:      0,
 	}
 
 	verificationToken := uuid.New().String()
@@ -352,6 +354,7 @@ func (s *UserServer) RegisterUser(ctx context.Context, req *userpb.RegisterUserR
 			Day:   int32(newUser.PasswordActive.Time().Day()),
 		},
 		StorageQuota: newUser.StorageQuota,
+		UsedQuota:    0,
 	}
 
 	returnUser := &userpb.RegisterUserResponse{
@@ -533,4 +536,39 @@ func (s *UserServer) ValidateToken(ctx context.Context, req *userpb.ValidateToke
 	return &userpb.ValidateTokenResponse{
 		UserId: userId,
 	}, nil
+}
+
+func (s *UserServer) CheckStorageQuota(ctx context.Context, req *storagepb.CheckStorageQuotaRequest) (*storagepb.CheckStorageQuotaResponse, error) {
+	userId, err := primitive.ObjectIDFromHex(req.GetUserId())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Value is not a valid id:%v", err)
+	}
+	var user db.UserDBModel
+	err = s.dbCollection.FindOne(ctx, bson.M{"_id": userId}).Decode(&user)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, status.Errorf(codes.NotFound, "Couldn't find user with ID:%v", err)
+		}
+		log.Printf("Database error: %v", err)
+		return nil, status.Errorf(codes.Internal, "Failed to load user from db: %v", err)
+	}
+	log.Printf("Remaining quota:%d", user.StorageQuota-user.UsedQuota)
+
+	return &storagepb.CheckStorageQuotaResponse{Quota: user.StorageQuota - user.UsedQuota}, nil
+}
+
+func (s *UserServer) ChangeUsedQuota(ctx context.Context, req *storagepb.ChangeQuotaRequest) (*userpb.EmptyResponse, error) {
+	userId, err := primitive.ObjectIDFromHex(req.GetUserId())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Value is not a valid id:%v", err)
+	}
+	res, err := s.dbCollection.UpdateByID(ctx, userId, bson.M{"$inc": bson.M{"used_quota": req.GetAmount()}})
+	if err != nil {
+		log.Printf("Failed to change quota:%v", err)
+		return nil, status.Errorf(codes.Internal, "Failed to change quota:%v", err)
+	}
+	if res.MatchedCount == 0 {
+		return nil, status.Errorf(codes.NotFound, "Couldn't find user with ID: %s", req.GetUserId())
+	}
+	return &userpb.EmptyResponse{}, nil
 }

@@ -253,6 +253,7 @@ func (s *UserServer) VerifyMagicLink(ctx context.Context, req *userpb.VerifyMagi
 				Month: int32(user.PasswordActive.Time().Month()),
 				Day:   int32(user.PasswordActive.Time().Day()),
 			},
+			StorageQuota: user.StorageQuota,
 		},
 	}, nil
 }
@@ -298,6 +299,7 @@ func (s *UserServer) RegisterUser(ctx context.Context, req *userpb.RegisterUserR
 		LastName:       lastName,
 		PasswordActive: primitive.NewDateTimeFromTime(time.Now()),
 		Verified:       false,
+		StorageQuota:   2000,
 	}
 
 	verificationToken := uuid.New().String()
@@ -349,6 +351,7 @@ func (s *UserServer) RegisterUser(ctx context.Context, req *userpb.RegisterUserR
 			Month: int32(newUser.PasswordActive.Time().Month()),
 			Day:   int32(newUser.PasswordActive.Time().Day()),
 		},
+		StorageQuota: newUser.StorageQuota,
 	}
 
 	returnUser := &userpb.RegisterUserResponse{
@@ -440,6 +443,7 @@ func (s *UserServer) LoginUser(ctx context.Context, req *userpb.LoginUserRequest
 				Month: int32(user.PasswordActive.Time().Month()),
 				Day:   int32(user.PasswordActive.Time().Day()),
 			},
+			StorageQuota: user.StorageQuota,
 		},
 	}, nil
 }

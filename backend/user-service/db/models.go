@@ -15,6 +15,7 @@ type UserDBModel struct {
 	PasswordActive primitive.DateTime `bson:"password_active"` //When the password was created
 	Verified       bool               `bson:"verified"`
 	TwoFactor      bool               `bson:"two_factor"`
+	StorageQuota   int32              `bson:"storage_quota"`
 }
 
 type VerificationTokenModel struct {

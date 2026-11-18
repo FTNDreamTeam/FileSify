@@ -78,6 +78,26 @@ services:
     depends_on:
       silo:
         condition: service_healthy
+      data-service-mongo:
+        condition: service_healthy
+    networks:
+      - storage-network
+
+  data-service-mongo:
+    image: mongo:latest
+    container_name: storage-mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${STORAGE_MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${STORAGE_MONGO_PASS}
+    volumes:
+      - silo-data:/data/meta
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "-u", "${STORAGE_MONGO_USERNAME}", "-p", "${STORAGE_MONGO_PASS}", "--authenticationDatabase", "admin", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+      start_period: 15s
     networks:
       - storage-network
 

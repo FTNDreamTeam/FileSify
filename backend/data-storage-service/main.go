@@ -12,19 +12,46 @@ import (
 
 	"github.com/FTNDreamTeam/FileSify/backend/data-storage-service/internal/server"
 	"github.com/FTNDreamTeam/FileSify/backend/data-storage-service/internal/storage"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 )
 
 func main() {
+
 	// Silo Storage Setup
 	endpoint := os.Getenv("SILO_ENDPOINT")
 	accessKey := os.Getenv("MINIO_ROOT_USER")
 	secretKey := os.Getenv("MINIO_ROOT_PASSWORD")
+	userServicePort := os.Getenv("USER_SERVICE_PORT")
+	mongoUri := os.Getenv("METADATA_URI")
+	metaDBName := os.Getenv("META_DB")
 
 	var store *storage.SiloStore
 	var err error
+
+	// Register Services
+	//User Service
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	userConn, err := grpc.NewClient("user-service:"+userServicePort, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	userClient := userpb.NewUserServiceClient(userConn)
+	//Metadata DB
+	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoUri))
+
+	if err != nil {
+		log.Fatalf("Failed to initialize mongo:%v", err)
+	}
+
+	if err := mongoClient.Ping(ctx, nil); err != nil {
+		log.Fatalf("Failed to ping Mongo:%v", err)
+	}
+
+	fileMetaColl := mongoClient.Database(metaDBName).Collection("file_meta")
+	folderMetaColl := mongoClient.Database(metaDBName).Collection("folder_meta")
 
 	// Keep trying to connect to Silo until successful
 	for {
@@ -58,10 +85,7 @@ func main() {
 
 	grpcServer := grpc.NewServer()
 
-	// Register Services
-	userConn, err := grpc.NewClient("user-service:"+os.Getenv("USER_SERVICE_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	userClient := userpb.NewUserServiceClient(userConn)
-	storageServer := server.NewStorageServer(store, userClient)
+	storageServer := server.NewStorageServer(store, userClient, fileMetaColl, folderMetaColl)
 
 	pb.RegisterStorageServiceServer(grpcServer, storageServer)
 	reflection.Register(grpcServer)

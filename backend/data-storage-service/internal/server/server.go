@@ -7,11 +7,15 @@ import (
 	"log"
 	"path"
 	"strings"
+	"time"
 
 	pb "gen/data-storage-service-gen"
 	userpb "gen/user-service-gen"
 
+	"github.com/FTNDreamTeam/FileSify/backend/data-storage-service/internal/db"
 	"github.com/FTNDreamTeam/FileSify/backend/data-storage-service/internal/storage"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -20,10 +24,12 @@ type StorageServer struct {
 	pb.UnimplementedStorageServiceServer
 	Store      storage.ObjectStore
 	UserClient userpb.UserServiceClient
+	FileMeta   *mongo.Collection
+	FolderMeta *mongo.Collection
 }
 
-func NewStorageServer(store storage.ObjectStore, userClient userpb.UserServiceClient) *StorageServer {
-	return &StorageServer{Store: store, UserClient: userClient}
+func NewStorageServer(store storage.ObjectStore, userClient userpb.UserServiceClient, fileMeta *mongo.Collection, folderMeta *mongo.Collection) *StorageServer {
+	return &StorageServer{Store: store, UserClient: userClient, FileMeta: fileMeta, FolderMeta: folderMeta}
 }
 
 func (s *StorageServer) CreateFolder(ctx context.Context, req *pb.CreateFolderRequest) (*pb.CreateFolderResponse, error) {
@@ -35,6 +41,13 @@ func (s *StorageServer) CreateFolder(ctx context.Context, req *pb.CreateFolderRe
 	if !strings.HasSuffix(folderPath, "/") {
 		folderPath += "/"
 	}
+
+	fileMeta := db.FolderMeta{
+		ID:      primitive.NewObjectID(),
+		Path:    folderPath,
+		Created: primitive.NewDateTimeFromTime(time.Now()),
+	}
+
 	if req.GetToken() != "" { //Checks if request has token
 		//If it does it means it is a user created folder
 		valResponse, err := s.UserClient.ValidateToken(ctx, &userpb.ValidateTokenRequest{ //Validate token
@@ -46,13 +59,24 @@ func (s *StorageServer) CreateFolder(ctx context.Context, req *pb.CreateFolderRe
 		}
 		finalPath := valResponse.GetUserId() + "/" + folderPath // Folders in Silo must end with a slash
 		folderPath = finalPath
+
+		fileMeta.Owner, err = primitive.ObjectIDFromHex(valResponse.GetUserId())
+		if err != nil {
+			log.Printf("Couldn't create ObjectID from string:%v", err)
+		}
+
 	}
 	//If it doesn't it means it is a root folder created after verification
+	_, err := s.FolderMeta.InsertOne(ctx, fileMeta) //Insert metadata in Mongo
+
+	if err != nil {
+		log.Printf("Couldn't save metadata to MongoDB:%v", err)
+	}
 
 	// Create a 0-byte object
 	emptyReader := bytes.NewReader([]byte{})
 
-	err := s.Store.Put(ctx, "filesify", folderPath, emptyReader, 0, "application/x-directory")
+	err = s.Store.Put(ctx, "filesify", folderPath, emptyReader, 0, "application/x-directory")
 	if err != nil {
 		log.Printf("Create folder error: %v", err)
 		return nil, status.Error(codes.Internal, "failed to create folder in Silo")
@@ -97,6 +121,18 @@ func (s *StorageServer) UploadFile(stream pb.StorageService_UploadFileServer) er
 		)
 		uploadErrCh <- putErr
 	}()
+
+	metaUserId, err := primitive.ObjectIDFromHex(meta.GetUserId())
+	if err != nil {
+		log.Printf("Couldn't parse ObjectID from string:%v", err)
+	}
+
+	_, err = s.FileMeta.InsertOne(stream.Context(), db.FileMeta{
+		Name:  meta.GetName(),
+		Date:  *meta.GetDateCreatedAt(),
+		Time:  primitive.Timestamp{},
+		Owner: metaUserId,
+	})
 
 	for {
 		req, err := stream.Recv() //Begin receiveing through stream

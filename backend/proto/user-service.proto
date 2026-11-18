@@ -25,6 +25,7 @@ message UserProfile {
   string first_name = 3;
   string last_name = 4;
   google.type.Date password_valid = 6;
+  int32 storage_quota = 7;
 }
 
 message RegisterUserRequest {

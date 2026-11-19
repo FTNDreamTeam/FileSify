@@ -36,3 +36,16 @@ message UploadFileRequest {
 }
 
 message UploadFileResponse {}
+
+message ChangeQuotaRequest {
+  int32 amount = 1;
+  string user_id = 2;
+}
+
+message CheckStorageQuotaRequest {
+  string user_id = 1;
+}
+
+message CheckStorageQuotaResponse {
+  int32 quota = 1;
+}

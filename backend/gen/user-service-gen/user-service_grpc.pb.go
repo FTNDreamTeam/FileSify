@@ -8,6 +8,7 @@ package user_service_gen
 
 import (
 	context "context"
+	data_storage_service_gen "gen/data-storage-service-gen"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -19,16 +20,20 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_RegisterUser_FullMethodName     = "/user_service.v1.UserService/RegisterUser"
-	UserService_LoginUser_FullMethodName        = "/user_service.v1.UserService/LoginUser"
-	UserService_SendVerification_FullMethodName = "/user_service.v1.UserService/SendVerification"
-	UserService_VerifyAccount_FullMethodName    = "/user_service.v1.UserService/VerifyAccount"
-	UserService_RequestMagicLink_FullMethodName = "/user_service.v1.UserService/RequestMagicLink"
-	UserService_VerifyMagicLink_FullMethodName  = "/user_service.v1.UserService/VerifyMagicLink"
-	UserService_ChangePassword_FullMethodName   = "/user_service.v1.UserService/ChangePassword"
-	UserService_SendTwoFactor_FullMethodName    = "/user_service.v1.UserService/SendTwoFactor"
-	UserService_Verify2FA_FullMethodName        = "/user_service.v1.UserService/Verify2FA"
-	UserService_ValidateToken_FullMethodName    = "/user_service.v1.UserService/ValidateToken"
+	UserService_RegisterUser_FullMethodName         = "/user_service.v1.UserService/RegisterUser"
+	UserService_LoginUser_FullMethodName            = "/user_service.v1.UserService/LoginUser"
+	UserService_SendVerification_FullMethodName     = "/user_service.v1.UserService/SendVerification"
+	UserService_VerifyAccount_FullMethodName        = "/user_service.v1.UserService/VerifyAccount"
+	UserService_RequestMagicLink_FullMethodName     = "/user_service.v1.UserService/RequestMagicLink"
+	UserService_VerifyMagicLink_FullMethodName      = "/user_service.v1.UserService/VerifyMagicLink"
+	UserService_ChangePassword_FullMethodName       = "/user_service.v1.UserService/ChangePassword"
+	UserService_SendTwoFactor_FullMethodName        = "/user_service.v1.UserService/SendTwoFactor"
+	UserService_Verify2FA_FullMethodName            = "/user_service.v1.UserService/Verify2FA"
+	UserService_ValidateToken_FullMethodName        = "/user_service.v1.UserService/ValidateToken"
+	UserService_IncreaseStorageQuota_FullMethodName = "/user_service.v1.UserService/IncreaseStorageQuota"
+	UserService_DecreaseStorageQuota_FullMethodName = "/user_service.v1.UserService/DecreaseStorageQuota"
+	UserService_ChangeUsedQuota_FullMethodName      = "/user_service.v1.UserService/ChangeUsedQuota"
+	UserService_CheckStorageQuota_FullMethodName    = "/user_service.v1.UserService/CheckStorageQuota"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -45,6 +50,10 @@ type UserServiceClient interface {
 	SendTwoFactor(ctx context.Context, in *SendTwoFactorRequest, opts ...grpc.CallOption) (*SendTwoFactorResponse, error)
 	Verify2FA(ctx context.Context, in *Verify2FARequest, opts ...grpc.CallOption) (*Verify2FAResponse, error)
 	ValidateToken(ctx context.Context, in *ValidateTokenRequest, opts ...grpc.CallOption) (*ValidateTokenResponse, error)
+	IncreaseStorageQuota(ctx context.Context, in *data_storage_service_gen.ChangeQuotaRequest, opts ...grpc.CallOption) (*EmptyResponse, error)
+	DecreaseStorageQuota(ctx context.Context, in *data_storage_service_gen.ChangeQuotaRequest, opts ...grpc.CallOption) (*EmptyResponse, error)
+	ChangeUsedQuota(ctx context.Context, in *data_storage_service_gen.ChangeQuotaRequest, opts ...grpc.CallOption) (*EmptyResponse, error)
+	CheckStorageQuota(ctx context.Context, in *data_storage_service_gen.CheckStorageQuotaRequest, opts ...grpc.CallOption) (*data_storage_service_gen.CheckStorageQuotaResponse, error)
 }
 
 type userServiceClient struct {
@@ -155,6 +164,46 @@ func (c *userServiceClient) ValidateToken(ctx context.Context, in *ValidateToken
 	return out, nil
 }
 
+func (c *userServiceClient) IncreaseStorageQuota(ctx context.Context, in *data_storage_service_gen.ChangeQuotaRequest, opts ...grpc.CallOption) (*EmptyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(EmptyResponse)
+	err := c.cc.Invoke(ctx, UserService_IncreaseStorageQuota_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) DecreaseStorageQuota(ctx context.Context, in *data_storage_service_gen.ChangeQuotaRequest, opts ...grpc.CallOption) (*EmptyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(EmptyResponse)
+	err := c.cc.Invoke(ctx, UserService_DecreaseStorageQuota_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) ChangeUsedQuota(ctx context.Context, in *data_storage_service_gen.ChangeQuotaRequest, opts ...grpc.CallOption) (*EmptyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(EmptyResponse)
+	err := c.cc.Invoke(ctx, UserService_ChangeUsedQuota_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) CheckStorageQuota(ctx context.Context, in *data_storage_service_gen.CheckStorageQuotaRequest, opts ...grpc.CallOption) (*data_storage_service_gen.CheckStorageQuotaResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(data_storage_service_gen.CheckStorageQuotaResponse)
+	err := c.cc.Invoke(ctx, UserService_CheckStorageQuota_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -169,6 +218,10 @@ type UserServiceServer interface {
 	SendTwoFactor(context.Context, *SendTwoFactorRequest) (*SendTwoFactorResponse, error)
 	Verify2FA(context.Context, *Verify2FARequest) (*Verify2FAResponse, error)
 	ValidateToken(context.Context, *ValidateTokenRequest) (*ValidateTokenResponse, error)
+	IncreaseStorageQuota(context.Context, *data_storage_service_gen.ChangeQuotaRequest) (*EmptyResponse, error)
+	DecreaseStorageQuota(context.Context, *data_storage_service_gen.ChangeQuotaRequest) (*EmptyResponse, error)
+	ChangeUsedQuota(context.Context, *data_storage_service_gen.ChangeQuotaRequest) (*EmptyResponse, error)
+	CheckStorageQuota(context.Context, *data_storage_service_gen.CheckStorageQuotaRequest) (*data_storage_service_gen.CheckStorageQuotaResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -208,6 +261,18 @@ func (UnimplementedUserServiceServer) Verify2FA(context.Context, *Verify2FAReque
 }
 func (UnimplementedUserServiceServer) ValidateToken(context.Context, *ValidateTokenRequest) (*ValidateTokenResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ValidateToken not implemented")
+}
+func (UnimplementedUserServiceServer) IncreaseStorageQuota(context.Context, *data_storage_service_gen.ChangeQuotaRequest) (*EmptyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method IncreaseStorageQuota not implemented")
+}
+func (UnimplementedUserServiceServer) DecreaseStorageQuota(context.Context, *data_storage_service_gen.ChangeQuotaRequest) (*EmptyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DecreaseStorageQuota not implemented")
+}
+func (UnimplementedUserServiceServer) ChangeUsedQuota(context.Context, *data_storage_service_gen.ChangeQuotaRequest) (*EmptyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ChangeUsedQuota not implemented")
+}
+func (UnimplementedUserServiceServer) CheckStorageQuota(context.Context, *data_storage_service_gen.CheckStorageQuotaRequest) (*data_storage_service_gen.CheckStorageQuotaResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CheckStorageQuota not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -410,6 +475,78 @@ func _UserService_ValidateToken_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_IncreaseStorageQuota_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(data_storage_service_gen.ChangeQuotaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).IncreaseStorageQuota(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_IncreaseStorageQuota_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).IncreaseStorageQuota(ctx, req.(*data_storage_service_gen.ChangeQuotaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_DecreaseStorageQuota_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(data_storage_service_gen.ChangeQuotaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).DecreaseStorageQuota(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_DecreaseStorageQuota_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).DecreaseStorageQuota(ctx, req.(*data_storage_service_gen.ChangeQuotaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_ChangeUsedQuota_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(data_storage_service_gen.ChangeQuotaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ChangeUsedQuota(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_ChangeUsedQuota_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ChangeUsedQuota(ctx, req.(*data_storage_service_gen.ChangeQuotaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_CheckStorageQuota_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(data_storage_service_gen.CheckStorageQuotaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).CheckStorageQuota(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_CheckStorageQuota_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).CheckStorageQuota(ctx, req.(*data_storage_service_gen.CheckStorageQuotaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -456,6 +593,22 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ValidateToken",
 			Handler:    _UserService_ValidateToken_Handler,
+		},
+		{
+			MethodName: "IncreaseStorageQuota",
+			Handler:    _UserService_IncreaseStorageQuota_Handler,
+		},
+		{
+			MethodName: "DecreaseStorageQuota",
+			Handler:    _UserService_DecreaseStorageQuota_Handler,
+		},
+		{
+			MethodName: "ChangeUsedQuota",
+			Handler:    _UserService_ChangeUsedQuota_Handler,
+		},
+		{
+			MethodName: "CheckStorageQuota",
+			Handler:    _UserService_CheckStorageQuota_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

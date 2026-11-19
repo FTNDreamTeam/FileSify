@@ -7,6 +7,7 @@
 package user_service_gen
 
 import (
+	data_storage_service_gen "gen/data-storage-service-gen"
 	date "google.golang.org/genproto/googleapis/type/date"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -30,6 +31,7 @@ type UserProfile struct {
 	LastName      string                 `protobuf:"bytes,4,opt,name=last_name,json=lastName,proto3" json:"last_name,omitempty"`
 	PasswordValid *date.Date             `protobuf:"bytes,6,opt,name=password_valid,json=passwordValid,proto3" json:"password_valid,omitempty"`
 	StorageQuota  int32                  `protobuf:"varint,7,opt,name=storage_quota,json=storageQuota,proto3" json:"storage_quota,omitempty"`
+	UsedQuota     int32                  `protobuf:"varint,8,opt,name=used_quota,json=usedQuota,proto3" json:"used_quota,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -102,6 +104,13 @@ func (x *UserProfile) GetPasswordValid() *date.Date {
 func (x *UserProfile) GetStorageQuota() int32 {
 	if x != nil {
 		return x.StorageQuota
+	}
+	return 0
+}
+
+func (x *UserProfile) GetUsedQuota() int32 {
+	if x != nil {
+		return x.UsedQuota
 	}
 	return 0
 }
@@ -1174,11 +1183,47 @@ func (x *ValidateTokenResponse) GetUserId() string {
 	return ""
 }
 
+type EmptyResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *EmptyResponse) Reset() {
+	*x = EmptyResponse{}
+	mi := &file_user_service_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EmptyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EmptyResponse) ProtoMessage() {}
+
+func (x *EmptyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_user_service_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EmptyResponse.ProtoReflect.Descriptor instead.
+func (*EmptyResponse) Descriptor() ([]byte, []int) {
+	return file_user_service_proto_rawDescGZIP(), []int{22}
+}
+
 var File_user_service_proto protoreflect.FileDescriptor
 
 const file_user_service_proto_rawDesc = "" +
 	"\n" +
-	"\x12user-service.proto\x12\x0fuser_service.v1\x1a\x11google/date.proto\"\xce\x01\n" +
+	"\x12user-service.proto\x12\x0fuser_service.v1\x1a\x1adata-storage-service.proto\x1a\x11google/date.proto\"\xed\x01\n" +
 	"\vUserProfile\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1d\n" +
@@ -1186,7 +1231,9 @@ const file_user_service_proto_rawDesc = "" +
 	"first_name\x18\x03 \x01(\tR\tfirstName\x12\x1b\n" +
 	"\tlast_name\x18\x04 \x01(\tR\blastName\x128\n" +
 	"\x0epassword_valid\x18\x06 \x01(\v2\x11.google.type.DateR\rpasswordValid\x12#\n" +
-	"\rstorage_quota\x18\a \x01(\x05R\fstorageQuota\"\x83\x01\n" +
+	"\rstorage_quota\x18\a \x01(\x05R\fstorageQuota\x12\x1d\n" +
+	"\n" +
+	"used_quota\x18\b \x01(\x05R\tusedQuota\"\x83\x01\n" +
 	"\x13RegisterUserRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\x12\x1d\n" +
@@ -1248,7 +1295,9 @@ const file_user_service_proto_rawDesc = "" +
 	"\x14ValidateTokenRequest\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\"0\n" +
 	"\x15ValidateTokenResponse\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId2\xdb\a\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"\x0f\n" +
+	"\rEmptyResponse2\xc8\n" +
+	"\n" +
 	"\vUserService\x12]\n" +
 	"\fRegisterUser\x12$.user_service.v1.RegisterUserRequest\x1a%.user_service.v1.RegisterUserResponse\"\x00\x12T\n" +
 	"\tLoginUser\x12!.user_service.v1.LoginUserRequest\x1a\".user_service.v1.LoginUserResponse\"\x00\x12i\n" +
@@ -1259,7 +1308,11 @@ const file_user_service_proto_rawDesc = "" +
 	"\x0eChangePassword\x12&.user_service.v1.ChangePasswordRequest\x1a'.user_service.v1.ChangePasswordResponse\"\x00\x12`\n" +
 	"\rSendTwoFactor\x12%.user_service.v1.SendTwoFactorRequest\x1a&.user_service.v1.SendTwoFactorResponse\"\x00\x12T\n" +
 	"\tVerify2FA\x12!.user_service.v1.Verify2FARequest\x1a\".user_service.v1.Verify2FAResponse\"\x00\x12`\n" +
-	"\rValidateToken\x12%.user_service.v1.ValidateTokenRequest\x1a&.user_service.v1.ValidateTokenResponse\"\x00B\x16Z\x14gen/user-service-genb\x06proto3"
+	"\rValidateToken\x12%.user_service.v1.ValidateTokenRequest\x1a&.user_service.v1.ValidateTokenResponse\"\x00\x12X\n" +
+	"\x14IncreaseStorageQuota\x12\x1e.storage.v1.ChangeQuotaRequest\x1a\x1e.user_service.v1.EmptyResponse\"\x00\x12X\n" +
+	"\x14DecreaseStorageQuota\x12\x1e.storage.v1.ChangeQuotaRequest\x1a\x1e.user_service.v1.EmptyResponse\"\x00\x12S\n" +
+	"\x0fChangeUsedQuota\x12\x1e.storage.v1.ChangeQuotaRequest\x1a\x1e.user_service.v1.EmptyResponse\"\x00\x12b\n" +
+	"\x11CheckStorageQuota\x12$.storage.v1.CheckStorageQuotaRequest\x1a%.storage.v1.CheckStorageQuotaResponse\"\x00B\x16Z\x14gen/user-service-genb\x06proto3"
 
 var (
 	file_user_service_proto_rawDescOnce sync.Once
@@ -1273,34 +1326,38 @@ func file_user_service_proto_rawDescGZIP() []byte {
 	return file_user_service_proto_rawDescData
 }
 
-var file_user_service_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
+var file_user_service_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
 var file_user_service_proto_goTypes = []any{
-	(*UserProfile)(nil),              // 0: user_service.v1.UserProfile
-	(*RegisterUserRequest)(nil),      // 1: user_service.v1.RegisterUserRequest
-	(*RegisterUserResponse)(nil),     // 2: user_service.v1.RegisterUserResponse
-	(*LoginUserRequest)(nil),         // 3: user_service.v1.LoginUserRequest
-	(*LoginUserResponse)(nil),        // 4: user_service.v1.LoginUserResponse
-	(*SendVerificationRequest)(nil),  // 5: user_service.v1.SendVerificationRequest
-	(*SendVerificationResponse)(nil), // 6: user_service.v1.SendVerificationResponse
-	(*VerifyAccountRequest)(nil),     // 7: user_service.v1.VerifyAccountRequest
-	(*VerifyAccountResponse)(nil),    // 8: user_service.v1.VerifyAccountResponse
-	(*RequestMagicLinkRequest)(nil),  // 9: user_service.v1.RequestMagicLinkRequest
-	(*RequestMagicLinkResponse)(nil), // 10: user_service.v1.RequestMagicLinkResponse
-	(*VerifyMagicLinkRequest)(nil),   // 11: user_service.v1.VerifyMagicLinkRequest
-	(*SendMagicLinkRequest)(nil),     // 12: user_service.v1.SendMagicLinkRequest
-	(*SendMagicLinkResponse)(nil),    // 13: user_service.v1.SendMagicLinkResponse
-	(*ChangePasswordRequest)(nil),    // 14: user_service.v1.ChangePasswordRequest
-	(*ChangePasswordResponse)(nil),   // 15: user_service.v1.ChangePasswordResponse
-	(*SendTwoFactorRequest)(nil),     // 16: user_service.v1.SendTwoFactorRequest
-	(*SendTwoFactorResponse)(nil),    // 17: user_service.v1.SendTwoFactorResponse
-	(*Verify2FARequest)(nil),         // 18: user_service.v1.Verify2FARequest
-	(*Verify2FAResponse)(nil),        // 19: user_service.v1.Verify2FAResponse
-	(*ValidateTokenRequest)(nil),     // 20: user_service.v1.ValidateTokenRequest
-	(*ValidateTokenResponse)(nil),    // 21: user_service.v1.ValidateTokenResponse
-	(*date.Date)(nil),                // 22: google.type.Date
+	(*UserProfile)(nil),                                        // 0: user_service.v1.UserProfile
+	(*RegisterUserRequest)(nil),                                // 1: user_service.v1.RegisterUserRequest
+	(*RegisterUserResponse)(nil),                               // 2: user_service.v1.RegisterUserResponse
+	(*LoginUserRequest)(nil),                                   // 3: user_service.v1.LoginUserRequest
+	(*LoginUserResponse)(nil),                                  // 4: user_service.v1.LoginUserResponse
+	(*SendVerificationRequest)(nil),                            // 5: user_service.v1.SendVerificationRequest
+	(*SendVerificationResponse)(nil),                           // 6: user_service.v1.SendVerificationResponse
+	(*VerifyAccountRequest)(nil),                               // 7: user_service.v1.VerifyAccountRequest
+	(*VerifyAccountResponse)(nil),                              // 8: user_service.v1.VerifyAccountResponse
+	(*RequestMagicLinkRequest)(nil),                            // 9: user_service.v1.RequestMagicLinkRequest
+	(*RequestMagicLinkResponse)(nil),                           // 10: user_service.v1.RequestMagicLinkResponse
+	(*VerifyMagicLinkRequest)(nil),                             // 11: user_service.v1.VerifyMagicLinkRequest
+	(*SendMagicLinkRequest)(nil),                               // 12: user_service.v1.SendMagicLinkRequest
+	(*SendMagicLinkResponse)(nil),                              // 13: user_service.v1.SendMagicLinkResponse
+	(*ChangePasswordRequest)(nil),                              // 14: user_service.v1.ChangePasswordRequest
+	(*ChangePasswordResponse)(nil),                             // 15: user_service.v1.ChangePasswordResponse
+	(*SendTwoFactorRequest)(nil),                               // 16: user_service.v1.SendTwoFactorRequest
+	(*SendTwoFactorResponse)(nil),                              // 17: user_service.v1.SendTwoFactorResponse
+	(*Verify2FARequest)(nil),                                   // 18: user_service.v1.Verify2FARequest
+	(*Verify2FAResponse)(nil),                                  // 19: user_service.v1.Verify2FAResponse
+	(*ValidateTokenRequest)(nil),                               // 20: user_service.v1.ValidateTokenRequest
+	(*ValidateTokenResponse)(nil),                              // 21: user_service.v1.ValidateTokenResponse
+	(*EmptyResponse)(nil),                                      // 22: user_service.v1.EmptyResponse
+	(*date.Date)(nil),                                          // 23: google.type.Date
+	(*data_storage_service_gen.ChangeQuotaRequest)(nil),        // 24: storage.v1.ChangeQuotaRequest
+	(*data_storage_service_gen.CheckStorageQuotaRequest)(nil),  // 25: storage.v1.CheckStorageQuotaRequest
+	(*data_storage_service_gen.CheckStorageQuotaResponse)(nil), // 26: storage.v1.CheckStorageQuotaResponse
 }
 var file_user_service_proto_depIdxs = []int32{
-	22, // 0: user_service.v1.UserProfile.password_valid:type_name -> google.type.Date
+	23, // 0: user_service.v1.UserProfile.password_valid:type_name -> google.type.Date
 	0,  // 1: user_service.v1.RegisterUserResponse.user:type_name -> user_service.v1.UserProfile
 	0,  // 2: user_service.v1.LoginUserResponse.user:type_name -> user_service.v1.UserProfile
 	1,  // 3: user_service.v1.UserService.RegisterUser:input_type -> user_service.v1.RegisterUserRequest
@@ -1313,18 +1370,26 @@ var file_user_service_proto_depIdxs = []int32{
 	16, // 10: user_service.v1.UserService.SendTwoFactor:input_type -> user_service.v1.SendTwoFactorRequest
 	18, // 11: user_service.v1.UserService.Verify2FA:input_type -> user_service.v1.Verify2FARequest
 	20, // 12: user_service.v1.UserService.ValidateToken:input_type -> user_service.v1.ValidateTokenRequest
-	2,  // 13: user_service.v1.UserService.RegisterUser:output_type -> user_service.v1.RegisterUserResponse
-	4,  // 14: user_service.v1.UserService.LoginUser:output_type -> user_service.v1.LoginUserResponse
-	6,  // 15: user_service.v1.UserService.SendVerification:output_type -> user_service.v1.SendVerificationResponse
-	8,  // 16: user_service.v1.UserService.VerifyAccount:output_type -> user_service.v1.VerifyAccountResponse
-	10, // 17: user_service.v1.UserService.RequestMagicLink:output_type -> user_service.v1.RequestMagicLinkResponse
-	4,  // 18: user_service.v1.UserService.VerifyMagicLink:output_type -> user_service.v1.LoginUserResponse
-	15, // 19: user_service.v1.UserService.ChangePassword:output_type -> user_service.v1.ChangePasswordResponse
-	17, // 20: user_service.v1.UserService.SendTwoFactor:output_type -> user_service.v1.SendTwoFactorResponse
-	19, // 21: user_service.v1.UserService.Verify2FA:output_type -> user_service.v1.Verify2FAResponse
-	21, // 22: user_service.v1.UserService.ValidateToken:output_type -> user_service.v1.ValidateTokenResponse
-	13, // [13:23] is the sub-list for method output_type
-	3,  // [3:13] is the sub-list for method input_type
+	24, // 13: user_service.v1.UserService.IncreaseStorageQuota:input_type -> storage.v1.ChangeQuotaRequest
+	24, // 14: user_service.v1.UserService.DecreaseStorageQuota:input_type -> storage.v1.ChangeQuotaRequest
+	24, // 15: user_service.v1.UserService.ChangeUsedQuota:input_type -> storage.v1.ChangeQuotaRequest
+	25, // 16: user_service.v1.UserService.CheckStorageQuota:input_type -> storage.v1.CheckStorageQuotaRequest
+	2,  // 17: user_service.v1.UserService.RegisterUser:output_type -> user_service.v1.RegisterUserResponse
+	4,  // 18: user_service.v1.UserService.LoginUser:output_type -> user_service.v1.LoginUserResponse
+	6,  // 19: user_service.v1.UserService.SendVerification:output_type -> user_service.v1.SendVerificationResponse
+	8,  // 20: user_service.v1.UserService.VerifyAccount:output_type -> user_service.v1.VerifyAccountResponse
+	10, // 21: user_service.v1.UserService.RequestMagicLink:output_type -> user_service.v1.RequestMagicLinkResponse
+	4,  // 22: user_service.v1.UserService.VerifyMagicLink:output_type -> user_service.v1.LoginUserResponse
+	15, // 23: user_service.v1.UserService.ChangePassword:output_type -> user_service.v1.ChangePasswordResponse
+	17, // 24: user_service.v1.UserService.SendTwoFactor:output_type -> user_service.v1.SendTwoFactorResponse
+	19, // 25: user_service.v1.UserService.Verify2FA:output_type -> user_service.v1.Verify2FAResponse
+	21, // 26: user_service.v1.UserService.ValidateToken:output_type -> user_service.v1.ValidateTokenResponse
+	22, // 27: user_service.v1.UserService.IncreaseStorageQuota:output_type -> user_service.v1.EmptyResponse
+	22, // 28: user_service.v1.UserService.DecreaseStorageQuota:output_type -> user_service.v1.EmptyResponse
+	22, // 29: user_service.v1.UserService.ChangeUsedQuota:output_type -> user_service.v1.EmptyResponse
+	26, // 30: user_service.v1.UserService.CheckStorageQuota:output_type -> storage.v1.CheckStorageQuotaResponse
+	17, // [17:31] is the sub-list for method output_type
+	3,  // [3:17] is the sub-list for method input_type
 	3,  // [3:3] is the sub-list for extension type_name
 	3,  // [3:3] is the sub-list for extension extendee
 	0,  // [0:3] is the sub-list for field type_name
@@ -1341,7 +1406,7 @@ func file_user_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_user_service_proto_rawDesc), len(file_user_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   22,
+			NumMessages:   23,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

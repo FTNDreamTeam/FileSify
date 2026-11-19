@@ -18,4 +18,6 @@ type FileMeta struct {
 	Date  date.Date           `bson:"date"`
 	Time  primitive.Timestamp `bson:"time"`
 	Owner primitive.ObjectID  `bson:"owner"`
+	Path  string              `bson:"path"`
+	Size  int32               `bson:"size"`
 }

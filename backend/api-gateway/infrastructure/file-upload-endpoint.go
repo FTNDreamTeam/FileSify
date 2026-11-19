@@ -15,7 +15,10 @@ import (
 )
 
 func RegisterFileUploadRoute(mux *runtime.ServeMux, storageClient storagepb.StorageServiceClient, userClient userpb.UserServiceClient) error {
+	const kb = 1_000
+	const mb = 1_000 * kb
 	return mux.HandlePath("POST", "/api/storage/file", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
+
 		token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 		if token == "" {
 			http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
@@ -23,8 +26,26 @@ func RegisterFileUploadRoute(mux *runtime.ServeMux, storageClient storagepb.Stor
 		}
 
 		authResp, err := userClient.ValidateToken(r.Context(), &userpb.ValidateTokenRequest{Token: token}) //Returns UserID for selecting users root folder
-		if err != nil || authResp.GetUserId() == "" {
-			http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		if err != nil {
+			http.Error(w, "Invalid/expired token or user service unavailable", http.StatusUnauthorized)
+			return
+		}
+
+		if authResp.GetUserId() == "" {
+			http.Error(w, "Invalid/expired token or user service unavailable", http.StatusUnauthorized)
+			return
+		}
+
+		if r.ContentLength > 100*mb {
+			http.Error(w, "The file exceeds the 100MB limit", http.StatusBadRequest)
+			return
+		}
+
+		if check, err := quotaLessThanLength(int32(r.ContentLength), userClient, authResp.UserId, r); err != nil {
+			http.Error(w, "Error loading storage quota", http.StatusBadRequest)
+			return
+		} else if check {
+			http.Error(w, "Remaining quota less than size of file", http.StatusBadRequest)
 			return
 		}
 
@@ -107,4 +128,15 @@ func RegisterFileUploadRoute(mux *runtime.ServeMux, storageClient storagepb.Stor
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"uploaded"}`))
 	})
+}
+
+func quotaLessThanLength(contentLength int32, userClient userpb.UserServiceClient, userId string, r *http.Request) (bool, error) {
+	storageResp, err := userClient.CheckStorageQuota(r.Context(), &storagepb.CheckStorageQuotaRequest{
+		UserId: userId,
+	})
+	if err != nil {
+		return false, fmt.Errorf("Failed to fetch storage quota%v", err)
+	}
+	quota := storageResp.GetQuota()
+	return quota < contentLength, nil
 }

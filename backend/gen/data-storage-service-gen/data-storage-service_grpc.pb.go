@@ -21,6 +21,8 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	StorageService_CreateFolder_FullMethodName = "/storage.v1.StorageService/CreateFolder"
 	StorageService_UploadFile_FullMethodName   = "/storage.v1.StorageService/UploadFile"
+	StorageService_ListFiles_FullMethodName    = "/storage.v1.StorageService/ListFiles"
+	StorageService_RenameFolder_FullMethodName = "/storage.v1.StorageService/RenameFolder"
 )
 
 // StorageServiceClient is the client API for StorageService service.
@@ -29,6 +31,8 @@ const (
 type StorageServiceClient interface {
 	CreateFolder(ctx context.Context, in *CreateFolderRequest, opts ...grpc.CallOption) (*CreateFolderResponse, error)
 	UploadFile(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UploadFileRequest, UploadFileResponse], error)
+	ListFiles(ctx context.Context, in *ListFilesRequest, opts ...grpc.CallOption) (*ListFilesResponse, error)
+	RenameFolder(ctx context.Context, in *RenameFolderRequest, opts ...grpc.CallOption) (*RenameFolderResponse, error)
 }
 
 type storageServiceClient struct {
@@ -62,12 +66,34 @@ func (c *storageServiceClient) UploadFile(ctx context.Context, opts ...grpc.Call
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type StorageService_UploadFileClient = grpc.ClientStreamingClient[UploadFileRequest, UploadFileResponse]
 
+func (c *storageServiceClient) ListFiles(ctx context.Context, in *ListFilesRequest, opts ...grpc.CallOption) (*ListFilesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListFilesResponse)
+	err := c.cc.Invoke(ctx, StorageService_ListFiles_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageServiceClient) RenameFolder(ctx context.Context, in *RenameFolderRequest, opts ...grpc.CallOption) (*RenameFolderResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RenameFolderResponse)
+	err := c.cc.Invoke(ctx, StorageService_RenameFolder_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // StorageServiceServer is the server API for StorageService service.
 // All implementations must embed UnimplementedStorageServiceServer
 // for forward compatibility.
 type StorageServiceServer interface {
 	CreateFolder(context.Context, *CreateFolderRequest) (*CreateFolderResponse, error)
 	UploadFile(grpc.ClientStreamingServer[UploadFileRequest, UploadFileResponse]) error
+	ListFiles(context.Context, *ListFilesRequest) (*ListFilesResponse, error)
+	RenameFolder(context.Context, *RenameFolderRequest) (*RenameFolderResponse, error)
 	mustEmbedUnimplementedStorageServiceServer()
 }
 
@@ -83,6 +109,12 @@ func (UnimplementedStorageServiceServer) CreateFolder(context.Context, *CreateFo
 }
 func (UnimplementedStorageServiceServer) UploadFile(grpc.ClientStreamingServer[UploadFileRequest, UploadFileResponse]) error {
 	return status.Error(codes.Unimplemented, "method UploadFile not implemented")
+}
+func (UnimplementedStorageServiceServer) ListFiles(context.Context, *ListFilesRequest) (*ListFilesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListFiles not implemented")
+}
+func (UnimplementedStorageServiceServer) RenameFolder(context.Context, *RenameFolderRequest) (*RenameFolderResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RenameFolder not implemented")
 }
 func (UnimplementedStorageServiceServer) mustEmbedUnimplementedStorageServiceServer() {}
 func (UnimplementedStorageServiceServer) testEmbeddedByValue()                        {}
@@ -130,6 +162,42 @@ func _StorageService_UploadFile_Handler(srv interface{}, stream grpc.ServerStrea
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type StorageService_UploadFileServer = grpc.ClientStreamingServer[UploadFileRequest, UploadFileResponse]
 
+func _StorageService_ListFiles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListFilesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StorageServiceServer).ListFiles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StorageService_ListFiles_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StorageServiceServer).ListFiles(ctx, req.(*ListFilesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StorageService_RenameFolder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RenameFolderRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StorageServiceServer).RenameFolder(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StorageService_RenameFolder_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StorageServiceServer).RenameFolder(ctx, req.(*RenameFolderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // StorageService_ServiceDesc is the grpc.ServiceDesc for StorageService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -140,6 +208,14 @@ var StorageService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateFolder",
 			Handler:    _StorageService_CreateFolder_Handler,
+		},
+		{
+			MethodName: "ListFiles",
+			Handler:    _StorageService_ListFiles_Handler,
+		},
+		{
+			MethodName: "RenameFolder",
+			Handler:    _StorageService_RenameFolder_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

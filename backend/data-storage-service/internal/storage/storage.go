@@ -3,6 +3,8 @@ package storage
 import (
 	"context"
 	"io"
+
+	"github.com/minio/minio-go/v7"
 )
 
 type ObjectStore interface {
@@ -17,4 +19,10 @@ type ObjectStore interface {
 
 	//CreateBucket creates a new bucket with the given name.
 	CreateBucket(ctx context.Context, bucket string) error
+
+	//ListObjects lists the objects in the specified bucket with the given options.
+	ListObjects(ctx context.Context, bucket string, opts minio.ListObjectsOptions) <-chan minio.ObjectInfo
+
+	//CopyObject copies an object from the source bucket and object name to the destination bucket and object name.
+	CopyObject(ctx context.Context, destBucket, destObject, srcBucket, srcObject string) error
 }

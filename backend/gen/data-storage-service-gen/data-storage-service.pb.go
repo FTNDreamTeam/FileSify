@@ -453,6 +453,266 @@ func (x *CheckStorageQuotaResponse) GetQuota() int32 {
 	return 0
 }
 
+type ListFilesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Path          string                 `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+	Token         *string                `protobuf:"bytes,2,opt,name=token,proto3,oneof" json:"token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListFilesRequest) Reset() {
+	*x = ListFilesRequest{}
+	mi := &file_data_storage_service_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListFilesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListFilesRequest) ProtoMessage() {}
+
+func (x *ListFilesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_data_storage_service_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListFilesRequest.ProtoReflect.Descriptor instead.
+func (*ListFilesRequest) Descriptor() ([]byte, []int) {
+	return file_data_storage_service_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *ListFilesRequest) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+func (x *ListFilesRequest) GetToken() string {
+	if x != nil && x.Token != nil {
+		return *x.Token
+	}
+	return ""
+}
+
+type FileInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	IsDirectory   bool                   `protobuf:"varint,2,opt,name=is_directory,json=isDirectory,proto3" json:"is_directory,omitempty"`
+	Size          int64                  `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty"`
+	Path          string                 `protobuf:"bytes,4,opt,name=path,proto3" json:"path,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FileInfo) Reset() {
+	*x = FileInfo{}
+	mi := &file_data_storage_service_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FileInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FileInfo) ProtoMessage() {}
+
+func (x *FileInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_data_storage_service_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FileInfo.ProtoReflect.Descriptor instead.
+func (*FileInfo) Descriptor() ([]byte, []int) {
+	return file_data_storage_service_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *FileInfo) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *FileInfo) GetIsDirectory() bool {
+	if x != nil {
+		return x.IsDirectory
+	}
+	return false
+}
+
+func (x *FileInfo) GetSize() int64 {
+	if x != nil {
+		return x.Size
+	}
+	return 0
+}
+
+func (x *FileInfo) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+type ListFilesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Files         []*FileInfo            `protobuf:"bytes,1,rep,name=files,proto3" json:"files,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListFilesResponse) Reset() {
+	*x = ListFilesResponse{}
+	mi := &file_data_storage_service_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListFilesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListFilesResponse) ProtoMessage() {}
+
+func (x *ListFilesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_data_storage_service_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListFilesResponse.ProtoReflect.Descriptor instead.
+func (*ListFilesResponse) Descriptor() ([]byte, []int) {
+	return file_data_storage_service_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *ListFilesResponse) GetFiles() []*FileInfo {
+	if x != nil {
+		return x.Files
+	}
+	return nil
+}
+
+type RenameFolderRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	OldPath       string                 `protobuf:"bytes,1,opt,name=old_path,json=oldPath,proto3" json:"old_path,omitempty"`
+	NewPath       string                 `protobuf:"bytes,2,opt,name=new_path,json=newPath,proto3" json:"new_path,omitempty"`
+	Token         *string                `protobuf:"bytes,3,opt,name=token,proto3,oneof" json:"token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RenameFolderRequest) Reset() {
+	*x = RenameFolderRequest{}
+	mi := &file_data_storage_service_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RenameFolderRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RenameFolderRequest) ProtoMessage() {}
+
+func (x *RenameFolderRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_data_storage_service_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RenameFolderRequest.ProtoReflect.Descriptor instead.
+func (*RenameFolderRequest) Descriptor() ([]byte, []int) {
+	return file_data_storage_service_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *RenameFolderRequest) GetOldPath() string {
+	if x != nil {
+		return x.OldPath
+	}
+	return ""
+}
+
+func (x *RenameFolderRequest) GetNewPath() string {
+	if x != nil {
+		return x.NewPath
+	}
+	return ""
+}
+
+func (x *RenameFolderRequest) GetToken() string {
+	if x != nil && x.Token != nil {
+		return *x.Token
+	}
+	return ""
+}
+
+type RenameFolderResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RenameFolderResponse) Reset() {
+	*x = RenameFolderResponse{}
+	mi := &file_data_storage_service_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RenameFolderResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RenameFolderResponse) ProtoMessage() {}
+
+func (x *RenameFolderResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_data_storage_service_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RenameFolderResponse.ProtoReflect.Descriptor instead.
+func (*RenameFolderResponse) Descriptor() ([]byte, []int) {
+	return file_data_storage_service_proto_rawDescGZIP(), []int{12}
+}
+
 var File_data_storage_service_proto protoreflect.FileDescriptor
 
 const file_data_storage_service_proto_rawDesc = "" +
@@ -482,11 +742,30 @@ const file_data_storage_service_proto_rawDesc = "" +
 	"\x18CheckStorageQuotaRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\"1\n" +
 	"\x19CheckStorageQuotaResponse\x12\x14\n" +
-	"\x05quota\x18\x01 \x01(\x05R\x05quota2\xb2\x01\n" +
+	"\x05quota\x18\x01 \x01(\x05R\x05quota\"K\n" +
+	"\x10ListFilesRequest\x12\x12\n" +
+	"\x04path\x18\x01 \x01(\tR\x04path\x12\x19\n" +
+	"\x05token\x18\x02 \x01(\tH\x00R\x05token\x88\x01\x01B\b\n" +
+	"\x06_token\"i\n" +
+	"\bFileInfo\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12!\n" +
+	"\fis_directory\x18\x02 \x01(\bR\visDirectory\x12\x12\n" +
+	"\x04size\x18\x03 \x01(\x03R\x04size\x12\x12\n" +
+	"\x04path\x18\x04 \x01(\tR\x04path\"?\n" +
+	"\x11ListFilesResponse\x12*\n" +
+	"\x05files\x18\x01 \x03(\v2\x14.storage.v1.FileInfoR\x05files\"p\n" +
+	"\x13RenameFolderRequest\x12\x19\n" +
+	"\bold_path\x18\x01 \x01(\tR\aoldPath\x12\x19\n" +
+	"\bnew_path\x18\x02 \x01(\tR\anewPath\x12\x19\n" +
+	"\x05token\x18\x03 \x01(\tH\x00R\x05token\x88\x01\x01B\b\n" +
+	"\x06_token\"\x16\n" +
+	"\x14RenameFolderResponse2\xcf\x02\n" +
 	"\x0eStorageService\x12Q\n" +
 	"\fCreateFolder\x12\x1f.storage.v1.CreateFolderRequest\x1a .storage.v1.CreateFolderResponse\x12M\n" +
 	"\n" +
-	"UploadFile\x12\x1d.storage.v1.UploadFileRequest\x1a\x1e.storage.v1.UploadFileResponse(\x01B\x1eZ\x1cgen/data-storage-service-genb\x06proto3"
+	"UploadFile\x12\x1d.storage.v1.UploadFileRequest\x1a\x1e.storage.v1.UploadFileResponse(\x01\x12H\n" +
+	"\tListFiles\x12\x1c.storage.v1.ListFilesRequest\x1a\x1d.storage.v1.ListFilesResponse\x12Q\n" +
+	"\fRenameFolder\x12\x1f.storage.v1.RenameFolderRequest\x1a .storage.v1.RenameFolderResponseB\x1eZ\x1cgen/data-storage-service-genb\x06proto3"
 
 var (
 	file_data_storage_service_proto_rawDescOnce sync.Once
@@ -500,7 +779,7 @@ func file_data_storage_service_proto_rawDescGZIP() []byte {
 	return file_data_storage_service_proto_rawDescData
 }
 
-var file_data_storage_service_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_data_storage_service_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_data_storage_service_proto_goTypes = []any{
 	(*CreateFolderRequest)(nil),       // 0: storage.v1.CreateFolderRequest
 	(*CreateFolderResponse)(nil),      // 1: storage.v1.CreateFolderResponse
@@ -510,22 +789,32 @@ var file_data_storage_service_proto_goTypes = []any{
 	(*ChangeQuotaRequest)(nil),        // 5: storage.v1.ChangeQuotaRequest
 	(*CheckStorageQuotaRequest)(nil),  // 6: storage.v1.CheckStorageQuotaRequest
 	(*CheckStorageQuotaResponse)(nil), // 7: storage.v1.CheckStorageQuotaResponse
-	(*date.Date)(nil),                 // 8: google.type.Date
-	(*timestamppb.Timestamp)(nil),     // 9: google.protobuf.Timestamp
+	(*ListFilesRequest)(nil),          // 8: storage.v1.ListFilesRequest
+	(*FileInfo)(nil),                  // 9: storage.v1.FileInfo
+	(*ListFilesResponse)(nil),         // 10: storage.v1.ListFilesResponse
+	(*RenameFolderRequest)(nil),       // 11: storage.v1.RenameFolderRequest
+	(*RenameFolderResponse)(nil),      // 12: storage.v1.RenameFolderResponse
+	(*date.Date)(nil),                 // 13: google.type.Date
+	(*timestamppb.Timestamp)(nil),     // 14: google.protobuf.Timestamp
 }
 var file_data_storage_service_proto_depIdxs = []int32{
-	8, // 0: storage.v1.FileMetaData.date_created_at:type_name -> google.type.Date
-	9, // 1: storage.v1.FileMetaData.time_created_at:type_name -> google.protobuf.Timestamp
-	2, // 2: storage.v1.UploadFileRequest.metadata:type_name -> storage.v1.FileMetaData
-	0, // 3: storage.v1.StorageService.CreateFolder:input_type -> storage.v1.CreateFolderRequest
-	3, // 4: storage.v1.StorageService.UploadFile:input_type -> storage.v1.UploadFileRequest
-	1, // 5: storage.v1.StorageService.CreateFolder:output_type -> storage.v1.CreateFolderResponse
-	4, // 6: storage.v1.StorageService.UploadFile:output_type -> storage.v1.UploadFileResponse
-	5, // [5:7] is the sub-list for method output_type
-	3, // [3:5] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	13, // 0: storage.v1.FileMetaData.date_created_at:type_name -> google.type.Date
+	14, // 1: storage.v1.FileMetaData.time_created_at:type_name -> google.protobuf.Timestamp
+	2,  // 2: storage.v1.UploadFileRequest.metadata:type_name -> storage.v1.FileMetaData
+	9,  // 3: storage.v1.ListFilesResponse.files:type_name -> storage.v1.FileInfo
+	0,  // 4: storage.v1.StorageService.CreateFolder:input_type -> storage.v1.CreateFolderRequest
+	3,  // 5: storage.v1.StorageService.UploadFile:input_type -> storage.v1.UploadFileRequest
+	8,  // 6: storage.v1.StorageService.ListFiles:input_type -> storage.v1.ListFilesRequest
+	11, // 7: storage.v1.StorageService.RenameFolder:input_type -> storage.v1.RenameFolderRequest
+	1,  // 8: storage.v1.StorageService.CreateFolder:output_type -> storage.v1.CreateFolderResponse
+	4,  // 9: storage.v1.StorageService.UploadFile:output_type -> storage.v1.UploadFileResponse
+	10, // 10: storage.v1.StorageService.ListFiles:output_type -> storage.v1.ListFilesResponse
+	12, // 11: storage.v1.StorageService.RenameFolder:output_type -> storage.v1.RenameFolderResponse
+	8,  // [8:12] is the sub-list for method output_type
+	4,  // [4:8] is the sub-list for method input_type
+	4,  // [4:4] is the sub-list for extension type_name
+	4,  // [4:4] is the sub-list for extension extendee
+	0,  // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_data_storage_service_proto_init() }
@@ -538,13 +827,15 @@ func file_data_storage_service_proto_init() {
 		(*UploadFileRequest_Metadata)(nil),
 		(*UploadFileRequest_Content)(nil),
 	}
+	file_data_storage_service_proto_msgTypes[8].OneofWrappers = []any{}
+	file_data_storage_service_proto_msgTypes[11].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_data_storage_service_proto_rawDesc), len(file_data_storage_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

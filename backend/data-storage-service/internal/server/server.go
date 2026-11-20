@@ -15,6 +15,7 @@ import (
 
 	"github.com/FTNDreamTeam/FileSify/backend/data-storage-service/internal/db"
 	"github.com/FTNDreamTeam/FileSify/backend/data-storage-service/internal/storage"
+	"github.com/minio/minio-go/v7"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -219,4 +220,127 @@ func (s *StorageServer) UploadFile(stream pb.StorageService_UploadFileServer) er
 	}
 
 	return stream.SendAndClose(&pb.UploadFileResponse{})
+}
+
+func (s *StorageServer) ListFiles(ctx context.Context, req *pb.ListFilesRequest) (*pb.ListFilesResponse, error) {
+	if req.GetToken() == "" {
+		return nil, status.Error(codes.InvalidArgument, "token cannot be empty")
+	}
+	// Validate the token and get the user ID
+	valResponse, err := s.UserClient.ValidateToken(ctx, &userpb.ValidateTokenRequest{
+		Token: req.GetToken(),
+	})
+	if err != nil {
+		log.Printf("Error validating token:%v", err)
+		return nil, status.Errorf(codes.Unauthenticated, "No token present:%v", err)
+	}
+
+	userId := valResponse.GetUserId()
+
+	// Clean the request path and prepend the user ID to ensure users can only access their own files
+	requestPath := req.GetPath()
+	cleanPath := strings.Trim(path.Clean("/"+requestPath), "/")
+	// UserID/path/
+	prefix := userId + "/"
+	if cleanPath != "" {
+		prefix += cleanPath + "/"
+	}
+
+	opts := minio.ListObjectsOptions{
+		Prefix:    prefix,
+		Recursive: false,
+	}
+
+	objectCh := s.Store.ListObjects(ctx, "filesify", opts)
+	var files []*pb.FileInfo
+	for object := range objectCh {
+		if object.Err != nil {
+			log.Printf("Error listing object:%v", object.Err)
+			return nil, status.Errorf(codes.Internal, "failed to list files")
+		}
+
+		if object.Key == prefix {
+			// Skip the folder itself
+			continue
+		}
+
+		isDir := object.ContentType == "application/x-directory" || strings.HasSuffix(object.Key, "/")
+		name := strings.TrimPrefix(object.Key, prefix)
+		name = strings.TrimSuffix(name, "/")
+
+		files = append(files, &pb.FileInfo{
+			Name:        name,
+			IsDirectory: isDir,
+			Size:        object.Size,
+			Path:        object.Key,
+		})
+	}
+
+	return &pb.ListFilesResponse{Files: files}, nil
+
+}
+
+func (s *StorageServer) RenameFolder(cxt context.Context, req *pb.RenameFolderRequest) (*pb.RenameFolderResponse, error) {
+	if req.GetToken() == "" {
+		return nil, status.Error(codes.InvalidArgument, "token cannot be empty")
+	}
+	// Validate the token and get the user ID
+	valResponse, err := s.UserClient.ValidateToken(cxt, &userpb.ValidateTokenRequest{
+		Token: req.GetToken(),
+	})
+	if err != nil {
+		log.Printf("Error validating token:%v", err)
+		return nil, status.Errorf(codes.Unauthenticated, "No token present:%v", err)
+	}
+
+	userId := valResponse.GetUserId()
+
+	oldCleanPath := strings.Trim(path.Clean("/"+req.GetOldPath()), "/")
+	newCleanPath := strings.Trim(path.Clean("/"+req.GetNewPath()), "/")
+
+	oldPrefix := userId + "/" + oldCleanPath + "/"
+	newPrefix := userId + "/" + newCleanPath + "/"
+	// If the old and new prefixes are the same, there's nothing to rename
+	if oldPrefix == newPrefix {
+		return &pb.RenameFolderResponse{}, nil
+	}
+	// List all files inside the old folder recursively
+	opts := minio.ListObjectsOptions{
+		Prefix:    oldPrefix,
+		Recursive: true,
+	}
+
+	objectCh := s.Store.ListObjects(cxt, "filesify", opts)
+	// Iterate over the objects and copy them to the new folder, then delete the old ones
+	for object := range objectCh {
+		if object.Err != nil {
+			log.Printf("Error listing object:%v", object.Err)
+			return nil, status.Errorf(codes.Internal, "failed to list files")
+		}
+		newKey := strings.Replace(object.Key, oldPrefix, newPrefix, 1)
+		err := s.Store.CopyObject(cxt, "filesify", newKey, "filesify", object.Key)
+		if err != nil {
+			log.Printf("Error copying object from %s to %s: %v", object.Key, newKey, err)
+			return nil, status.Errorf(codes.Internal, "failed to copy object")
+		}
+		err = s.Store.Delete(cxt, "filesify", object.Key)
+		if err != nil {
+			log.Printf("Error deleting old object %s: %v", object.Key, err)
+			return nil, status.Errorf(codes.Internal, "failed to delete old object")
+		}
+	}
+	// Update the folder metadata in MongoDB
+	userObjID, err := primitive.ObjectIDFromHex(userId)
+	if err == nil {
+		filter := bson.M{"owner": userObjID, "path": bson.M{"$regex": "^" + oldPrefix}}
+		update := bson.M{"$set": bson.M{"path": bson.M{"$replaceOne": bson.M{"input": "$path", "find": oldPrefix, "replacement": newPrefix}}}}
+		_, err = s.FolderMeta.UpdateMany(cxt, filter, update)
+		if err != nil {
+			log.Printf("Error updating folder metadata: %v", err)
+			return nil, status.Errorf(codes.Internal, "failed to update folder metadata")
+		}
+	}
+
+	return &pb.RenameFolderResponse{}, nil
+
 }

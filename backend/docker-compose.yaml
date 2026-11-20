@@ -47,6 +47,7 @@ services:
     restart: unless-stopped
     networks:
       - user-network
+    attach: false
 
   silo:
     image: docker.io/pgsty/silo:RELEASE.2026-09-16T00-00-00Z
@@ -100,6 +101,7 @@ services:
       start_period: 15s
     networks:
       - storage-network
+    attach: false
 
   mail-service:
     build:

@@ -38,7 +38,7 @@ func NewStorageServer(store storage.ObjectStore, userClient userpb.UserServiceCl
 func (s *StorageServer) CreateFolder(ctx context.Context, req *pb.CreateFolderRequest) (*pb.CreateFolderResponse, error) {
 	folderPath := req.GetPath()
 	if folderPath == "" {
-		log.Print("Folder path emtpy")
+		log.Print("Folder path empty")
 		return nil, status.Error(codes.InvalidArgument, "path cannot be empty")
 	}
 	if !strings.HasSuffix(folderPath, "/") {
@@ -280,12 +280,12 @@ func (s *StorageServer) ListFiles(ctx context.Context, req *pb.ListFilesRequest)
 
 }
 
-func (s *StorageServer) RenameFolder(cxt context.Context, req *pb.RenameFolderRequest) (*pb.RenameFolderResponse, error) {
+func (s *StorageServer) RenameFolder(ctx context.Context, req *pb.RenameFolderRequest) (*pb.RenameFolderResponse, error) {
 	if req.GetToken() == "" {
 		return nil, status.Error(codes.InvalidArgument, "token cannot be empty")
 	}
 	// Validate the token and get the user ID
-	valResponse, err := s.UserClient.ValidateToken(cxt, &userpb.ValidateTokenRequest{
+	valResponse, err := s.UserClient.ValidateToken(ctx, &userpb.ValidateTokenRequest{
 		Token: req.GetToken(),
 	})
 	if err != nil {
@@ -310,7 +310,7 @@ func (s *StorageServer) RenameFolder(cxt context.Context, req *pb.RenameFolderRe
 		Recursive: true,
 	}
 
-	objectCh := s.Store.ListObjects(cxt, "filesify", opts)
+	objectCh := s.Store.ListObjects(ctx, "filesify", opts)
 	// Iterate over the objects and copy them to the new folder, then delete the old ones
 	for object := range objectCh {
 		if object.Err != nil {
@@ -318,26 +318,43 @@ func (s *StorageServer) RenameFolder(cxt context.Context, req *pb.RenameFolderRe
 			return nil, status.Errorf(codes.Internal, "failed to list files")
 		}
 		newKey := strings.Replace(object.Key, oldPrefix, newPrefix, 1)
-		err := s.Store.CopyObject(cxt, "filesify", newKey, "filesify", object.Key)
+		err := s.Store.CopyObject(ctx, "filesify", newKey, "filesify", object.Key)
 		if err != nil {
 			log.Printf("Error copying object from %s to %s: %v", object.Key, newKey, err)
 			return nil, status.Errorf(codes.Internal, "failed to copy object")
 		}
-		err = s.Store.Delete(cxt, "filesify", object.Key)
+		err = s.Store.Delete(ctx, "filesify", object.Key)
 		if err != nil {
 			log.Printf("Error deleting old object %s: %v", object.Key, err)
 			return nil, status.Errorf(codes.Internal, "failed to delete old object")
 		}
 	}
+
 	// Update the folder metadata in MongoDB
 	userObjID, err := primitive.ObjectIDFromHex(userId)
 	if err == nil {
-		filter := bson.M{"owner": userObjID, "path": bson.M{"$regex": "^" + oldPrefix}}
-		update := bson.M{"$set": bson.M{"path": bson.M{"$replaceOne": bson.M{"input": "$path", "find": oldPrefix, "replacement": newPrefix}}}}
-		_, err = s.FolderMeta.UpdateMany(cxt, filter, update)
+		filter := bson.M{
+			"owner": userObjID,
+			"name":  bson.M{"$regex": "^" + oldPrefix},
+		}
+
+		cursor, err := s.FolderMeta.Find(ctx, filter)
 		if err != nil {
-			log.Printf("Error updating folder metadata: %v", err)
-			return nil, status.Errorf(codes.Internal, "failed to update folder metadata")
+			log.Printf("Error finding folders to rename in Mongo: %v", err)
+		} else {
+			defer cursor.Close(ctx)
+			for cursor.Next(ctx) {
+				var folder db.FolderMeta
+				if err := cursor.Decode(&folder); err == nil {
+					newPath := strings.Replace(folder.Path, oldPrefix, newPrefix, 1)
+					_, err = s.FolderMeta.UpdateByID(ctx, folder.ID, bson.M{
+						"$set": bson.M{"name": newPath},
+					})
+					if err != nil {
+						log.Printf("Error updating folder %s in Mongo: %v", folder.Path, err)
+					}
+				}
+			}
 		}
 	}
 

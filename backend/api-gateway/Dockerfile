@@ -13,7 +13,7 @@ RUN go mod download
 
 COPY ./backend/api-gateway/ .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o api-gateway main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o api-gateway cmd/server/main.go
 
 FROM alpine:latest
 

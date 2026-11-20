@@ -5,13 +5,15 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"os"
+
+	httpTransport "github.com/FTNDreamTeam/FileSify/backend/api-gateway/internal/transport/http"
 
 	storagepb "gen/data-storage-service-gen"
 	pb "gen/gateway"
 	userpb "gen/user-service-gen"
 
-	infrastructure "github.com/FTNDreamTeam/FileSify/backend/api-gateway/infrastructure"
+	config "github.com/FTNDreamTeam/FileSify/backend/api-gateway/internal/config"
+	service "github.com/FTNDreamTeam/FileSify/backend/api-gateway/internal/service"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -56,15 +58,18 @@ func (s *server) CreateFolder(ctx context.Context, request *storagepb.CreateFold
 }
 
 func main() {
+
+	configs := config.LoadConfigs()
+
 	// Internal gRPC listener (only reachable from inside the Docker network)
-	lis, err := net.Listen("tcp", "api-gateway:"+os.Getenv("GATEWAY_PORT"))
+	lis, err := net.Listen("tcp", "api-gateway:"+configs.GATEWAY_PORT)
 	if err != nil {
 		log.Fatalln("Failed to listen:", err)
 	}
 
 	// Dial user-service
 	userConn, err := grpc.NewClient(
-		"user-service:"+os.Getenv("USER_SERVICE_PORT"),
+		"user-service:"+configs.USER_SERVICE_PORT,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
@@ -74,7 +79,7 @@ func main() {
 
 	// Dial data-storage-service
 	storageConn, err := grpc.NewClient(
-		"data-storage-service:"+os.Getenv("STORAGE_PORT"),
+		"data-storage-service:"+configs.STORAGE_PORT,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
@@ -92,7 +97,7 @@ func main() {
 
 	// Dial the gateway's own gRPC server, so gwmux can forward REST → gRPC
 	gwConn, err := grpc.NewClient(
-		"api-gateway:"+os.Getenv("GATEWAY_PORT"),
+		"api-gateway:"+configs.GATEWAY_PORT,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
@@ -108,7 +113,9 @@ func main() {
 	root := http.NewServeMux()
 	root.Handle("/api/", gwmux)
 	root.Handle("/", http.FileServer(http.Dir("./frontend")))
-	if err := infrastructure.RegisterFileUploadRoute(gwmux, storageClient, userClient); err != nil { //Register the upload route for files
+	uploadService := service.NewFileUploadService(storageClient, userClient)
+	uploadHandler := httpTransport.NewFileUploadHandler(uploadService)
+	if err := uploadHandler.RegisterRoutes(gwmux); err != nil { //Register the upload route for files
 		log.Printf("Failed to route to /api/file:%s", err)
 	}
 

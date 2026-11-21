@@ -61,4 +61,15 @@ service GatewayService {
       body: "*"
     };
   }
+
+  rpc ListFiles(storage.v1.ListFilesRequest) returns (storage.v1.ListFilesResponse) {
+    option (google.api.http) = {get: "/api/storage/files"};
+  }
+
+  rpc RenameFolder(storage.v1.RenameFolderRequest) returns (storage.v1.RenameFolderResponse) {
+    option (google.api.http) = {
+      put: "/api/storage/foler"
+      body: "*"
+    };
+  }
 }

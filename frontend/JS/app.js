@@ -3,50 +3,6 @@
     // Current folder path
     let currentFolderPath = '';
 
-    // ---------- Breadcrumb rendering ----------
-    function renderBreadcrumb(dirPath) {
-        const bc = document.querySelector('.breadcrumb');
-        if (!bc) return;
-        bc.innerHTML = '';
-
-        const root = document.createElement('li');
-        root.className = 'breadcrumb-item' + (dirPath ? '' : ' active');
-        if (dirPath) {
-            // Clickable root - returns to My Drive
-            const a = document.createElement('a');
-            a.href = '#';
-            a.textContent = 'My Drive';
-            a.addEventListener('click', (e) => { e.preventDefault(); load(''); });
-            root.appendChild(a);
-        } else {
-            // Root folder
-            root.textContent = 'My Drive';
-            root.setAttribute('aria-current', 'page');
-        }
-        bc.appendChild(root);
-
-        // Path segments - intermediate ones clickable, last one is current
-        const parts = dirPath.split('/').filter(Boolean);
-        parts.forEach((part, i) => {
-            const isLast = i === parts.length - 1;
-            const li = document.createElement('li');
-            li.className = 'breadcrumb-item' + (isLast ? ' active' : '');
-            if (isLast) {
-                li.textContent = part;            // textContent — never innerHTML for paths
-                li.setAttribute('aria-current', 'page');
-            } else {
-                const a = document.createElement('a');
-                a.href = '#';
-                a.textContent = part;
-                // Build cumulative path for navigation
-                const target = parts.slice(0, i + 1).join('/') + '/';
-                a.addEventListener('click', (e) => { e.preventDefault(); load(target); });
-                li.appendChild(a);
-            }
-            bc.appendChild(li);
-        });
-    }
-
     // ---------- Shared helpers ----------
     function mark(input, ok) {
         input.classList.toggle('is-valid', ok);
@@ -1287,8 +1243,75 @@
         const tbody = document.getElementById('fileTableBody');
         if (!tbody) return;
 
-        const bc = document.getElementById('fileBreadcrumb');
-        let currentPath = '';
+        const bc          = document.querySelector('.breadcrumb');
+        const fileCountEl = document.getElementById('fileCount');
+
+        // Build a dashboard URL with a given folder path
+        function buildNavUrl(path) {
+            const url = new URL(window.location.href);
+            if (path) url.searchParams.set('path', path);
+            else url.searchParams.delete('path');
+            return url.pathname + url.search;
+        }
+
+        // Read the folder path from the current URL
+        function pathFromUrl() {
+            return new URLSearchParams(window.location.search).get('path') || '';
+        }
+
+        // Breadcrumb rendering
+        function renderBreadcrumb(dirPath) {
+            if (!bc) return;
+            bc.innerHTML = '';
+
+            const root = document.createElement('li');
+            root.className = 'breadcrumb-item' + (dirPath ? '' : ' active');
+            if (dirPath) {
+                // Clickable root - real href so ctrl+click / open in new tab works
+                const a = document.createElement('a');
+                a.href = buildNavUrl('');
+                a.textContent = 'My Drive';
+                a.dataset.navPath = '';
+                root.appendChild(a);
+            } else {
+                // At root - no link
+                root.textContent = 'My Drive';
+                root.setAttribute('aria-current', 'page');
+            }
+            bc.appendChild(root);
+
+            const parts = dirPath.split('/').filter(Boolean);
+            parts.forEach((part, i) => {
+                const isLast = i === parts.length - 1;
+                const li = document.createElement('li');
+                li.className = 'breadcrumb-item' + (isLast ? ' active' : '');
+                if (isLast) {
+                    li.textContent = part;   // textContent - never innerHTML for paths
+                    li.setAttribute('aria-current', 'page');
+                } else {
+                    // Build cumulative path for navigation
+                    const target = parts.slice(0, i + 1).join('/') + '/';
+                    const a = document.createElement('a');
+                    a.href = buildNavUrl(target);
+                    a.textContent = part;
+                    a.dataset.navPath = target;
+                    li.appendChild(a);
+                }
+                bc.appendChild(li);
+            });
+        }
+
+        // Navigator links
+        if (bc) {
+            bc.addEventListener('click', (e) => {
+                const a = e.target.closest('a[data-nav-path]');
+                if (!a) return;
+                // Modifier keys = let the browser do its native thing (new tab etc.)
+                if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+                e.preventDefault();
+                load(a.dataset.navPath);
+            });
+        }
 
         // Size formatter
         function formatSize(bytes) {
@@ -1299,31 +1322,29 @@
             return (bytes / 1024 ** 3).toFixed(2) + ' GB';
         }
 
-        // Single row - folders are clickable to navigate inside
+        // Folders are clickable to navigate inside
         function row(file) {
-            const icon = file.isDirectory
-                ? 'bi-folder-fill'
-                : 'bi-file-earmark-fill';
+            const icon = file.isDirectory ? 'bi-folder-fill' : 'bi-file-earmark-fill';
             const kind = file.isDirectory ? 'Folder' : 'File';
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
-            <td>
-                <div class="file-name">
-                    <span class="icon ${file.isDirectory ? 'folder' : 'doc'}">
-                        <i class="bi ${icon}"></i>
-                    </span>
-                    <div>${escapeHtml(file.name)}<small>${kind}</small></div>
-                </div>
-            </td>
-            <td class="d-none d-md-table-cell text-soft">${formatSize(file.size)}</td>
-            <td class="d-none d-md-table-cell text-soft">—</td>
-            <td class="d-none d-sm-table-cell"></td>
-            <td class="file-actions">
-                <button class="btn-icon" aria-label="More options">
-                    <i class="bi bi-three-dots"></i>
-                </button>
-            </td>`;
+        <td>
+            <div class="file-name">
+                <span class="icon ${file.isDirectory ? 'folder' : 'doc'}">
+                    <i class="bi ${icon}"></i>
+                </span>
+                <div>${escapeHtml(file.name)}<small>${kind}</small></div>
+            </div>
+        </td>
+        <td class="d-none d-md-table-cell text-soft">${formatSize(file.size)}</td>
+        <td class="d-none d-md-table-cell text-soft">—</td>
+        <td class="d-none d-sm-table-cell"></td>
+        <td class="file-actions">
+            <button class="btn-icon" aria-label="More options">
+                <i class="bi bi-three-dots"></i>
+            </button>
+        </td>`;
             if (file.isDirectory) {
                 tr.style.cursor = 'pointer';
                 tr.addEventListener('click', (e) => {
@@ -1334,13 +1355,14 @@
             return tr;
         }
 
+        // HTML escape to prevent XSS from filenames
         function escapeHtml(s) {
             return s.replace(/[&<>"']/g, c => ({
                 '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
             }[c]));
         }
 
-        async function load(dirPath) {
+        async function load(dirPath, push = true) {
             const token = localStorage.getItem('token');
             if (!token) { window.location.replace('login.html'); return; }
 
@@ -1363,12 +1385,24 @@
                 const data = await res.json();
                 const files = data.files || [];
 
+                // Item count
+                if (fileCountEl) {
+                    fileCountEl.textContent = files.length === 0
+                        ? 'No items'
+                        : files.length + (files.length === 1 ? ' item' : ' items');
+                }
+
                 // Commit the path only after a successful load
                 currentFolderPath = dirPath;
                 renderBreadcrumb(dirPath);
 
-                // Empty folder message
+                // Sync URL and history
+                if (push) {
+                    history.pushState({ path: dirPath }, '', buildNavUrl(dirPath));
+                }
+
                 tbody.innerHTML = '';
+                // Empty folder message
                 if (files.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="5" class="text-soft p-3">This folder is empty.</td></tr>`;
                     return;
@@ -1381,13 +1415,21 @@
                     .forEach(f => tbody.appendChild(row(f)));
 
             } catch (err) {
-                // Error display
+                if (fileCountEl) fileCountEl.textContent = '—';
                 tbody.innerHTML =
                     `<tr><td colspan="5" class="text-danger p-3">Failed to load files: ${escapeHtml(err.message)}</td></tr>`;
             }
         }
-        // Load data + reload onChange
-        load('');
-        window.addEventListener('files-changed', () => load(currentFolderPath));
+
+        // Browser back/forward
+        window.addEventListener('popstate', () => {
+            load(pathFromUrl(), false);
+        });
+
+        // Refresh on upload
+        window.addEventListener('files-changed', () => load(currentFolderPath, false));
+
+        // Initial load
+        load(pathFromUrl(), false);
     })();
 })();

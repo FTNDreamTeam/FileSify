@@ -68,7 +68,7 @@ service GatewayService {
 
   rpc RenameFolder(storage.v1.RenameFolderRequest) returns (storage.v1.RenameFolderResponse) {
     option (google.api.http) = {
-      put: "/api/storage/foler"
+      put: "/api/storage/folder"
       body: "*"
     };
   }

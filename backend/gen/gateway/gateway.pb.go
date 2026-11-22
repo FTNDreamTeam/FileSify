@@ -28,7 +28,7 @@ var File_gateway_proto protoreflect.FileDescriptor
 const file_gateway_proto_rawDesc = "" +
 	"\n" +
 	"\rgateway.proto\x12\n" +
-	"gateway.v1\x1a\x1adata-storage-service.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x12user-service.proto2\xd5\t\n" +
+	"gateway.v1\x1a\x1adata-storage-service.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x12user-service.proto2\xd6\t\n" +
 	"\x0eGatewayService\x12u\n" +
 	"\fRegisterUser\x12$.user_service.v1.RegisterUserRequest\x1a%.user_service.v1.RegisterUserResponse\"\x18\x82\xd3\xe4\x93\x02\x12:\x01*\"\r/api/register\x12i\n" +
 	"\tLoginUser\x12!.user_service.v1.LoginUserRequest\x1a\".user_service.v1.LoginUserResponse\"\x15\x82\xd3\xe4\x93\x02\x0f:\x01*\"\n" +
@@ -39,8 +39,8 @@ const file_gateway_proto_rawDesc = "" +
 	"\x0eChangePassword\x12&.user_service.v1.ChangePasswordRequest\x1a'.user_service.v1.ChangePasswordResponse\"#\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/api/auth/password-reset\x12t\n" +
 	"\tVerify2FA\x12!.user_service.v1.Verify2FARequest\x1a\".user_service.v1.Verify2FAResponse\" \x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/api/twofactor/verify\x12q\n" +
 	"\fCreateFolder\x12\x1f.storage.v1.CreateFolderRequest\x1a .storage.v1.CreateFolderResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/api/storage/folder\x12d\n" +
-	"\tListFiles\x12\x1c.storage.v1.ListFilesRequest\x1a\x1d.storage.v1.ListFilesResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/api/storage/files\x12p\n" +
-	"\fRenameFolder\x12\x1f.storage.v1.RenameFolderRequest\x1a .storage.v1.RenameFolderResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\x1a\x12/api/storage/folerB\rZ\vgen/gatewayb\x06proto3"
+	"\tListFiles\x12\x1c.storage.v1.ListFilesRequest\x1a\x1d.storage.v1.ListFilesResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/api/storage/files\x12q\n" +
+	"\fRenameFolder\x12\x1f.storage.v1.RenameFolderRequest\x1a .storage.v1.RenameFolderResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\x1a\x13/api/storage/folderB\rZ\vgen/gatewayb\x06proto3"
 
 var file_gateway_proto_goTypes = []any{
 	(*user_service_gen.RegisterUserRequest)(nil),          // 0: user_service.v1.RegisterUserRequest

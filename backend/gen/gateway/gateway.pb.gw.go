@@ -519,7 +519,7 @@ func RegisterGatewayServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/gateway.v1.GatewayService/RenameFolder", runtime.WithHTTPPathPattern("/api/storage/foler"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/gateway.v1.GatewayService/RenameFolder", runtime.WithHTTPPathPattern("/api/storage/folder"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -730,7 +730,7 @@ func RegisterGatewayServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/gateway.v1.GatewayService/RenameFolder", runtime.WithHTTPPathPattern("/api/storage/foler"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/gateway.v1.GatewayService/RenameFolder", runtime.WithHTTPPathPattern("/api/storage/folder"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -756,7 +756,7 @@ var (
 	pattern_GatewayService_Verify2FA_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "twofactor", "verify"}, ""))
 	pattern_GatewayService_CreateFolder_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "storage", "folder"}, ""))
 	pattern_GatewayService_ListFiles_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "storage", "files"}, ""))
-	pattern_GatewayService_RenameFolder_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "storage", "foler"}, ""))
+	pattern_GatewayService_RenameFolder_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "storage", "folder"}, ""))
 )
 
 var (

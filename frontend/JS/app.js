@@ -1,5 +1,45 @@
 (function () {
     'use strict';
+    let currentFolderPath = '';
+
+    function renderBreadcrumb(dirPath) {
+        const bc = document.querySelector('.breadcrumb');
+        if (!bc) return;
+        bc.innerHTML = '';
+
+        const root = document.createElement('li');
+        root.className = 'breadcrumb-item' + (dirPath ? '' : ' active');
+        if (dirPath) {
+            const a = document.createElement('a');
+            a.href = '#';
+            a.textContent = 'My Drive';
+            a.addEventListener('click', (e) => { e.preventDefault(); load(''); });
+            root.appendChild(a);
+        } else {
+            root.textContent = 'My Drive';
+            root.setAttribute('aria-current', 'page');
+        }
+        bc.appendChild(root);
+
+        const parts = dirPath.split('/').filter(Boolean);
+        parts.forEach((part, i) => {
+            const isLast = i === parts.length - 1;
+            const li = document.createElement('li');
+            li.className = 'breadcrumb-item' + (isLast ? ' active' : '');
+            if (isLast) {
+                li.textContent = part;            // textContent — never innerHTML for paths
+                li.setAttribute('aria-current', 'page');
+            } else {
+                const a = document.createElement('a');
+                a.href = '#';
+                a.textContent = part;
+                const target = parts.slice(0, i + 1).join('/') + '/';
+                a.addEventListener('click', (e) => { e.preventDefault(); load(target); });
+                li.appendChild(a);
+            }
+            bc.appendChild(li);
+        });
+    }
 
     // ---------- Shared helpers ----------
     function mark(input, ok) {
@@ -1005,38 +1045,60 @@
         wireDialogClose(dialog);
 
         confirmBtn.addEventListener('click', async () => {
-            // Validation
-            const folderName = input.value.trim();
-            if (!folderName) {
-                alertEl.textContent = 'Please enter a folder name.';
-                alertEl.className = 'alert alert-danger mb-3';
-                alertEl.classList.remove('d-none');
+            const name = input.value.trim();
+
+            // Basic name validation
+            if (!name) {
+                showFolderError('Please enter a folder name.');
                 return;
             }
+            if (name.includes('/') || name.includes('\\')) {
+                showFolderError('Folder name cannot contain slashes.');
+                return;
+            }
+            if (name.length > 100) {
+                showFolderError('Folder name is too long (max 100 characters).');
+                return;
+            }
+
+            // Build the path relative to the current folder
+            const parent = currentFolderPath.endsWith('/') || currentFolderPath === ''
+                ? currentFolderPath
+                : currentFolderPath + '/';
+            const newPath = parent + name;
 
             const originalText = confirmBtn.innerHTML;
             confirmBtn.disabled = true;
             confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Creating…';
             alertEl.classList.add('d-none');
 
-            // Send data for folder creation
             try {
+                const token = localStorage.getItem('token');
+                const qs = new URLSearchParams();
+                qs.set('token', token);
                 const res = await fetch('/api/storage/folder', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                        'Authorization': 'Bearer ' + token
                     },
-                    body: JSON.stringify({ path: folderName })
+                    body: JSON.stringify({
+                        path:  newPath,
+                        token: token
+                    })
                 });
 
                 if (!res.ok) {
                     const data = await res.json().catch(() => ({}));
-                    throw new Error(data.message || 'Failed to create folder');
+                    throw new Error(data.message || `Failed to create folder (HTTP ${res.status})`);
                 }
 
                 dialog.close('success');
-                window.location.reload();
+
+                // Reload the *current* folder, not the page
+                window.dispatchEvent(new CustomEvent('files-changed'));
+                // Or, if load() is reachable:
+                // load(currentFolderPath);
 
             } catch (err) {
                 alertEl.textContent = err.message;
@@ -1047,6 +1109,12 @@
                 confirmBtn.innerHTML = originalText;
             }
         });
+
+        function showFolderError(msg) {
+            alertEl.textContent = msg;
+            alertEl.className = 'alert alert-danger mb-3';
+            alertEl.classList.remove('d-none');
+        }
     })();
 
     // ---------- File uploading dialog----------
@@ -1196,6 +1264,7 @@
                 showAlert('File uploaded successfully.', 'success');
                 setTimeout(() => {
                     dialog.close('uploaded');
+                    window.dispatchEvent(new CustomEvent('files-changed'));
                 }, 1200);
 
             } catch {
@@ -1205,5 +1274,108 @@
                 submitBtn.innerHTML = originalHtml;
             }
         });
+    })();
+
+    (function initFileList() {
+        'use strict';
+
+        const tbody = document.getElementById('fileTableBody');
+        if (!tbody) return;
+
+        const bc = document.getElementById('fileBreadcrumb');
+        let currentPath = '';
+
+        function formatSize(bytes) {
+            if (!bytes || bytes <= 0) return '—';
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 ** 2) return (bytes / 1024).toFixed(1) + ' KB';
+            if (bytes < 1024 ** 3) return (bytes / 1024 ** 2).toFixed(1) + ' MB';
+            return (bytes / 1024 ** 3).toFixed(2) + ' GB';
+        }
+
+        function row(file) {
+            const icon = file.isDirectory
+                ? 'bi-folder-fill'
+                : 'bi-file-earmark-fill';
+            const kind = file.isDirectory ? 'Folder' : 'File';
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+            <td>
+                <div class="file-name">
+                    <span class="icon ${file.isDirectory ? 'folder' : 'doc'}">
+                        <i class="bi ${icon}"></i>
+                    </span>
+                    <div>${escapeHtml(file.name)}<small>${kind}</small></div>
+                </div>
+            </td>
+            <td class="d-none d-md-table-cell text-soft">${formatSize(file.size)}</td>
+            <td class="d-none d-md-table-cell text-soft">—</td>
+            <td class="d-none d-sm-table-cell"></td>
+            <td class="file-actions">
+                <button class="btn-icon" aria-label="More options">
+                    <i class="bi bi-three-dots"></i>
+                </button>
+            </td>`;
+            if (file.isDirectory) {
+                tr.style.cursor = 'pointer';
+                tr.addEventListener('click', (e) => {
+                    if (e.target.closest('button')) return;
+                    load(file.path);
+                });
+            }
+            return tr;
+        }
+
+        function escapeHtml(s) {
+            return s.replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
+
+        async function load(dirPath) {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.replace('login.html'); return; }
+
+            tbody.innerHTML = `<tr><td colspan="5" class="text-soft p-3">Loading…</td></tr>`;
+
+            const qs = new URLSearchParams();
+            if (dirPath) qs.set('path', dirPath);
+            qs.set('token', token);
+
+            try {
+                const res = await fetch('/api/storage/files?' + qs.toString());
+                if (res.status === 401) { window.location.replace('login.html'); return; }
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    throw new Error(data.message || `HTTP ${res.status}`);
+                }
+
+                const data = await res.json();
+                const files = data.files || [];
+
+                // ── NEW: commit the path only after a successful load ──
+                currentFolderPath = dirPath;
+                renderBreadcrumb(dirPath);
+
+                tbody.innerHTML = '';
+                if (files.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-soft p-3">This folder is empty.</td></tr>`;
+                    return;
+                }
+
+                files
+                    .slice()
+                    .sort((a, b) => (b.isDirectory - a.isDirectory) || a.name.localeCompare(b.name))
+                    .forEach(f => tbody.appendChild(row(f)));
+
+            } catch (err) {
+                tbody.innerHTML =
+                    `<tr><td colspan="5" class="text-danger p-3">Failed to load files: ${escapeHtml(err.message)}</td></tr>`;
+            }
+        }
+
+        load('');
+        window.addEventListener('files-changed', () => load(currentFolderPath));
     })();
 })();

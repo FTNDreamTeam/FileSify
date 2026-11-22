@@ -226,58 +226,56 @@ func (s *StorageServer) ListFiles(ctx context.Context, req *pb.ListFilesRequest)
 	if req.GetToken() == "" {
 		return nil, status.Error(codes.InvalidArgument, "token cannot be empty")
 	}
-	// Validate the token and get the user ID
+
 	valResponse, err := s.UserClient.ValidateToken(ctx, &userpb.ValidateTokenRequest{
 		Token: req.GetToken(),
 	})
 	if err != nil {
-		log.Printf("Error validating token:%v", err)
-		return nil, status.Errorf(codes.Unauthenticated, "No token present:%v", err)
+		log.Printf("Error validating token: %v", err)
+		return nil, status.Error(codes.Unauthenticated, "invalid token")
 	}
 
 	userId := valResponse.GetUserId()
 
-	// Clean the request path and prepend the user ID to ensure users can only access their own files
-	requestPath := req.GetPath()
-	cleanPath := strings.Trim(path.Clean("/"+requestPath), "/")
-	// UserID/path/
+	cleanPath := strings.Trim(path.Clean("/"+req.GetPath()), "/")
 	prefix := userId + "/"
 	if cleanPath != "" {
 		prefix += cleanPath + "/"
 	}
 
-	opts := minio.ListObjectsOptions{
-		Prefix:    prefix,
-		Recursive: false,
-	}
+	opts := minio.ListObjectsOptions{Prefix: prefix, Recursive: false}
 
-	objectCh := s.Store.ListObjects(ctx, "filesify", opts)
 	var files []*pb.FileInfo
-	for object := range objectCh {
+	seen := make(map[string]struct{})
+
+	for object := range s.Store.ListObjects(ctx, "filesify", opts) {
 		if object.Err != nil {
-			log.Printf("Error listing object:%v", object.Err)
-			return nil, status.Errorf(codes.Internal, "failed to list files")
+			log.Printf("Error listing object: %v", object.Err)
+			return nil, status.Error(codes.Internal, "failed to list files")
 		}
 
 		if object.Key == prefix {
-			// Skip the folder itself
 			continue
 		}
 
-		isDir := object.ContentType == "application/x-directory" || strings.HasSuffix(object.Key, "/")
-		name := strings.TrimPrefix(object.Key, prefix)
-		name = strings.TrimSuffix(name, "/")
+		relPath := strings.TrimPrefix(object.Key, userId+"/")
+		if _, dup := seen[relPath]; dup {
+			continue
+		}
+		seen[relPath] = struct{}{}
+
+		isDir := strings.HasSuffix(object.Key, "/")
+		trimmed := strings.TrimSuffix(relPath, "/")
 
 		files = append(files, &pb.FileInfo{
-			Name:        name,
+			Name:        path.Base(trimmed),
 			IsDirectory: isDir,
 			Size:        object.Size,
-			Path:        object.Key,
+			Path:        relPath,
 		})
 	}
 
 	return &pb.ListFilesResponse{Files: files}, nil
-
 }
 
 func (s *StorageServer) RenameFolder(ctx context.Context, req *pb.RenameFolderRequest) (*pb.RenameFolderResponse, error) {

@@ -62,3 +62,23 @@ func (s *SiloStore) CreateBucket(ctx context.Context, bucket string) error {
 	}
 	return nil
 }
+
+func (s *SiloStore) ListObjects(cxt context.Context, bucket string, opts minio.ListObjectsOptions) <-chan minio.ObjectInfo {
+	return s.client.ListObjects(cxt, bucket, opts)
+}
+
+func (s *SiloStore) CopyObject(ctx context.Context, destBucket, destObject, srcBucket, srcObject string) error {
+	src := minio.CopySrcOptions{
+		Bucket: srcBucket,
+		Object: srcObject,
+	}
+	dest := minio.CopyDestOptions{
+		Bucket: destBucket,
+		Object: destObject,
+	}
+	_, err := s.client.CopyObject(ctx, dest, src)
+	if err != nil {
+		return fmt.Errorf("failed to copy object from %s to %s: %w", srcObject, destObject, err)
+	}
+	return nil
+}

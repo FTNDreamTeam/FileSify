@@ -56,6 +56,12 @@ func (s *server) Verify2FA(ctx context.Context, request *userpb.Verify2FARequest
 func (s *server) CreateFolder(ctx context.Context, request *storagepb.CreateFolderRequest) (*storagepb.CreateFolderResponse, error) {
 	return s.storageClient.CreateFolder(ctx, request)
 }
+func (s *server) ListFiles(ctx context.Context, request *storagepb.ListFilesRequest) (*storagepb.ListFilesResponse, error) {
+	return s.storageClient.ListFiles(ctx, request)
+}
+func (s *server) RenameFolder(ctx context.Context, request *storagepb.RenameFolderRequest) (*storagepb.RenameFolderResponse, error) {
+	return s.storageClient.RenameFolder(ctx, request)
+}
 
 func main() {
 

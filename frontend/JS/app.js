@@ -1,7 +1,9 @@
 (function () {
     'use strict';
+    // Current folder path
     let currentFolderPath = '';
 
+    // ---------- Breadcrumb rendering ----------
     function renderBreadcrumb(dirPath) {
         const bc = document.querySelector('.breadcrumb');
         if (!bc) return;
@@ -10,17 +12,20 @@
         const root = document.createElement('li');
         root.className = 'breadcrumb-item' + (dirPath ? '' : ' active');
         if (dirPath) {
+            // Clickable root - returns to My Drive
             const a = document.createElement('a');
             a.href = '#';
             a.textContent = 'My Drive';
             a.addEventListener('click', (e) => { e.preventDefault(); load(''); });
             root.appendChild(a);
         } else {
+            // Root folder
             root.textContent = 'My Drive';
             root.setAttribute('aria-current', 'page');
         }
         bc.appendChild(root);
 
+        // Path segments - intermediate ones clickable, last one is current
         const parts = dirPath.split('/').filter(Boolean);
         parts.forEach((part, i) => {
             const isLast = i === parts.length - 1;
@@ -33,6 +38,7 @@
                 const a = document.createElement('a');
                 a.href = '#';
                 a.textContent = part;
+                // Build cumulative path for navigation
                 const target = parts.slice(0, i + 1).join('/') + '/';
                 a.addEventListener('click', (e) => { e.preventDefault(); load(target); });
                 li.appendChild(a);
@@ -1095,10 +1101,7 @@
 
                 dialog.close('success');
 
-                // Reload the *current* folder, not the page
                 window.dispatchEvent(new CustomEvent('files-changed'));
-                // Or, if load() is reachable:
-                // load(currentFolderPath);
 
             } catch (err) {
                 alertEl.textContent = err.message;
@@ -1220,10 +1223,11 @@
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Uploading…';
 
+            const token = localStorage.getItem('token');
+
             const formData = new FormData();
             formData.append('file', file);
-
-            const token = localStorage.getItem('token');
+            formData.append('path', currentFolderPath);
 
             // Send file
             try {
@@ -1276,6 +1280,7 @@
         });
     })();
 
+    // ---------- File list and folder browsing ----------
     (function initFileList() {
         'use strict';
 
@@ -1285,6 +1290,7 @@
         const bc = document.getElementById('fileBreadcrumb');
         let currentPath = '';
 
+        // Size formatter
         function formatSize(bytes) {
             if (!bytes || bytes <= 0) return '—';
             if (bytes < 1024) return bytes + ' B';
@@ -1293,6 +1299,7 @@
             return (bytes / 1024 ** 3).toFixed(2) + ' GB';
         }
 
+        // Single row - folders are clickable to navigate inside
         function row(file) {
             const icon = file.isDirectory
                 ? 'bi-folder-fill'
@@ -1337,8 +1344,10 @@
             const token = localStorage.getItem('token');
             if (!token) { window.location.replace('login.html'); return; }
 
+            // Loading state
             tbody.innerHTML = `<tr><td colspan="5" class="text-soft p-3">Loading…</td></tr>`;
 
+            // Token in query - gateway drops Authorization for GET
             const qs = new URLSearchParams();
             if (dirPath) qs.set('path', dirPath);
             qs.set('token', token);
@@ -1354,27 +1363,30 @@
                 const data = await res.json();
                 const files = data.files || [];
 
-                // ── NEW: commit the path only after a successful load ──
+                // Commit the path only after a successful load
                 currentFolderPath = dirPath;
                 renderBreadcrumb(dirPath);
 
+                // Empty folder message
                 tbody.innerHTML = '';
                 if (files.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="5" class="text-soft p-3">This folder is empty.</td></tr>`;
                     return;
                 }
 
+                // Folders first, then files, alphabetical
                 files
                     .slice()
                     .sort((a, b) => (b.isDirectory - a.isDirectory) || a.name.localeCompare(b.name))
                     .forEach(f => tbody.appendChild(row(f)));
 
             } catch (err) {
+                // Error display
                 tbody.innerHTML =
                     `<tr><td colspan="5" class="text-danger p-3">Failed to load files: ${escapeHtml(err.message)}</td></tr>`;
             }
         }
-
+        // Load data + reload onChange
         load('');
         window.addEventListener('files-changed', () => load(currentFolderPath));
     })();

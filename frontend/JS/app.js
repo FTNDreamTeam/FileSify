@@ -1267,7 +1267,7 @@
             const root = document.createElement('li');
             root.className = 'breadcrumb-item' + (dirPath ? '' : ' active');
             if (dirPath) {
-                // Clickable root - real href so ctrl+click / open in new tab works
+                // Clickable root
                 const a = document.createElement('a');
                 a.href = buildNavUrl('');
                 a.textContent = 'My Drive';
@@ -1286,7 +1286,7 @@
                 const li = document.createElement('li');
                 li.className = 'breadcrumb-item' + (isLast ? ' active' : '');
                 if (isLast) {
-                    li.textContent = part;   // textContent - never innerHTML for paths
+                    li.textContent = part;
                     li.setAttribute('aria-current', 'page');
                 } else {
                     // Build cumulative path for navigation
@@ -1329,27 +1329,28 @@
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
-        <td>
-            <div class="file-name">
-                <span class="icon ${file.isDirectory ? 'folder' : 'doc'}">
-                    <i class="bi ${icon}"></i>
-                </span>
-                <div>${escapeHtml(file.name)}<small>${kind}</small></div>
-            </div>
-        </td>
-        <td class="d-none d-md-table-cell text-soft">${formatSize(file.size)}</td>
-        <td class="d-none d-md-table-cell text-soft">—</td>
-        <td class="d-none d-sm-table-cell"></td>
-        <td class="file-actions">
-            <button class="btn-icon" aria-label="More options">
-                <i class="bi bi-three-dots"></i>
-            </button>
-        </td>`;
-            if (file.isDirectory) {
-                tr.style.cursor = 'pointer';
-                tr.addEventListener('click', (e) => {
-                    if (e.target.closest('button')) return;
-                    load(file.path);
+            <td>
+                <div class="file-name">
+                    <span class="icon ${file.isDirectory ? 'folder' : 'doc'}">
+                        <i class="bi ${icon}"></i>
+                    </span>
+                    <div>${escapeHtml(file.name)}<small>${kind}</small></div>
+                </div>
+            </td>
+            <td class="d-none d-md-table-cell text-soft">${formatSize(file.size)}</td>
+            <td class="d-none d-md-table-cell text-soft">—</td>
+            <td class="d-none d-sm-table-cell"></td>
+            <td class="file-actions">
+                <button type="button" class="btn-icon" aria-label="More options"
+                        data-action="rename" ${file.isDirectory ? '' : 'disabled'}>
+                    <i class="bi bi-three-dots"></i>
+                </button>
+            </td>`;
+            const menuBtn = tr.querySelector('button[data-action="rename"]');
+            if (menuBtn && file.isDirectory && openRenameFolderDialog) {
+                menuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openRenameFolderDialog(file);
                 });
             }
             return tr;
@@ -1431,5 +1432,98 @@
 
         // Initial load
         load(pathFromUrl(), false);
+    })();
+
+    // ---------- Folder renaming dialog ----------
+    let openRenameFolderDialog = null;
+
+    (function initRenameFolderDialog() {
+        const dialog     = document.getElementById('renameFolderDialog');
+        if (!dialog) return;
+
+        const input      = document.getElementById('renameFolderInput');
+        const confirmBtn = document.getElementById('renameFolderConfirm');
+        const alertEl    = document.getElementById('renameFolderAlert');
+
+        let target = null;
+
+        function showError(msg) {
+            alertEl.textContent = msg;
+            alertEl.className = 'alert alert-danger mb-3';
+            alertEl.classList.remove('d-none');
+        }
+
+        wireDialogClose(dialog);
+
+        openRenameFolderDialog = function (file) {
+            const oldPath = file.path;
+            const leaf    = file.name;
+            const parent  = oldPath.slice(0, oldPath.length - leaf.length - 1); // "" or "Projects/"
+
+            target = { oldPath, leafName: leaf, parentPath: parent };
+
+            input.value = leaf;
+            alertEl.classList.add('d-none');
+            dialog.showModal();
+
+            // Select the leaf name (not the extension-less part — folder, no extension)
+            setTimeout(() => { input.focus(); input.select(); }, 100);
+        };
+
+        // Enter to submit
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); confirmBtn.click(); }
+        });
+
+        confirmBtn.addEventListener('click', async () => {
+            if (!target) return;
+
+            const newName = input.value.trim();
+            if (!newName) { showError('Please enter a name.'); return; }
+            if (newName === target.leafName) { dialog.close('cancel'); return; }
+            if (newName.includes('/') || newName.includes('\\')) {
+                showError('Folder name cannot contain slashes.'); return;
+            }
+            if (newName.length > 100) { showError('Name is too long (max 100 characters).'); return; }
+
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.replace('login.html'); return; }
+
+            const newPath = target.parentPath + newName;
+
+            const originalText = confirmBtn.innerHTML;
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Renaming…';
+            alertEl.classList.add('d-none');
+
+            try {
+                const res = await fetch('/api/storage/folder', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        oldPath: target.oldPath,
+                        newPath: newPath,
+                        token:   token
+                    })
+                });
+
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    throw new Error(data.message || `Rename failed (HTTP ${res.status})`);
+                }
+
+                dialog.close('success');
+                window.dispatchEvent(new CustomEvent('files-changed'));
+
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = originalText;
+            }
+        });
     })();
 })();

@@ -7,6 +7,7 @@ import (
 	"log"
 	"math"
 	"path"
+	"regexp"
 	"strings"
 	"time"
 
@@ -330,29 +331,37 @@ func (s *StorageServer) RenameFolder(ctx context.Context, req *pb.RenameFolderRe
 
 	// Update the folder metadata in MongoDB
 	userObjID, err := primitive.ObjectIDFromHex(userId)
-	if err == nil {
-		filter := bson.M{
-			"owner": userObjID,
-			"name":  bson.M{"$regex": "^" + oldPrefix},
-		}
+	if err != nil {
+		log.Printf("RenameFolder: invalid user id %q: %v", userId, err)
+		return nil, status.Error(codes.Internal, "failed to update folder metadata")
+	}
 
-		cursor, err := s.FolderMeta.Find(ctx, filter)
-		if err != nil {
-			log.Printf("Error finding folders to rename in Mongo: %v", err)
-		} else {
-			defer cursor.Close(ctx)
-			for cursor.Next(ctx) {
-				var folder db.FolderMeta
-				if err := cursor.Decode(&folder); err == nil {
-					newPath := strings.Replace(folder.Path, oldPrefix, newPrefix, 1)
-					_, err = s.FolderMeta.UpdateByID(ctx, folder.ID, bson.M{
-						"$set": bson.M{"name": newPath},
-					})
-					if err != nil {
-						log.Printf("Error updating folder %s in Mongo: %v", folder.Path, err)
-					}
-				}
-			}
+	relOldPrefix := oldCleanPath + "/"
+	relNewPrefix := newCleanPath + "/"
+
+	filter := bson.M{
+		"owner": userObjID,
+		"name":  bson.M{"$regex": "^" + regexp.QuoteMeta(relOldPrefix)},
+	}
+
+	cursor, err := s.FolderMeta.Find(ctx, filter)
+	if err != nil {
+		log.Printf("RenameFolder: mongo find failed: %v", err)
+		return nil, status.Error(codes.Internal, "failed to update folder metadata")
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var folder db.FolderMeta
+		if err := cursor.Decode(&folder); err != nil {
+			log.Printf("RenameFolder: decode failed: %v", err)
+			continue
+		}
+		newRelative := relNewPrefix + strings.TrimPrefix(folder.Path, relOldPrefix)
+		if _, err := s.FolderMeta.UpdateByID(ctx, folder.ID, bson.M{
+			"$set": bson.M{"name": newRelative},
+		}); err != nil {
+			log.Printf("RenameFolder: update %s failed: %v", folder.Path, err)
 		}
 	}
 

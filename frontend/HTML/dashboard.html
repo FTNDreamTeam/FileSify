@@ -217,7 +217,7 @@
                     </nav>
                     <h6 class="mt-1 mb-0">Files and folders</h6>
                 </div>
-                <div class="text-soft small">124 items</div>
+                <div class="text-soft small" id="fileCount">-</div>
             </div>
 
             <table class="file-table">
@@ -230,7 +230,7 @@
                     <th></th>
                 </tr>
                 </thead>
-                <tbody>
+                <tbody id="fileTableBody">
                 <tr>
                     <td><div class="file-name"><span class="icon folder"><i class="bi bi-folder-fill"></i></span><div>Projects<small>Folder · 12 items</small></div></div></td>
                     <td class="d-none d-md-table-cell text-soft">—</td>
@@ -366,6 +366,27 @@
     </div>
 </dialog>
 
+<!-- Rename Folder Dialog -->
+<dialog class="dialog" id="renameFolderDialog" aria-labelledby="renameFolderTitle">
+    <div class="dialog-header">
+        <h2 class="dialog-title" id="renameFolderTitle">Rename folder</h2>
+        <button type="button" class="dialog-close" data-dialog-close aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <div class="dialog-body" style="text-align: left;">
+        <div id="renameFolderAlert" class="alert d-none mb-3" role="alert"></div>
+        <label for="renameFolderInput" class="form-label">New name</label>
+        <input type="text" class="form-control" id="renameFolderInput" required>
+    </div>
+    <div class="dialog-footer">
+        <button type="button" class="btn btn-outline-brand rounded-pill px-3" data-dialog-close>Cancel</button>
+        <button type="button" class="btn btn-brand rounded-pill px-3" id="renameFolderConfirm">
+            <i class="bi bi-pencil me-1"></i> Rename
+        </button>
+    </div>
+</dialog>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../JS/app.js"></script>
 <script>
@@ -387,6 +408,7 @@
 
 
     })();
+
 </script>
 </body>
 </html>

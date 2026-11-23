@@ -272,7 +272,7 @@ func (s *StorageServer) ListFiles(ctx context.Context, req *pb.ListFilesRequest)
 			Name:        name,
 			IsDirectory: isDir,
 			Size:        object.Size,
-			Path:        object.Key,
+			Path:        strings.TrimPrefix(object.Key, userId+"/"),
 		})
 	}
 

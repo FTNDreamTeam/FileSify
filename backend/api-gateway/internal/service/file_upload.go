@@ -128,5 +128,5 @@ func (s *FileUploadService) checkQuota(ctx context.Context, userID string, fileS
 	if err != nil {
 		return false, err
 	}
-	return int64(storageResp.GetQuota()) >= fileSize, nil
+	return int64(storageResp.GetQuota()) >= fileSize/mb, nil
 }

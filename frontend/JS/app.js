@@ -1036,8 +1036,6 @@
 
             try {
                 const token = localStorage.getItem('token');
-                const qs = new URLSearchParams();
-                qs.set('token', token);
                 const res = await fetch('/api/storage/folder', {
                     method: 'POST',
                     headers: {
@@ -1237,7 +1235,7 @@
             }
         });
     })();
-
+    // ---------- File list and folder browsing ----------
     (function initFileList() {
         'use strict';
 

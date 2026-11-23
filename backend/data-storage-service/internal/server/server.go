@@ -7,7 +7,6 @@ import (
 	"log"
 	"math"
 	"path"
-	"regexp"
 	"strings"
 	"time"
 
@@ -227,56 +226,58 @@ func (s *StorageServer) ListFiles(ctx context.Context, req *pb.ListFilesRequest)
 	if req.GetToken() == "" {
 		return nil, status.Error(codes.InvalidArgument, "token cannot be empty")
 	}
-
+	// Validate the token and get the user ID
 	valResponse, err := s.UserClient.ValidateToken(ctx, &userpb.ValidateTokenRequest{
 		Token: req.GetToken(),
 	})
 	if err != nil {
-		log.Printf("Error validating token: %v", err)
-		return nil, status.Error(codes.Unauthenticated, "invalid token")
+		log.Printf("Error validating token:%v", err)
+		return nil, status.Errorf(codes.Unauthenticated, "No token present:%v", err)
 	}
 
 	userId := valResponse.GetUserId()
 
-	cleanPath := strings.Trim(path.Clean("/"+req.GetPath()), "/")
+	// Clean the request path and prepend the user ID to ensure users can only access their own files
+	requestPath := req.GetPath()
+	cleanPath := strings.Trim(path.Clean("/"+requestPath), "/")
+	// UserID/path/
 	prefix := userId + "/"
 	if cleanPath != "" {
 		prefix += cleanPath + "/"
 	}
 
-	opts := minio.ListObjectsOptions{Prefix: prefix, Recursive: false}
+	opts := minio.ListObjectsOptions{
+		Prefix:    prefix,
+		Recursive: false,
+	}
 
+	objectCh := s.Store.ListObjects(ctx, "filesify", opts)
 	var files []*pb.FileInfo
-	seen := make(map[string]struct{})
-
-	for object := range s.Store.ListObjects(ctx, "filesify", opts) {
+	for object := range objectCh {
 		if object.Err != nil {
-			log.Printf("Error listing object: %v", object.Err)
-			return nil, status.Error(codes.Internal, "failed to list files")
+			log.Printf("Error listing object:%v", object.Err)
+			return nil, status.Errorf(codes.Internal, "failed to list files")
 		}
 
 		if object.Key == prefix {
+			// Skip the folder itself
 			continue
 		}
 
-		relPath := strings.TrimPrefix(object.Key, userId+"/")
-		if _, dup := seen[relPath]; dup {
-			continue
-		}
-		seen[relPath] = struct{}{}
-
-		isDir := strings.HasSuffix(object.Key, "/")
-		trimmed := strings.TrimSuffix(relPath, "/")
+		isDir := object.ContentType == "application/x-directory" || strings.HasSuffix(object.Key, "/")
+		name := strings.TrimPrefix(object.Key, prefix)
+		name = strings.TrimSuffix(name, "/")
 
 		files = append(files, &pb.FileInfo{
-			Name:        path.Base(trimmed),
+			Name:        name,
 			IsDirectory: isDir,
 			Size:        object.Size,
-			Path:        relPath,
+			Path:        strings.TrimPrefix(object.Key, userId+"/"),
 		})
 	}
 
 	return &pb.ListFilesResponse{Files: files}, nil
+
 }
 
 func (s *StorageServer) RenameFolder(ctx context.Context, req *pb.RenameFolderRequest) (*pb.RenameFolderResponse, error) {
@@ -331,37 +332,29 @@ func (s *StorageServer) RenameFolder(ctx context.Context, req *pb.RenameFolderRe
 
 	// Update the folder metadata in MongoDB
 	userObjID, err := primitive.ObjectIDFromHex(userId)
-	if err != nil {
-		log.Printf("RenameFolder: invalid user id %q: %v", userId, err)
-		return nil, status.Error(codes.Internal, "failed to update folder metadata")
-	}
-
-	relOldPrefix := oldCleanPath + "/"
-	relNewPrefix := newCleanPath + "/"
-
-	filter := bson.M{
-		"owner": userObjID,
-		"name":  bson.M{"$regex": "^" + regexp.QuoteMeta(relOldPrefix)},
-	}
-
-	cursor, err := s.FolderMeta.Find(ctx, filter)
-	if err != nil {
-		log.Printf("RenameFolder: mongo find failed: %v", err)
-		return nil, status.Error(codes.Internal, "failed to update folder metadata")
-	}
-	defer cursor.Close(ctx)
-
-	for cursor.Next(ctx) {
-		var folder db.FolderMeta
-		if err := cursor.Decode(&folder); err != nil {
-			log.Printf("RenameFolder: decode failed: %v", err)
-			continue
+	if err == nil {
+		filter := bson.M{
+			"owner": userObjID,
+			"name":  bson.M{"$regex": "^" + oldPrefix},
 		}
-		newRelative := relNewPrefix + strings.TrimPrefix(folder.Path, relOldPrefix)
-		if _, err := s.FolderMeta.UpdateByID(ctx, folder.ID, bson.M{
-			"$set": bson.M{"name": newRelative},
-		}); err != nil {
-			log.Printf("RenameFolder: update %s failed: %v", folder.Path, err)
+
+		cursor, err := s.FolderMeta.Find(ctx, filter)
+		if err != nil {
+			log.Printf("Error finding folders to rename in Mongo: %v", err)
+		} else {
+			defer cursor.Close(ctx)
+			for cursor.Next(ctx) {
+				var folder db.FolderMeta
+				if err := cursor.Decode(&folder); err == nil {
+					newPath := strings.Replace(folder.Path, oldPrefix, newPrefix, 1)
+					_, err = s.FolderMeta.UpdateByID(ctx, folder.ID, bson.M{
+						"$set": bson.M{"name": newPath},
+					})
+					if err != nil {
+						log.Printf("Error updating folder %s in Mongo: %v", folder.Path, err)
+					}
+				}
+			}
 		}
 	}
 

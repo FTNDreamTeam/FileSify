@@ -1057,7 +1057,10 @@
 
                 dialog.close('success');
 
+                // Reload the *current* folder, not the page
                 window.dispatchEvent(new CustomEvent('files-changed'));
+                // Or, if load() is reachable:
+                // load(currentFolderPath);
 
             } catch (err) {
                 alertEl.textContent = err.message;
@@ -1179,11 +1182,10 @@
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Uploading…';
 
-            const token = localStorage.getItem('token');
-
             const formData = new FormData();
             formData.append('file', file);
-            formData.append('path', currentFolderPath);
+
+            const token = localStorage.getItem('token');
 
             // Send file
             try {
@@ -1236,17 +1238,18 @@
         });
     })();
 
-    // ---------- File list and folder browsing ----------
     (function initFileList() {
         'use strict';
 
-        const tbody = document.getElementById('fileTableBody');
+        // Element definition
+        const tbody       = document.getElementById('fileTableBody');
         if (!tbody) return;
 
+        // Breadcrumb and item-count elements
         const bc          = document.querySelector('.breadcrumb');
         const fileCountEl = document.getElementById('fileCount');
 
-        // Build a dashboard URL with a given folder path
+        // Build a URL for a folder path - real href so ctrl+click / open-in-new-tab work
         function buildNavUrl(path) {
             const url = new URL(window.location.href);
             if (path) url.searchParams.set('path', path);
@@ -1254,12 +1257,12 @@
             return url.pathname + url.search;
         }
 
-        // Read the folder path from the current URL
+        // Read ?path= from the current URL (for deep-linking)
         function pathFromUrl() {
             return new URLSearchParams(window.location.search).get('path') || '';
         }
 
-        // Breadcrumb rendering
+        // Breadcrumb
         function renderBreadcrumb(dirPath) {
             if (!bc) return;
             bc.innerHTML = '';
@@ -1267,7 +1270,7 @@
             const root = document.createElement('li');
             root.className = 'breadcrumb-item' + (dirPath ? '' : ' active');
             if (dirPath) {
-                // Clickable root
+                // Clickable root - returns to My Drive
                 const a = document.createElement('a');
                 a.href = buildNavUrl('');
                 a.textContent = 'My Drive';
@@ -1280,13 +1283,14 @@
             }
             bc.appendChild(root);
 
+            // Path segments - intermediate ones clickable, last one is current
             const parts = dirPath.split('/').filter(Boolean);
             parts.forEach((part, i) => {
                 const isLast = i === parts.length - 1;
                 const li = document.createElement('li');
                 li.className = 'breadcrumb-item' + (isLast ? ' active' : '');
                 if (isLast) {
-                    li.textContent = part;
+                    li.textContent = part;   // textContent - never innerHTML for paths
                     li.setAttribute('aria-current', 'page');
                 } else {
                     // Build cumulative path for navigation
@@ -1301,19 +1305,19 @@
             });
         }
 
-        // Navigator links
+        // Delegated breadcrumb click - survives re-renders
         if (bc) {
             bc.addEventListener('click', (e) => {
                 const a = e.target.closest('a[data-nav-path]');
                 if (!a) return;
-                // Modifier keys = let the browser do its native thing (new tab etc.)
+                // Modifier keys - let the browser open in new tab
                 if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
                 e.preventDefault();
                 load(a.dataset.navPath);
             });
         }
 
-        // Size formatter
+        // File size formatter
         function formatSize(bytes) {
             if (!bytes || bytes <= 0) return '—';
             if (bytes < 1024) return bytes + ' B';
@@ -1322,47 +1326,59 @@
             return (bytes / 1024 ** 3).toFixed(2) + ' GB';
         }
 
-        // Folders are clickable to navigate inside
+        // Single row
         function row(file) {
             const icon = file.isDirectory ? 'bi-folder-fill' : 'bi-file-earmark-fill';
             const kind = file.isDirectory ? 'Folder' : 'File';
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
-            <td>
-                <div class="file-name">
-                    <span class="icon ${file.isDirectory ? 'folder' : 'doc'}">
-                        <i class="bi ${icon}"></i>
-                    </span>
-                    <div>${escapeHtml(file.name)}<small>${kind}</small></div>
-                </div>
-            </td>
-            <td class="d-none d-md-table-cell text-soft">${formatSize(file.size)}</td>
-            <td class="d-none d-md-table-cell text-soft">—</td>
-            <td class="d-none d-sm-table-cell"></td>
-            <td class="file-actions">
-                <button type="button" class="btn-icon" aria-label="More options"
-                        data-action="rename" ${file.isDirectory ? '' : 'disabled'}>
-                    <i class="bi bi-three-dots"></i>
-                </button>
-            </td>`;
-            const menuBtn = tr.querySelector('button[data-action="rename"]');
-            if (menuBtn && file.isDirectory && openRenameFolderDialog) {
-                menuBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    openRenameFolderDialog(file);
+        <td>
+            <div class="file-name">
+                <span class="icon ${file.isDirectory ? 'folder' : 'doc'}">
+                    <i class="bi ${icon}"></i>
+                </span>
+                <div>${escapeHtml(file.name)}<small>${kind}</small></div>
+            </div>
+        </td>
+        <td class="d-none d-md-table-cell text-soft">${formatSize(file.size)}</td>
+        <td class="d-none d-md-table-cell text-soft">—</td>
+        <td class="d-none d-sm-table-cell"></td>
+        <td class="file-actions">
+            <button type="button" class="btn-icon" aria-label="More options">
+                <i class="bi bi-three-dots"></i>
+            </button>
+        </td>`;
+
+            // Folder row - click navigates into folder
+            if (file.isDirectory) {
+                tr.style.cursor = 'pointer';
+                tr.addEventListener('click', (e) => {
+                    if (e.target.closest('button')) return;
+                    load(file.path);
                 });
             }
+
+            // Kebab menu opens the rename dialog (folders only)
+            const menuBtn = tr.querySelector('.file-actions .btn-icon');
+            if (menuBtn && file.isDirectory && openRenameDialog) {
+                menuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();   // don't navigate into the folder
+                    openRenameDialog(file);
+                });
+            }
+
             return tr;
         }
 
-        // HTML escape to prevent XSS from filenames
+        // Escape HTML to prevent XSS from file/folder names
         function escapeHtml(s) {
             return s.replace(/[&<>"']/g, c => ({
                 '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
             }[c]));
         }
 
+        // Load folder contents
         async function load(dirPath, push = true) {
             const token = localStorage.getItem('token');
             if (!token) { window.location.replace('login.html'); return; }
@@ -1383,24 +1399,22 @@
                     throw new Error(data.message || `HTTP ${res.status}`);
                 }
 
-                const data = await res.json();
+                const data  = await res.json();
                 const files = data.files || [];
 
-                // Item count
+                // Item count in the header
                 if (fileCountEl) {
                     fileCountEl.textContent = files.length === 0
                         ? 'No items'
                         : files.length + (files.length === 1 ? ' item' : ' items');
                 }
 
-                // Commit the path only after a successful load
+                // Commit path + breadcrumb only after a successful load
                 currentFolderPath = dirPath;
                 renderBreadcrumb(dirPath);
 
-                // Sync URL and history
-                if (push) {
-                    history.pushState({ path: dirPath }, '', buildNavUrl(dirPath));
-                }
+                // Push URL state - skip when driven by popstate or refresh
+                if (push) history.pushState({ path: dirPath }, '', buildNavUrl(dirPath));
 
                 tbody.innerHTML = '';
                 // Empty folder message
@@ -1416,6 +1430,7 @@
                     .forEach(f => tbody.appendChild(row(f)));
 
             } catch (err) {
+                // Error state
                 if (fileCountEl) fileCountEl.textContent = '—';
                 tbody.innerHTML =
                     `<tr><td colspan="5" class="text-danger p-3">Failed to load files: ${escapeHtml(err.message)}</td></tr>`;
@@ -1423,11 +1438,9 @@
         }
 
         // Browser back/forward
-        window.addEventListener('popstate', () => {
-            load(pathFromUrl(), false);
-        });
+        window.addEventListener('popstate', () => load(pathFromUrl(), false));
 
-        // Refresh on upload
+        // Refresh on change
         window.addEventListener('files-changed', () => load(currentFolderPath, false));
 
         // Initial load
@@ -1435,10 +1448,11 @@
     })();
 
     // ---------- Folder renaming dialog ----------
-    let openRenameFolderDialog = null;
+    let openRenameDialog = null;
 
-    (function initRenameFolderDialog() {
-        const dialog     = document.getElementById('renameFolderDialog');
+    (function initFolderRename() {
+        // Element definition
+        const dialog = document.getElementById('renameFolderDialog');
         if (!dialog) return;
 
         const input      = document.getElementById('renameFolderInput');
@@ -1447,55 +1461,61 @@
 
         let target = null;
 
+        // Dialog alert
         function showError(msg) {
             alertEl.textContent = msg;
             alertEl.className = 'alert alert-danger mb-3';
             alertEl.classList.remove('d-none');
         }
 
+        // Cancel + backdrop
         wireDialogClose(dialog);
 
-        openRenameFolderDialog = function (file) {
-            const oldPath = file.path;
-            const leaf    = file.name;
-            const parent  = oldPath.slice(0, oldPath.length - leaf.length - 1); // "" or "Projects/"
+        // Called from the folder row kebab
+        openRenameDialog = function (file) {
+            // Split file.path into parent + leaf for newPath construction
+            const trimmed   = file.path.endsWith('/') ? file.path.slice(0, -1) : file.path;
+            const lastSlash = trimmed.lastIndexOf('/');
+            const parent    = lastSlash >= 0 ? trimmed.slice(0, lastSlash + 1) : '';
 
-            target = { oldPath, leafName: leaf, parentPath: parent };
+            target = { oldPath: file.path, parent, leafName: file.name };
 
-            input.value = leaf;
+            input.value = file.name;
             alertEl.classList.add('d-none');
             dialog.showModal();
-
-            // Select the leaf name (not the extension-less part — folder, no extension)
             setTimeout(() => { input.focus(); input.select(); }, 100);
         };
 
-        // Enter to submit
+        // Enter submits
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') { e.preventDefault(); confirmBtn.click(); }
         });
 
+        // Confirm button
         confirmBtn.addEventListener('click', async () => {
             if (!target) return;
 
             const newName = input.value.trim();
-            if (!newName) { showError('Please enter a name.'); return; }
-            if (newName === target.leafName) { dialog.close('cancel'); return; }
-            if (newName.includes('/') || newName.includes('\\')) {
-                showError('Folder name cannot contain slashes.'); return;
-            }
-            if (newName.length > 100) { showError('Name is too long (max 100 characters).'); return; }
+
+            // Name validation
+            if (!newName)                                         { showError('Please enter a name.'); return; }
+            if (newName === target.leafName)                      { dialog.close('cancel'); return; }
+            if (newName.includes('/') || newName.includes('\\')) { showError('Name cannot contain slashes.'); return; }
+            if (newName.length > 100)                             { showError('Name is too long (max 100 characters).'); return; }
 
             const token = localStorage.getItem('token');
             if (!token) { window.location.replace('login.html'); return; }
 
-            const newPath = target.parentPath + newName;
+            // Build new path - folders always end with a slash
+            const newPath = target.parent + newName + '/';
 
-            const originalText = confirmBtn.innerHTML;
+            // Loading state
+            const original = confirmBtn.innerHTML;
             confirmBtn.disabled = true;
             confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Renaming…';
             alertEl.classList.add('d-none');
 
+            // Send rename request
             try {
                 const res = await fetch('/api/storage/folder', {
                     method: 'PUT',
@@ -1510,20 +1530,23 @@
                     })
                 });
 
-                if (!res.ok) {
-                    const data = await res.json().catch(() => ({}));
-                    throw new Error(data.message || `Rename failed (HTTP ${res.status})`);
-                }
+                // Response check
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.message || `Rename failed (HTTP ${res.status})`);
 
+                // Success - close and refresh table
                 dialog.close('success');
                 window.dispatchEvent(new CustomEvent('files-changed'));
 
             } catch (err) {
                 showError(err.message);
             } finally {
+                // Restore button
                 confirmBtn.disabled = false;
-                confirmBtn.innerHTML = originalText;
+                confirmBtn.innerHTML = original;
             }
         });
     })();
+
+
 })();

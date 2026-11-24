@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/FTNDreamTeam/FileSify/backend/user-service/db"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -24,10 +25,11 @@ func jwtSecret() []byte {
 	return []byte(s)
 }
 
-func GenerateToken(userID, email string) (string, error) {
+func GenerateToken(userID, email string, role db.Role) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":   userID,
 		"email": email,
+		"role":  role.String(),
 		"iat":   time.Now().Unix(),
 		"exp":   time.Now().Add(tokenTTL).Unix(),
 	}

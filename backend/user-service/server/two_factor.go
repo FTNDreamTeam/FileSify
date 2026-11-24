@@ -12,6 +12,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/FTNDreamTeam/FileSify/backend/user-service/db"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -32,6 +33,7 @@ func NewTFAService(rdb *redis.Client, hmacSecret []byte) *TwoFactorService {
 type PendingSession struct {
 	UserID string `json:"user_id"`
 	Email  string `json:"email"`
+	Role   string `json:"role"`
 }
 
 func (s *TwoFactorService) GenerateOTP(ctx context.Context, userId string) (string, error) {
@@ -101,7 +103,7 @@ func (s *TwoFactorService) VerifyOTP(ctx context.Context, userId string, submitt
 	return true, nil
 }
 
-func (s *TwoFactorService) StartChallenge(ctx context.Context, userId string, email string) (pendingToken string, otpCode string, err error) {
+func (s *TwoFactorService) StartChallenge(ctx context.Context, userId string, email string, role db.Role) (pendingToken string, otpCode string, err error) {
 	otpCode, err = s.GenerateOTP(ctx, userId)
 	if err != nil {
 		return "", "", status.Errorf(codes.Internal, "[user-service/two-factor] Failed to generate OTP:%s", err)
@@ -116,6 +118,7 @@ func (s *TwoFactorService) StartChallenge(ctx context.Context, userId string, em
 	payload, err := json.Marshal(PendingSession{
 		UserID: userId,
 		Email:  email,
+		Role:   role.String(),
 	})
 	if err != nil {
 		return "", "", status.Errorf(codes.Internal, "[user-service/two-factor] Failed to marshal:%s", err)

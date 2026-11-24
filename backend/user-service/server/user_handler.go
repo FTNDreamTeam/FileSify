@@ -233,7 +233,7 @@ func (s *UserServer) VerifyMagicLink(ctx context.Context, req *userpb.VerifyMagi
 		slog.Warn("magic_link_cleanup_failed", "event", "auth.magic_link.cleanup", "error", err.Error())
 	}
 
-	jwtToken, err := GenerateToken(user.ID.Hex(), user.Email)
+	jwtToken, err := GenerateToken(user.ID.Hex(), user.Email, user.Role)
 	if err != nil {
 		slog.Error("magic_link_failure", "event", "auth.magic_link.failed", "reason", "token_generation_failed", "status", "failure", "user_id", user.ID.Hex(), "error", err.Error())
 		return nil, status.Errorf(codes.Internal, "failed to issue token: %v", err)
@@ -355,6 +355,7 @@ func (s *UserServer) RegisterUser(ctx context.Context, req *userpb.RegisterUserR
 		},
 		StorageQuota: newUser.StorageQuota,
 		UsedQuota:    0,
+		Role:         db.USER.String(),
 	}
 
 	returnUser := &userpb.RegisterUserResponse{
@@ -404,8 +405,14 @@ func (s *UserServer) LoginUser(ctx context.Context, req *userpb.LoginUserRequest
 		return nil, status.Error(codes.FailedPrecondition, "your password has expired; please reset it to continue")
 	}
 
+	role, err := db.RoleFromString(user.Role)
+	if err != nil {
+		slog.Error("login_failure", "event", "auth.login.failed", "reason", "role_invalid", "user_id", user.ID.Hex(), "status", "failure")
+		return nil, status.Error(codes.Internal, "Failed to parse role from string")
+	}
+
 	if user.TwoFactor {
-		pendingToken, code, err := s.twoFactorService.StartChallenge(ctx, user.ID.Hex(), user.Email)
+		pendingToken, code, err := s.twoFactorService.StartChallenge(ctx, user.ID.Hex(), user.Email, role)
 		if err != nil {
 			return nil, err
 		}
@@ -425,7 +432,7 @@ func (s *UserServer) LoginUser(ctx context.Context, req *userpb.LoginUserRequest
 		}, nil
 	}
 
-	token, err := GenerateToken(user.ID.Hex(), user.Email)
+	token, err := GenerateToken(user.ID.Hex(), user.Email, role)
 	if err != nil {
 		slog.Error("login_failure", "event", "auth.login.failed", "reason", "token_generation_failed", "user_id", user.ID.Hex(), "status", "failure", "error", err.Error())
 		return nil, status.Errorf(codes.Internal, "failed to issue token: %v", err)
@@ -518,7 +525,13 @@ func (s *UserServer) Verify2FA(ctx context.Context, req *userpb.Verify2FARequest
 		return nil, status.Errorf(codes.PermissionDenied, "[user-service] Error while completing challenge:%s", err)
 	}
 
-	token, err := GenerateToken(session.UserID, session.Email)
+	role, err := db.RoleFromString(session.Role)
+	if err != nil {
+		slog.Error("verify_2fa", "event", "auth.verify_2fa", "status", "failed_challenge", "error", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "[user-service] Error parsing role from string:%s", err)
+	}
+
+	token, err := GenerateToken(session.UserID, session.Email, role)
 	if err != nil {
 		slog.Error("verify_2fa", "event", "auth.verify_2fa", "status", "token_gen_failed", "error", err.Error())
 		return nil, status.Errorf(codes.PermissionDenied, "[user-service] Error while generating token:%s", err)

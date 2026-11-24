@@ -12,6 +12,7 @@ service StorageService {
   rpc UploadFile(stream UploadFileRequest) returns (UploadFileResponse);
   rpc ListFiles(ListFilesRequest) returns (ListFilesResponse);
   rpc RenameFolder(RenameFolderRequest) returns (RenameFolderResponse);
+  rpc RenameFile(RenameFileRequest) returns (RenameFileResponse);
 }
 
 message CreateFolderRequest {

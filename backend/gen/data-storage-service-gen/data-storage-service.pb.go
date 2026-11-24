@@ -861,13 +861,15 @@ const file_data_storage_service_proto_rawDesc = "" +
 	"\bnew_name\x18\x02 \x01(\tR\anewName\x12\x19\n" +
 	"\x05token\x18\x03 \x01(\tH\x00R\x05token\x88\x01\x01B\b\n" +
 	"\x06_token\"\x14\n" +
-	"\x12RenameFileResponse2\xcf\x02\n" +
+	"\x12RenameFileResponse2\x9c\x03\n" +
 	"\x0eStorageService\x12Q\n" +
 	"\fCreateFolder\x12\x1f.storage.v1.CreateFolderRequest\x1a .storage.v1.CreateFolderResponse\x12M\n" +
 	"\n" +
 	"UploadFile\x12\x1d.storage.v1.UploadFileRequest\x1a\x1e.storage.v1.UploadFileResponse(\x01\x12H\n" +
 	"\tListFiles\x12\x1c.storage.v1.ListFilesRequest\x1a\x1d.storage.v1.ListFilesResponse\x12Q\n" +
-	"\fRenameFolder\x12\x1f.storage.v1.RenameFolderRequest\x1a .storage.v1.RenameFolderResponseB\x1eZ\x1cgen/data-storage-service-genb\x06proto3"
+	"\fRenameFolder\x12\x1f.storage.v1.RenameFolderRequest\x1a .storage.v1.RenameFolderResponse\x12K\n" +
+	"\n" +
+	"RenameFile\x12\x1d.storage.v1.RenameFileRequest\x1a\x1e.storage.v1.RenameFileResponseB\x1eZ\x1cgen/data-storage-service-genb\x06proto3"
 
 var (
 	file_data_storage_service_proto_rawDescOnce sync.Once
@@ -910,12 +912,14 @@ var file_data_storage_service_proto_depIdxs = []int32{
 	3,  // 5: storage.v1.StorageService.UploadFile:input_type -> storage.v1.UploadFileRequest
 	8,  // 6: storage.v1.StorageService.ListFiles:input_type -> storage.v1.ListFilesRequest
 	11, // 7: storage.v1.StorageService.RenameFolder:input_type -> storage.v1.RenameFolderRequest
-	1,  // 8: storage.v1.StorageService.CreateFolder:output_type -> storage.v1.CreateFolderResponse
-	4,  // 9: storage.v1.StorageService.UploadFile:output_type -> storage.v1.UploadFileResponse
-	10, // 10: storage.v1.StorageService.ListFiles:output_type -> storage.v1.ListFilesResponse
-	12, // 11: storage.v1.StorageService.RenameFolder:output_type -> storage.v1.RenameFolderResponse
-	8,  // [8:12] is the sub-list for method output_type
-	4,  // [4:8] is the sub-list for method input_type
+	13, // 8: storage.v1.StorageService.RenameFile:input_type -> storage.v1.RenameFileRequest
+	1,  // 9: storage.v1.StorageService.CreateFolder:output_type -> storage.v1.CreateFolderResponse
+	4,  // 10: storage.v1.StorageService.UploadFile:output_type -> storage.v1.UploadFileResponse
+	10, // 11: storage.v1.StorageService.ListFiles:output_type -> storage.v1.ListFilesResponse
+	12, // 12: storage.v1.StorageService.RenameFolder:output_type -> storage.v1.RenameFolderResponse
+	14, // 13: storage.v1.StorageService.RenameFile:output_type -> storage.v1.RenameFileResponse
+	9,  // [9:14] is the sub-list for method output_type
+	4,  // [4:9] is the sub-list for method input_type
 	4,  // [4:4] is the sub-list for extension type_name
 	4,  // [4:4] is the sub-list for extension extendee
 	0,  // [0:4] is the sub-list for field type_name

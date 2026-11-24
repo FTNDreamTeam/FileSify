@@ -47,7 +47,6 @@ services:
     restart: unless-stopped
     networks:
       - user-network
-    attach: false
 
   silo:
     image: docker.io/pgsty/silo:RELEASE.2026-09-16T00-00-00Z
@@ -101,7 +100,6 @@ services:
       start_period: 15s
     networks:
       - storage-network
-    attach: false
 
   mail-service:
     build:
@@ -140,6 +138,41 @@ services:
     networks:
       - user-network
 
+  notification-service:
+    container_name: "notification-service"
+    build:
+      context: ..
+      dockerfile: ./backend/notification-service/Dockerfile
+    environment:
+      - PORT=8084
+      - CASSANDRA_HOSTS=cassandra
+    networks:
+      - user-network
+    depends_on:
+      - cassandra
+
+  cassandra:
+    image: cassandra:4.1
+    container_name: filesify-cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=filesify
+      - CASSANDRA_DC=datacenter1
+      - CASSANDRA_RACK=rack1
+      - MAX_HEAP_SIZE=512M
+      - HEAP_NEWSIZE=100M
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    healthcheck:
+      test: [ "CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES' > /dev/null 2>&1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    networks:
+      - user-network
+
 networks:
   user-network: #isolated user network
   storage-network: #isolated storage network
@@ -148,3 +181,4 @@ networks:
 volumes:
   user-data:
   silo-data:
+  cassandra_data:

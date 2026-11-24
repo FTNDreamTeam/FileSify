@@ -10,6 +10,7 @@ import (
 
 	storagepb "gen/data-storage-service-gen"
 	pb "gen/gateway"
+	notificationpb "gen/notification-service-gen"
 	userpb "gen/user-service-gen"
 
 	config "github.com/FTNDreamTeam/FileSify/backend/api-gateway/internal/config"
@@ -22,8 +23,9 @@ import (
 
 type server struct {
 	pb.UnimplementedGatewayServiceServer
-	userClient    userpb.UserServiceClient
-	storageClient storagepb.StorageServiceClient
+	userClient         userpb.UserServiceClient
+	storageClient      storagepb.StorageServiceClient
+	notificationClient notificationpb.NotificationServiceClient
 }
 
 func (s *server) RegisterUser(ctx context.Context, request *userpb.RegisterUserRequest) (*userpb.RegisterUserResponse, error) {
@@ -53,18 +55,24 @@ func (s *server) ChangePassword(ctx context.Context, request *userpb.ChangePassw
 func (s *server) Verify2FA(ctx context.Context, request *userpb.Verify2FARequest) (*userpb.Verify2FAResponse, error) {
 	return s.userClient.Verify2FA(ctx, request)
 }
+
 func (s *server) CreateFolder(ctx context.Context, request *storagepb.CreateFolderRequest) (*storagepb.CreateFolderResponse, error) {
 	return s.storageClient.CreateFolder(ctx, request)
 }
+
 func (s *server) ListFiles(ctx context.Context, request *storagepb.ListFilesRequest) (*storagepb.ListFilesResponse, error) {
 	return s.storageClient.ListFiles(ctx, request)
 }
+
 func (s *server) RenameFolder(ctx context.Context, request *storagepb.RenameFolderRequest) (*storagepb.RenameFolderResponse, error) {
 	return s.storageClient.RenameFolder(ctx, request)
 }
 
-func main() {
+func (s *server) ListNotifications(ctx context.Context, request *notificationpb.ListNotificationsRequest) (*notificationpb.ListNotificationsResponse, error) {
+	return s.notificationClient.ListNotifications(ctx, request)
+}
 
+func main() {
 	configs := config.LoadConfigs()
 
 	// Internal gRPC listener (only reachable from inside the Docker network)
@@ -93,9 +101,23 @@ func main() {
 	}
 	storageClient := storagepb.NewStorageServiceClient(storageConn)
 
+	notificationConn, err := grpc.NewClient(
+		"notification-service:8084",
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Println("Failed to dial notification-service:", err)
+	}
+	notificationClient := notificationpb.NewNotificationServiceClient(notificationConn)
+
 	// Start internal gRPC server
 	grpcServer := grpc.NewServer()
-	pb.RegisterGatewayServiceServer(grpcServer, &server{userClient: userClient, storageClient: storageClient})
+
+	pb.RegisterGatewayServiceServer(grpcServer, &server{
+		userClient:         userClient,
+		storageClient:      storageClient,
+		notificationClient: notificationClient,
+	})
 	reflection.Register(grpcServer)
 	go func() {
 		log.Println(grpcServer.Serve(lis))
@@ -119,6 +141,7 @@ func main() {
 	root := http.NewServeMux()
 	root.Handle("/api/", gwmux)
 	root.Handle("/", http.FileServer(http.Dir("./frontend")))
+
 	uploadService := service.NewFileUploadService(storageClient, userClient)
 	uploadHandler := httpTransport.NewFileUploadHandler(uploadService)
 	if err := uploadHandler.RegisterRoutes(gwmux); err != nil { //Register the upload route for files

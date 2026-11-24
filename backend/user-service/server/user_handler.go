@@ -24,6 +24,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/genproto/googleapis/type/date"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -35,6 +36,7 @@ type UserServer struct {
 	mailClient             mailpb.MailServiceClient
 	twoFactorService       *TwoFactorService
 	storageClient          storagepb.StorageServiceClient
+	requestCollection      *mongo.Collection
 }
 
 func NewUserServer(
@@ -44,6 +46,7 @@ func NewUserServer(
 	mailClient mailpb.MailServiceClient,
 	twoFactorService *TwoFactorService,
 	storageClient storagepb.StorageServiceClient,
+	requestCollection *mongo.Collection,
 ) *UserServer {
 	return &UserServer{
 		dbCollection:           collection,
@@ -52,6 +55,7 @@ func NewUserServer(
 		mailClient:             mailClient,
 		twoFactorService:       twoFactorService,
 		storageClient:          storageClient,
+		requestCollection:      requestCollection,
 	}
 }
 
@@ -573,4 +577,35 @@ func (s *UserServer) ChangeUsedQuota(ctx context.Context, req *storagepb.ChangeQ
 		return nil, status.Errorf(codes.NotFound, "Couldn't find user with ID: %s", req.GetUserId())
 	}
 	return &userpb.EmptyResponse{}, nil
+}
+
+func (s *UserServer) ListExpansionReq(ctx context.Context, req *userpb.ListExpansionReqRequest) (*userpb.ListExpansionReqResponse, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		fmt.Print("Error loading metadata")
+	}
+
+	tokens := md.Get("authorization")
+	if len(tokens) < 1 {
+		fmt.Println("No token")
+	} else {
+		fmt.Printf("Tokens: %v\n", tokens)
+	}
+
+	userId, err := ParseAndValidateToken(tokens[0])
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "Invalid token: %v", err)
+	}
+
+	var user db.UserDBModel
+	err = s.dbCollection.FindOne(ctx, bson.M{"_id": userId}).Decode(&user)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, status.Errorf(codes.NotFound, "Couldn't find user with ID:%v", err)
+		}
+		log.Printf("Database error: %v", err)
+		return nil, status.Errorf(codes.Internal, "Failed to load user from db: %v", err)
+	}
+
+	return &userpb.ListExpansionReqResponse{Requests: []*userpb.StorageExpansionRequest{nil}}, nil
 }

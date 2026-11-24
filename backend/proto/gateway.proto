@@ -4,8 +4,8 @@ package gateway.v1;
 
 import "data-storage-service.proto";
 import "google/api/annotations.proto";
-import "user-service.proto";
 import "notification-service.proto";
+import "user-service.proto";
 
 option go_package = "gen/gateway";
 
@@ -86,5 +86,9 @@ service GatewayService {
       post: "/api/notifications"
       body: "*"
     };
+  }
+
+  rpc ListExpansionReq(user_service.v1.ListExpansionReqRequest) returns (user_service.v1.ListExpansionReqResponse) {
+    option (google.api.http) = {get: "/api/quota/requests"};
   }
 }

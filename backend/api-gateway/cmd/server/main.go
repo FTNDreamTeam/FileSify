@@ -18,6 +18,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -72,6 +73,12 @@ func (s *server) RenameFile(ctx context.Context, request *storagepb.RenameFileRe
 
 func (s *server) ListNotifications(ctx context.Context, request *notificationpb.ListNotificationsRequest) (*notificationpb.ListNotificationsResponse, error) {
 	return s.notificationClient.ListNotifications(ctx, request)
+}
+func (s *server) ListExpansionReq(ctx context.Context, request *userpb.ListExpansionReqRequest) (*userpb.ListExpansionReqResponse, error) {
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		ctx = metadata.NewOutgoingContext(ctx, md)
+	}
+	return s.userClient.ListExpansionReq(ctx, request)
 }
 
 func main() {

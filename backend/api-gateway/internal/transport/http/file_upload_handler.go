@@ -57,6 +57,7 @@ func (h *FileUploadHandler) handleUpload(w http.ResponseWriter, r *http.Request,
 	})
 
 	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
 		h.writeError(w, err)
 		return
 	}

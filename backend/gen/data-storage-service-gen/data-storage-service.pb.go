@@ -713,6 +713,102 @@ func (*RenameFolderResponse) Descriptor() ([]byte, []int) {
 	return file_data_storage_service_proto_rawDescGZIP(), []int{12}
 }
 
+type RenameFileRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	OldPath       string                 `protobuf:"bytes,1,opt,name=old_path,json=oldPath,proto3" json:"old_path,omitempty"`
+	NewName       string                 `protobuf:"bytes,2,opt,name=new_name,json=newName,proto3" json:"new_name,omitempty"`
+	Token         *string                `protobuf:"bytes,3,opt,name=token,proto3,oneof" json:"token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RenameFileRequest) Reset() {
+	*x = RenameFileRequest{}
+	mi := &file_data_storage_service_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RenameFileRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RenameFileRequest) ProtoMessage() {}
+
+func (x *RenameFileRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_data_storage_service_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RenameFileRequest.ProtoReflect.Descriptor instead.
+func (*RenameFileRequest) Descriptor() ([]byte, []int) {
+	return file_data_storage_service_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *RenameFileRequest) GetOldPath() string {
+	if x != nil {
+		return x.OldPath
+	}
+	return ""
+}
+
+func (x *RenameFileRequest) GetNewName() string {
+	if x != nil {
+		return x.NewName
+	}
+	return ""
+}
+
+func (x *RenameFileRequest) GetToken() string {
+	if x != nil && x.Token != nil {
+		return *x.Token
+	}
+	return ""
+}
+
+type RenameFileResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RenameFileResponse) Reset() {
+	*x = RenameFileResponse{}
+	mi := &file_data_storage_service_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RenameFileResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RenameFileResponse) ProtoMessage() {}
+
+func (x *RenameFileResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_data_storage_service_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RenameFileResponse.ProtoReflect.Descriptor instead.
+func (*RenameFileResponse) Descriptor() ([]byte, []int) {
+	return file_data_storage_service_proto_rawDescGZIP(), []int{14}
+}
+
 var File_data_storage_service_proto protoreflect.FileDescriptor
 
 const file_data_storage_service_proto_rawDesc = "" +
@@ -759,7 +855,13 @@ const file_data_storage_service_proto_rawDesc = "" +
 	"\bnew_path\x18\x02 \x01(\tR\anewPath\x12\x19\n" +
 	"\x05token\x18\x03 \x01(\tH\x00R\x05token\x88\x01\x01B\b\n" +
 	"\x06_token\"\x16\n" +
-	"\x14RenameFolderResponse2\xcf\x02\n" +
+	"\x14RenameFolderResponse\"n\n" +
+	"\x11RenameFileRequest\x12\x19\n" +
+	"\bold_path\x18\x01 \x01(\tR\aoldPath\x12\x19\n" +
+	"\bnew_name\x18\x02 \x01(\tR\anewName\x12\x19\n" +
+	"\x05token\x18\x03 \x01(\tH\x00R\x05token\x88\x01\x01B\b\n" +
+	"\x06_token\"\x14\n" +
+	"\x12RenameFileResponse2\xcf\x02\n" +
 	"\x0eStorageService\x12Q\n" +
 	"\fCreateFolder\x12\x1f.storage.v1.CreateFolderRequest\x1a .storage.v1.CreateFolderResponse\x12M\n" +
 	"\n" +
@@ -779,7 +881,7 @@ func file_data_storage_service_proto_rawDescGZIP() []byte {
 	return file_data_storage_service_proto_rawDescData
 }
 
-var file_data_storage_service_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_data_storage_service_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_data_storage_service_proto_goTypes = []any{
 	(*CreateFolderRequest)(nil),       // 0: storage.v1.CreateFolderRequest
 	(*CreateFolderResponse)(nil),      // 1: storage.v1.CreateFolderResponse
@@ -794,12 +896,14 @@ var file_data_storage_service_proto_goTypes = []any{
 	(*ListFilesResponse)(nil),         // 10: storage.v1.ListFilesResponse
 	(*RenameFolderRequest)(nil),       // 11: storage.v1.RenameFolderRequest
 	(*RenameFolderResponse)(nil),      // 12: storage.v1.RenameFolderResponse
-	(*date.Date)(nil),                 // 13: google.type.Date
-	(*timestamppb.Timestamp)(nil),     // 14: google.protobuf.Timestamp
+	(*RenameFileRequest)(nil),         // 13: storage.v1.RenameFileRequest
+	(*RenameFileResponse)(nil),        // 14: storage.v1.RenameFileResponse
+	(*date.Date)(nil),                 // 15: google.type.Date
+	(*timestamppb.Timestamp)(nil),     // 16: google.protobuf.Timestamp
 }
 var file_data_storage_service_proto_depIdxs = []int32{
-	13, // 0: storage.v1.FileMetaData.date_created_at:type_name -> google.type.Date
-	14, // 1: storage.v1.FileMetaData.time_created_at:type_name -> google.protobuf.Timestamp
+	15, // 0: storage.v1.FileMetaData.date_created_at:type_name -> google.type.Date
+	16, // 1: storage.v1.FileMetaData.time_created_at:type_name -> google.protobuf.Timestamp
 	2,  // 2: storage.v1.UploadFileRequest.metadata:type_name -> storage.v1.FileMetaData
 	9,  // 3: storage.v1.ListFilesResponse.files:type_name -> storage.v1.FileInfo
 	0,  // 4: storage.v1.StorageService.CreateFolder:input_type -> storage.v1.CreateFolderRequest
@@ -829,13 +933,14 @@ func file_data_storage_service_proto_init() {
 	}
 	file_data_storage_service_proto_msgTypes[8].OneofWrappers = []any{}
 	file_data_storage_service_proto_msgTypes[11].OneofWrappers = []any{}
+	file_data_storage_service_proto_msgTypes[13].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_data_storage_service_proto_rawDesc), len(file_data_storage_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   13,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

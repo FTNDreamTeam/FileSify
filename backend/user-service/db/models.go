@@ -1,10 +1,42 @@
 package db
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+type Role int
+
+const (
+	USER Role = iota
+	ADMIN
+	UKNOWN
+)
+
+func (r Role) String() string {
+	switch r {
+	case USER:
+		return "user"
+	case ADMIN:
+		return "admin"
+	default:
+		return "uknown"
+	}
+}
+
+func RoleFromString(s string) (Role, error) {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case USER.String():
+		return USER, nil
+	case ADMIN.String():
+		return ADMIN, nil
+	default:
+		return UKNOWN, fmt.Errorf("Error converting string to role: %q", s)
+	}
+}
 
 type UserDBModel struct {
 	ID             primitive.ObjectID `bson:"_id,omitempty"`
@@ -17,6 +49,7 @@ type UserDBModel struct {
 	TwoFactor      bool               `bson:"two_factor"`
 	StorageQuota   int32              `bson:"storage_quota"`
 	UsedQuota      int32              `bson:"used_quota"`
+	Role           Role               `bson:"role"`
 }
 
 type VerificationTokenModel struct {

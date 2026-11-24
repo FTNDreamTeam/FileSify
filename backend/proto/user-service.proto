@@ -32,6 +32,7 @@ message UserProfile {
   google.type.Date password_valid = 6;
   int32 storage_quota = 7;
   int32 used_quota = 8;
+  string role = 9;
 }
 
 message RegisterUserRequest {

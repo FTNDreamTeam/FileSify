@@ -32,6 +32,7 @@ type UserProfile struct {
 	PasswordValid *date.Date             `protobuf:"bytes,6,opt,name=password_valid,json=passwordValid,proto3" json:"password_valid,omitempty"`
 	StorageQuota  int32                  `protobuf:"varint,7,opt,name=storage_quota,json=storageQuota,proto3" json:"storage_quota,omitempty"`
 	UsedQuota     int32                  `protobuf:"varint,8,opt,name=used_quota,json=usedQuota,proto3" json:"used_quota,omitempty"`
+	Role          string                 `protobuf:"bytes,9,opt,name=role,proto3" json:"role,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -113,6 +114,13 @@ func (x *UserProfile) GetUsedQuota() int32 {
 		return x.UsedQuota
 	}
 	return 0
+}
+
+func (x *UserProfile) GetRole() string {
+	if x != nil {
+		return x.Role
+	}
+	return ""
 }
 
 type RegisterUserRequest struct {
@@ -1223,7 +1231,7 @@ var File_user_service_proto protoreflect.FileDescriptor
 
 const file_user_service_proto_rawDesc = "" +
 	"\n" +
-	"\x12user-service.proto\x12\x0fuser_service.v1\x1a\x1adata-storage-service.proto\x1a\x11google/date.proto\"\xed\x01\n" +
+	"\x12user-service.proto\x12\x0fuser_service.v1\x1a\x1adata-storage-service.proto\x1a\x11google/date.proto\"\x81\x02\n" +
 	"\vUserProfile\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1d\n" +
@@ -1233,7 +1241,8 @@ const file_user_service_proto_rawDesc = "" +
 	"\x0epassword_valid\x18\x06 \x01(\v2\x11.google.type.DateR\rpasswordValid\x12#\n" +
 	"\rstorage_quota\x18\a \x01(\x05R\fstorageQuota\x12\x1d\n" +
 	"\n" +
-	"used_quota\x18\b \x01(\x05R\tusedQuota\"\x83\x01\n" +
+	"used_quota\x18\b \x01(\x05R\tusedQuota\x12\x12\n" +
+	"\x04role\x18\t \x01(\tR\x04role\"\x83\x01\n" +
 	"\x13RegisterUserRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\x12\x1d\n" +

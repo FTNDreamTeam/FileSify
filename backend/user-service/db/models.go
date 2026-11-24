@@ -27,6 +27,15 @@ func (r Role) String() string {
 	}
 }
 
+func (r Role) IsValid() bool {
+	switch r {
+	case USER, ADMIN:
+		return true
+	default:
+		return false
+	}
+}
+
 func RoleFromString(s string) (Role, error) {
 	switch strings.ToLower(strings.TrimSpace(s)) {
 	case USER.String():

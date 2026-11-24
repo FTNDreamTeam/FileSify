@@ -534,13 +534,14 @@ func (s *UserServer) Verify2FA(ctx context.Context, req *userpb.Verify2FARequest
 }
 
 func (s *UserServer) ValidateToken(ctx context.Context, req *userpb.ValidateTokenRequest) (*userpb.ValidateTokenResponse, error) {
-	userId, err := ParseAndValidateToken(req.GetToken())
+	userId, role, err := ParseAndValidateToken(req.GetToken())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "Invalid token")
 	}
 
 	return &userpb.ValidateTokenResponse{
 		UserId: userId,
+		Role:   role.String(),
 	}, nil
 }
 
@@ -592,9 +593,13 @@ func (s *UserServer) ListExpansionReq(ctx context.Context, req *userpb.ListExpan
 		fmt.Printf("Tokens: %v\n", tokens)
 	}
 
-	userId, err := ParseAndValidateToken(tokens[0])
+	userId, role, err := ParseAndValidateToken(tokens[0])
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid token: %v", err)
+	}
+
+	if role != db.ADMIN {
+		return nil, status.Error(codes.PermissionDenied, "User is not an admin")
 	}
 
 	var user db.UserDBModel

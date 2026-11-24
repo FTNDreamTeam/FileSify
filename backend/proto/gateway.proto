@@ -72,4 +72,10 @@ service GatewayService {
       body: "*"
     };
   }
+  rpc RenameFile(storage.v1.RenameFileRequest) returns (storage.v1.RenameFileResponse) {
+    option (google.api.http) = {
+      put: "/api/storage/files"
+      body: "*"
+    };
+  }
 }

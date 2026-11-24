@@ -29,9 +29,7 @@ var File_gateway_proto protoreflect.FileDescriptor
 const file_gateway_proto_rawDesc = "" +
 	"\n" +
 	"\rgateway.proto\x12\n" +
-	"gateway.v1\x1a\x1adata-storage-service.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x12user-service.proto\x1a\x1anotification-service.proto2\xe2\n" +
-	"gateway.v1\x1a\x1adata-storage-service.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x12user-service.proto2\xc2\n" +
-	"\n" +
+	"gateway.v1\x1a\x1adata-storage-service.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x12user-service.proto\x1a\x1anotification-service.proto2\xce\v\n" +
 	"\x0eGatewayService\x12u\n" +
 	"\fRegisterUser\x12$.user_service.v1.RegisterUserRequest\x1a%.user_service.v1.RegisterUserResponse\"\x18\x82\xd3\xe4\x93\x02\x12:\x01*\"\r/api/register\x12i\n" +
 	"\tLoginUser\x12!.user_service.v1.LoginUserRequest\x1a\".user_service.v1.LoginUserResponse\"\x15\x82\xd3\xe4\x93\x02\x0f:\x01*\"\n" +
@@ -43,7 +41,9 @@ const file_gateway_proto_rawDesc = "" +
 	"\tVerify2FA\x12!.user_service.v1.Verify2FARequest\x1a\".user_service.v1.Verify2FAResponse\" \x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/api/twofactor/verify\x12q\n" +
 	"\fCreateFolder\x12\x1f.storage.v1.CreateFolderRequest\x1a .storage.v1.CreateFolderResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/api/storage/folder\x12d\n" +
 	"\tListFiles\x12\x1c.storage.v1.ListFilesRequest\x1a\x1d.storage.v1.ListFilesResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/api/storage/files\x12q\n" +
-	"\fRenameFolder\x12\x1f.storage.v1.RenameFolderRequest\x1a .storage.v1.RenameFolderResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\x1a\x13/api/storage/folder\x12\x89\x01\n" +
+	"\fRenameFolder\x12\x1f.storage.v1.RenameFolderRequest\x1a .storage.v1.RenameFolderResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\x1a\x13/api/storage/folder\x12j\n" +
+	"\n" +
+	"RenameFile\x12\x1d.storage.v1.RenameFileRequest\x1a\x1e.storage.v1.RenameFileResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\x1a\x12/api/storage/files\x12\x89\x01\n" +
 	"\x11ListNotifications\x12).notification.v1.ListNotificationsRequest\x1a*.notification.v1.ListNotificationsResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/api/notificationsB\rZ\vgen/gatewayb\x06proto3"
 
 var file_gateway_proto_goTypes = []any{
@@ -57,43 +57,19 @@ var file_gateway_proto_goTypes = []any{
 	(*data_storage_service_gen.CreateFolderRequest)(nil),       // 7: storage.v1.CreateFolderRequest
 	(*data_storage_service_gen.ListFilesRequest)(nil),          // 8: storage.v1.ListFilesRequest
 	(*data_storage_service_gen.RenameFolderRequest)(nil),       // 9: storage.v1.RenameFolderRequest
-	(*notification_service_gen.ListNotificationsRequest)(nil),  // 10: notification.v1.ListNotificationsRequest
-	(*user_service_gen.RegisterUserResponse)(nil),              // 11: user_service.v1.RegisterUserResponse
-	(*user_service_gen.LoginUserResponse)(nil),                 // 12: user_service.v1.LoginUserResponse
-	(*user_service_gen.VerifyAccountResponse)(nil),             // 13: user_service.v1.VerifyAccountResponse
-	(*user_service_gen.RequestMagicLinkResponse)(nil),          // 14: user_service.v1.RequestMagicLinkResponse
-	(*user_service_gen.ChangePasswordResponse)(nil),            // 15: user_service.v1.ChangePasswordResponse
-	(*user_service_gen.Verify2FAResponse)(nil),                 // 16: user_service.v1.Verify2FAResponse
-	(*data_storage_service_gen.CreateFolderResponse)(nil),      // 17: storage.v1.CreateFolderResponse
-	(*data_storage_service_gen.ListFilesResponse)(nil),         // 18: storage.v1.ListFilesResponse
-	(*data_storage_service_gen.RenameFolderResponse)(nil),      // 19: storage.v1.RenameFolderResponse
-	(*notification_service_gen.ListNotificationsResponse)(nil), // 20: notification.v1.ListNotificationsResponse
-	"\fRenameFolder\x12\x1f.storage.v1.RenameFolderRequest\x1a .storage.v1.RenameFolderResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\x1a\x13/api/storage/folder\x12j\n" +
-	"\n" +
-	"RenameFile\x12\x1d.storage.v1.RenameFileRequest\x1a\x1e.storage.v1.RenameFileResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\x1a\x12/api/storage/filesB\rZ\vgen/gatewayb\x06proto3"
-
-var file_gateway_proto_goTypes = []any{
-	(*user_service_gen.RegisterUserRequest)(nil),          // 0: user_service.v1.RegisterUserRequest
-	(*user_service_gen.LoginUserRequest)(nil),             // 1: user_service.v1.LoginUserRequest
-	(*user_service_gen.VerifyAccountRequest)(nil),         // 2: user_service.v1.VerifyAccountRequest
-	(*user_service_gen.RequestMagicLinkRequest)(nil),      // 3: user_service.v1.RequestMagicLinkRequest
-	(*user_service_gen.VerifyMagicLinkRequest)(nil),       // 4: user_service.v1.VerifyMagicLinkRequest
-	(*user_service_gen.ChangePasswordRequest)(nil),        // 5: user_service.v1.ChangePasswordRequest
-	(*user_service_gen.Verify2FARequest)(nil),             // 6: user_service.v1.Verify2FARequest
-	(*data_storage_service_gen.CreateFolderRequest)(nil),  // 7: storage.v1.CreateFolderRequest
-	(*data_storage_service_gen.ListFilesRequest)(nil),     // 8: storage.v1.ListFilesRequest
-	(*data_storage_service_gen.RenameFolderRequest)(nil),  // 9: storage.v1.RenameFolderRequest
-	(*data_storage_service_gen.RenameFileRequest)(nil),    // 10: storage.v1.RenameFileRequest
-	(*user_service_gen.RegisterUserResponse)(nil),         // 11: user_service.v1.RegisterUserResponse
-	(*user_service_gen.LoginUserResponse)(nil),            // 12: user_service.v1.LoginUserResponse
-	(*user_service_gen.VerifyAccountResponse)(nil),        // 13: user_service.v1.VerifyAccountResponse
-	(*user_service_gen.RequestMagicLinkResponse)(nil),     // 14: user_service.v1.RequestMagicLinkResponse
-	(*user_service_gen.ChangePasswordResponse)(nil),       // 15: user_service.v1.ChangePasswordResponse
-	(*user_service_gen.Verify2FAResponse)(nil),            // 16: user_service.v1.Verify2FAResponse
-	(*data_storage_service_gen.CreateFolderResponse)(nil), // 17: storage.v1.CreateFolderResponse
-	(*data_storage_service_gen.ListFilesResponse)(nil),    // 18: storage.v1.ListFilesResponse
-	(*data_storage_service_gen.RenameFolderResponse)(nil), // 19: storage.v1.RenameFolderResponse
-	(*data_storage_service_gen.RenameFileResponse)(nil),   // 20: storage.v1.RenameFileResponse
+	(*data_storage_service_gen.RenameFileRequest)(nil),         // 10: storage.v1.RenameFileRequest
+	(*notification_service_gen.ListNotificationsRequest)(nil),  // 11: notification.v1.ListNotificationsRequest
+	(*user_service_gen.RegisterUserResponse)(nil),              // 12: user_service.v1.RegisterUserResponse
+	(*user_service_gen.LoginUserResponse)(nil),                 // 13: user_service.v1.LoginUserResponse
+	(*user_service_gen.VerifyAccountResponse)(nil),             // 14: user_service.v1.VerifyAccountResponse
+	(*user_service_gen.RequestMagicLinkResponse)(nil),          // 15: user_service.v1.RequestMagicLinkResponse
+	(*user_service_gen.ChangePasswordResponse)(nil),            // 16: user_service.v1.ChangePasswordResponse
+	(*user_service_gen.Verify2FAResponse)(nil),                 // 17: user_service.v1.Verify2FAResponse
+	(*data_storage_service_gen.CreateFolderResponse)(nil),      // 18: storage.v1.CreateFolderResponse
+	(*data_storage_service_gen.ListFilesResponse)(nil),         // 19: storage.v1.ListFilesResponse
+	(*data_storage_service_gen.RenameFolderResponse)(nil),      // 20: storage.v1.RenameFolderResponse
+	(*data_storage_service_gen.RenameFileResponse)(nil),        // 21: storage.v1.RenameFileResponse
+	(*notification_service_gen.ListNotificationsResponse)(nil), // 22: notification.v1.ListNotificationsResponse
 }
 var file_gateway_proto_depIdxs = []int32{
 	0,  // 0: gateway.v1.GatewayService.RegisterUser:input_type -> user_service.v1.RegisterUserRequest
@@ -106,22 +82,22 @@ var file_gateway_proto_depIdxs = []int32{
 	7,  // 7: gateway.v1.GatewayService.CreateFolder:input_type -> storage.v1.CreateFolderRequest
 	8,  // 8: gateway.v1.GatewayService.ListFiles:input_type -> storage.v1.ListFilesRequest
 	9,  // 9: gateway.v1.GatewayService.RenameFolder:input_type -> storage.v1.RenameFolderRequest
-	10, // 10: gateway.v1.GatewayService.ListNotifications:input_type -> notification.v1.ListNotificationsRequest
 	10, // 10: gateway.v1.GatewayService.RenameFile:input_type -> storage.v1.RenameFileRequest
-	11, // 11: gateway.v1.GatewayService.RegisterUser:output_type -> user_service.v1.RegisterUserResponse
-	12, // 12: gateway.v1.GatewayService.LoginUser:output_type -> user_service.v1.LoginUserResponse
-	13, // 13: gateway.v1.GatewayService.VerifyAccount:output_type -> user_service.v1.VerifyAccountResponse
-	14, // 14: gateway.v1.GatewayService.RequestMagicLink:output_type -> user_service.v1.RequestMagicLinkResponse
-	12, // 15: gateway.v1.GatewayService.VerifyMagicLink:output_type -> user_service.v1.LoginUserResponse
-	15, // 16: gateway.v1.GatewayService.ChangePassword:output_type -> user_service.v1.ChangePasswordResponse
-	16, // 17: gateway.v1.GatewayService.Verify2FA:output_type -> user_service.v1.Verify2FAResponse
-	17, // 18: gateway.v1.GatewayService.CreateFolder:output_type -> storage.v1.CreateFolderResponse
-	18, // 19: gateway.v1.GatewayService.ListFiles:output_type -> storage.v1.ListFilesResponse
-	19, // 20: gateway.v1.GatewayService.RenameFolder:output_type -> storage.v1.RenameFolderResponse
-	20, // 21: gateway.v1.GatewayService.ListNotifications:output_type -> notification.v1.ListNotificationsResponse
-	20, // 21: gateway.v1.GatewayService.RenameFile:output_type -> storage.v1.RenameFileResponse
-	11, // [11:22] is the sub-list for method output_type
-	0,  // [0:11] is the sub-list for method input_type
+	11, // 11: gateway.v1.GatewayService.ListNotifications:input_type -> notification.v1.ListNotificationsRequest
+	12, // 12: gateway.v1.GatewayService.RegisterUser:output_type -> user_service.v1.RegisterUserResponse
+	13, // 13: gateway.v1.GatewayService.LoginUser:output_type -> user_service.v1.LoginUserResponse
+	14, // 14: gateway.v1.GatewayService.VerifyAccount:output_type -> user_service.v1.VerifyAccountResponse
+	15, // 15: gateway.v1.GatewayService.RequestMagicLink:output_type -> user_service.v1.RequestMagicLinkResponse
+	13, // 16: gateway.v1.GatewayService.VerifyMagicLink:output_type -> user_service.v1.LoginUserResponse
+	16, // 17: gateway.v1.GatewayService.ChangePassword:output_type -> user_service.v1.ChangePasswordResponse
+	17, // 18: gateway.v1.GatewayService.Verify2FA:output_type -> user_service.v1.Verify2FAResponse
+	18, // 19: gateway.v1.GatewayService.CreateFolder:output_type -> storage.v1.CreateFolderResponse
+	19, // 20: gateway.v1.GatewayService.ListFiles:output_type -> storage.v1.ListFilesResponse
+	20, // 21: gateway.v1.GatewayService.RenameFolder:output_type -> storage.v1.RenameFolderResponse
+	21, // 22: gateway.v1.GatewayService.RenameFile:output_type -> storage.v1.RenameFileResponse
+	22, // 23: gateway.v1.GatewayService.ListNotifications:output_type -> notification.v1.ListNotificationsResponse
+	12, // [12:24] is the sub-list for method output_type
+	0,  // [0:12] is the sub-list for method input_type
 	0,  // [0:0] is the sub-list for extension type_name
 	0,  // [0:0] is the sub-list for extension extendee
 	0,  // [0:0] is the sub-list for field type_name

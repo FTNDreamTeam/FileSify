@@ -141,11 +141,10 @@ services:
   notification-service:
     container_name: "notification-service"
     build:
-      context: ..
-      dockerfile: ./backend/notification-service/Dockerfile
-    environment:
-      - PORT=8084
-      - CASSANDRA_HOSTS=cassandra
+      context: .
+      dockerfile: ./notification-service/Dockerfile
+    env_file:
+      - ./notification-service/.env
     networks:
       - user-network
     depends_on:
@@ -155,13 +154,13 @@ services:
     image: cassandra:4.1
     container_name: filesify-cassandra
     ports:
-      - "9042:9042"
+      - "${CASSANDRA_PORT}:${CASSANDRA_PORT}"
     environment:
-      - CASSANDRA_CLUSTER_NAME=filesify
-      - CASSANDRA_DC=datacenter1
-      - CASSANDRA_RACK=rack1
-      - MAX_HEAP_SIZE=512M
-      - HEAP_NEWSIZE=100M
+      CASSANDRA_CLUSTER_NAME: ${CASSANDRA_CLUSTER_NAME}
+      CASSANDRA_DC: ${CASSANDRA_DC}
+      CASSANDRA_RACK: ${CASSANDRA_RACK}
+      MAX_HEAP_SIZE: ${MAX_HEAP_SIZE}
+      HEAP_NEWSIZE: ${HEAP_NEWSIZE}
     volumes:
       - cassandra_data:/var/lib/cassandra
     healthcheck:

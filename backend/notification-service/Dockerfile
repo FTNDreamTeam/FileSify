@@ -3,16 +3,16 @@ FROM golang:1.27.3-alpine AS builder
 WORKDIR /app
 
 # Copy the gen module (from the root context)
-COPY ./backend/gen ./backend/gen
+COPY ./gen ./gen
 
 # Copy the notification service go.mod and go.sum
-COPY ./backend/notification-service/go.mod ./backend/notification-service/go.sum ./backend/notification-service/
+COPY ./notification-service/go.mod ./notification-service/go.sum ./notification-service/
 
-WORKDIR /app/backend/notification-service
+WORKDIR /app/notification-service
 RUN go mod download
 
 # Copy the rest of the notification service
-COPY ./backend/notification-service/ .
+COPY ./notification-service/ .
 
 # Build the binary
 RUN CGO_ENABLED=0 GOOS=linux go build -o /notification-service-bin ./cmd/server/main.go

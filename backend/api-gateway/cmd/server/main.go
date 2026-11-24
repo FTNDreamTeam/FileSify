@@ -104,7 +104,7 @@ func main() {
 	storageClient := storagepb.NewStorageServiceClient(storageConn)
 
 	notificationConn, err := grpc.NewClient(
-		"notification-service:8084",
+		"notification-service:"+configs.NOTIFICATION_PORT,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {

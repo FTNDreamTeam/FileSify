@@ -5,6 +5,7 @@ package gateway.v1;
 import "data-storage-service.proto";
 import "google/api/annotations.proto";
 import "user-service.proto";
+import "notification-service.proto";
 
 option go_package = "gen/gateway";
 
@@ -72,9 +73,17 @@ service GatewayService {
       body: "*"
     };
   }
+
   rpc RenameFile(storage.v1.RenameFileRequest) returns (storage.v1.RenameFileResponse) {
     option (google.api.http) = {
       put: "/api/storage/files"
+      body: "*"
+    };
+  }
+
+  rpc ListNotifications(notification.v1.ListNotificationsRequest) returns (notification.v1.ListNotificationsResponse) {
+    option (google.api.http) = {
+      post: "/api/notifications"
       body: "*"
     };
   }

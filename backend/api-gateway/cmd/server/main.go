@@ -51,7 +51,6 @@ func (s *server) VerifyMagicLink(ctx context.Context, request *userpb.VerifyMagi
 func (s *server) ChangePassword(ctx context.Context, request *userpb.ChangePasswordRequest) (*userpb.ChangePasswordResponse, error) {
 	return s.userClient.ChangePassword(ctx, request)
 }
-
 func (s *server) Verify2FA(ctx context.Context, request *userpb.Verify2FARequest) (*userpb.Verify2FAResponse, error) {
 	return s.userClient.Verify2FA(ctx, request)
 }
@@ -66,6 +65,9 @@ func (s *server) ListFiles(ctx context.Context, request *storagepb.ListFilesRequ
 
 func (s *server) RenameFolder(ctx context.Context, request *storagepb.RenameFolderRequest) (*storagepb.RenameFolderResponse, error) {
 	return s.storageClient.RenameFolder(ctx, request)
+}
+func (s *server) RenameFile(ctx context.Context, request *storagepb.RenameFileRequest) (*storagepb.RenameFileResponse, error) {
+	return s.storageClient.RenameFile(ctx, request)
 }
 
 func (s *server) ListNotifications(ctx context.Context, request *notificationpb.ListNotificationsRequest) (*notificationpb.ListNotificationsResponse, error) {

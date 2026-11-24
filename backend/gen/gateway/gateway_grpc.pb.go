@@ -33,6 +33,17 @@ const (
 	GatewayService_ListFiles_FullMethodName         = "/gateway.v1.GatewayService/ListFiles"
 	GatewayService_RenameFolder_FullMethodName      = "/gateway.v1.GatewayService/RenameFolder"
 	GatewayService_ListNotifications_FullMethodName = "/gateway.v1.GatewayService/ListNotifications"
+	GatewayService_RegisterUser_FullMethodName     = "/gateway.v1.GatewayService/RegisterUser"
+	GatewayService_LoginUser_FullMethodName        = "/gateway.v1.GatewayService/LoginUser"
+	GatewayService_VerifyAccount_FullMethodName    = "/gateway.v1.GatewayService/VerifyAccount"
+	GatewayService_RequestMagicLink_FullMethodName = "/gateway.v1.GatewayService/RequestMagicLink"
+	GatewayService_VerifyMagicLink_FullMethodName  = "/gateway.v1.GatewayService/VerifyMagicLink"
+	GatewayService_ChangePassword_FullMethodName   = "/gateway.v1.GatewayService/ChangePassword"
+	GatewayService_Verify2FA_FullMethodName        = "/gateway.v1.GatewayService/Verify2FA"
+	GatewayService_CreateFolder_FullMethodName     = "/gateway.v1.GatewayService/CreateFolder"
+	GatewayService_ListFiles_FullMethodName        = "/gateway.v1.GatewayService/ListFiles"
+	GatewayService_RenameFolder_FullMethodName     = "/gateway.v1.GatewayService/RenameFolder"
+	GatewayService_RenameFile_FullMethodName       = "/gateway.v1.GatewayService/RenameFile"
 )
 
 // GatewayServiceClient is the client API for GatewayService service.
@@ -50,6 +61,7 @@ type GatewayServiceClient interface {
 	ListFiles(ctx context.Context, in *data_storage_service_gen.ListFilesRequest, opts ...grpc.CallOption) (*data_storage_service_gen.ListFilesResponse, error)
 	RenameFolder(ctx context.Context, in *data_storage_service_gen.RenameFolderRequest, opts ...grpc.CallOption) (*data_storage_service_gen.RenameFolderResponse, error)
 	ListNotifications(ctx context.Context, in *notification_service_gen.ListNotificationsRequest, opts ...grpc.CallOption) (*notification_service_gen.ListNotificationsResponse, error)
+	RenameFile(ctx context.Context, in *data_storage_service_gen.RenameFileRequest, opts ...grpc.CallOption) (*data_storage_service_gen.RenameFileResponse, error)
 }
 
 type gatewayServiceClient struct {
@@ -164,6 +176,10 @@ func (c *gatewayServiceClient) ListNotifications(ctx context.Context, in *notifi
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(notification_service_gen.ListNotificationsResponse)
 	err := c.cc.Invoke(ctx, GatewayService_ListNotifications_FullMethodName, in, out, cOpts...)
+func (c *gatewayServiceClient) RenameFile(ctx context.Context, in *data_storage_service_gen.RenameFileRequest, opts ...grpc.CallOption) (*data_storage_service_gen.RenameFileResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(data_storage_service_gen.RenameFileResponse)
+	err := c.cc.Invoke(ctx, GatewayService_RenameFile_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -185,6 +201,7 @@ type GatewayServiceServer interface {
 	ListFiles(context.Context, *data_storage_service_gen.ListFilesRequest) (*data_storage_service_gen.ListFilesResponse, error)
 	RenameFolder(context.Context, *data_storage_service_gen.RenameFolderRequest) (*data_storage_service_gen.RenameFolderResponse, error)
 	ListNotifications(context.Context, *notification_service_gen.ListNotificationsRequest) (*notification_service_gen.ListNotificationsResponse, error)
+	RenameFile(context.Context, *data_storage_service_gen.RenameFileRequest) (*data_storage_service_gen.RenameFileResponse, error)
 	mustEmbedUnimplementedGatewayServiceServer()
 }
 
@@ -227,6 +244,8 @@ func (UnimplementedGatewayServiceServer) RenameFolder(context.Context, *data_sto
 }
 func (UnimplementedGatewayServiceServer) ListNotifications(context.Context, *notification_service_gen.ListNotificationsRequest) (*notification_service_gen.ListNotificationsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListNotifications not implemented")
+func (UnimplementedGatewayServiceServer) RenameFile(context.Context, *data_storage_service_gen.RenameFileRequest) (*data_storage_service_gen.RenameFileResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RenameFile not implemented")
 }
 func (UnimplementedGatewayServiceServer) mustEmbedUnimplementedGatewayServiceServer() {}
 func (UnimplementedGatewayServiceServer) testEmbeddedByValue()                        {}
@@ -431,6 +450,8 @@ func _GatewayService_RenameFolder_Handler(srv interface{}, ctx context.Context, 
 
 func _GatewayService_ListNotifications_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(notification_service_gen.ListNotificationsRequest)
+func _GatewayService_RenameFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(data_storage_service_gen.RenameFileRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -443,6 +464,14 @@ func _GatewayService_ListNotifications_Handler(srv interface{}, ctx context.Cont
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GatewayServiceServer).ListNotifications(ctx, req.(*notification_service_gen.ListNotificationsRequest))
+		return srv.(GatewayServiceServer).RenameFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GatewayService_RenameFile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServiceServer).RenameFile(ctx, req.(*data_storage_service_gen.RenameFileRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -497,6 +526,8 @@ var GatewayService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListNotifications",
 			Handler:    _GatewayService_ListNotifications_Handler,
+			MethodName: "RenameFile",
+			Handler:    _GatewayService_RenameFile_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

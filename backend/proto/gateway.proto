@@ -77,6 +77,9 @@ service GatewayService {
   rpc ListNotifications(notification.v1.ListNotificationsRequest) returns (notification.v1.ListNotificationsResponse) {
     option (google.api.http) = {
       post: "/api/notifications"
+  rpc RenameFile(storage.v1.RenameFileRequest) returns (storage.v1.RenameFileResponse) {
+    option (google.api.http) = {
+      put: "/api/storage/files"
       body: "*"
     };
   }

@@ -31,9 +31,9 @@ func NewTFAService(rdb *redis.Client, hmacSecret []byte) *TwoFactorService {
 }
 
 type PendingSession struct {
-	UserID string `json:"user_id"`
-	Email  string `json:"email"`
-	Role   string `json:"role"`
+	UserID string  `json:"user_id"`
+	Email  string  `json:"email"`
+	Role   db.Role `json:"role"`
 }
 
 func (s *TwoFactorService) GenerateOTP(ctx context.Context, userId string) (string, error) {
@@ -118,7 +118,7 @@ func (s *TwoFactorService) StartChallenge(ctx context.Context, userId string, em
 	payload, err := json.Marshal(PendingSession{
 		UserID: userId,
 		Email:  email,
-		Role:   role.String(),
+		Role:   role,
 	})
 	if err != nil {
 		return "", "", status.Errorf(codes.Internal, "[user-service/two-factor] Failed to marshal:%s", err)

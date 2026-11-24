@@ -49,7 +49,7 @@ type UserDBModel struct {
 	TwoFactor      bool               `bson:"two_factor"`
 	StorageQuota   int32              `bson:"storage_quota"`
 	UsedQuota      int32              `bson:"used_quota"`
-	Role           string             `bson:"role"`
+	Role           Role               `bson:"role"`
 }
 
 type VerificationTokenModel struct {

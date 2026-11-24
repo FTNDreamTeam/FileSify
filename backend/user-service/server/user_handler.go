@@ -302,6 +302,7 @@ func (s *UserServer) RegisterUser(ctx context.Context, req *userpb.RegisterUserR
 		Verified:       false,
 		StorageQuota:   2000,
 		UsedQuota:      0,
+		Role:           db.USER,
 	}
 
 	verificationToken := uuid.New().String()
@@ -405,14 +406,8 @@ func (s *UserServer) LoginUser(ctx context.Context, req *userpb.LoginUserRequest
 		return nil, status.Error(codes.FailedPrecondition, "your password has expired; please reset it to continue")
 	}
 
-	role, err := db.RoleFromString(user.Role)
-	if err != nil {
-		slog.Error("login_failure", "event", "auth.login.failed", "reason", "role_invalid", "user_id", user.ID.Hex(), "status", "failure")
-		return nil, status.Error(codes.Internal, "Failed to parse role from string")
-	}
-
 	if user.TwoFactor {
-		pendingToken, code, err := s.twoFactorService.StartChallenge(ctx, user.ID.Hex(), user.Email, role)
+		pendingToken, code, err := s.twoFactorService.StartChallenge(ctx, user.ID.Hex(), user.Email, user.Role)
 		if err != nil {
 			return nil, err
 		}
@@ -432,7 +427,7 @@ func (s *UserServer) LoginUser(ctx context.Context, req *userpb.LoginUserRequest
 		}, nil
 	}
 
-	token, err := GenerateToken(user.ID.Hex(), user.Email, role)
+	token, err := GenerateToken(user.ID.Hex(), user.Email, user.Role)
 	if err != nil {
 		slog.Error("login_failure", "event", "auth.login.failed", "reason", "token_generation_failed", "user_id", user.ID.Hex(), "status", "failure", "error", err.Error())
 		return nil, status.Errorf(codes.Internal, "failed to issue token: %v", err)
@@ -525,13 +520,7 @@ func (s *UserServer) Verify2FA(ctx context.Context, req *userpb.Verify2FARequest
 		return nil, status.Errorf(codes.PermissionDenied, "[user-service] Error while completing challenge:%s", err)
 	}
 
-	role, err := db.RoleFromString(session.Role)
-	if err != nil {
-		slog.Error("verify_2fa", "event", "auth.verify_2fa", "status", "failed_challenge", "error", err.Error())
-		return nil, status.Errorf(codes.InvalidArgument, "[user-service] Error parsing role from string:%s", err)
-	}
-
-	token, err := GenerateToken(session.UserID, session.Email, role)
+	token, err := GenerateToken(session.UserID, session.Email, session.Role)
 	if err != nil {
 		slog.Error("verify_2fa", "event", "auth.verify_2fa", "status", "token_gen_failed", "error", err.Error())
 		return nil, status.Errorf(codes.PermissionDenied, "[user-service] Error while generating token:%s", err)

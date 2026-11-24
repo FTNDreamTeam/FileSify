@@ -1,4 +1,0 @@
-localhost {
-    tls internal
-    reverse_proxy {$API_GATEWAY_INTERNAL_ADDR}
-}

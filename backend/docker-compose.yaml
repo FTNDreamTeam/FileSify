@@ -47,7 +47,6 @@ services:
     restart: unless-stopped
     networks:
       - user-network
-    attach: false
 
   silo:
     image: docker.io/pgsty/silo:RELEASE.2026-09-16T00-00-00Z
@@ -101,7 +100,6 @@ services:
       start_period: 15s
     networks:
       - storage-network
-    attach: false
 
   mail-service:
     build:
@@ -140,23 +138,39 @@ services:
     networks:
       - user-network
 
-  caddy:
-    image: caddy:2-alpine
-    container_name: caddy-proxy
-    restart: unless-stopped
-    environment:
-      - API_GATEWAY_INTERNAL_ADDR=${API_GATEWAY_INTERNAL_ADDR}    
-    ports:
-      - "${CADDY_HTTP_PORT}:${CADDY_HTTP_PORT}"
-      - "${CADDY_HTTPS_PORT}:${CADDY_HTTPS_PORT}"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
+  notification-service:
+    container_name: "notification-service"
+    build:
+      context: .
+      dockerfile: ./notification-service/Dockerfile
+    env_file:
+      - ./notification-service/.env
     networks:
       - user-network
     depends_on:
-      - api-gateway
+      - cassandra
+
+  cassandra:
+    image: cassandra:4.1
+    container_name: filesify-cassandra
+    ports:
+      - "${CASSANDRA_PORT}:${CASSANDRA_PORT}"
+    environment:
+      CASSANDRA_CLUSTER_NAME: ${CASSANDRA_CLUSTER_NAME}
+      CASSANDRA_DC: ${CASSANDRA_DC}
+      CASSANDRA_RACK: ${CASSANDRA_RACK}
+      MAX_HEAP_SIZE: ${MAX_HEAP_SIZE}
+      HEAP_NEWSIZE: ${HEAP_NEWSIZE}
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    healthcheck:
+      test: [ "CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES' > /dev/null 2>&1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    networks:
+      - user-network
 
 networks:
   user-network: #isolated user network
@@ -166,5 +180,4 @@ networks:
 volumes:
   user-data:
   silo-data:
-  caddy_data:
-  caddy_config:
+  cassandra_data:

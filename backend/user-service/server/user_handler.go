@@ -584,21 +584,25 @@ func (s *UserServer) ListExpansionReq(ctx context.Context, req *userpb.ListExpan
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		fmt.Print("Error loading metadata")
+		slog.Error("requests", "event", "quota.list_requests", "status", "no_metadata", "error", "Error loading metadata from request context")
+		return nil, status.Error(codes.NotFound, "Error loading metadata")
 	}
 
 	tokens := md.Get("authorization")
 	if len(tokens) < 1 {
-		fmt.Println("No token")
-	} else {
-		fmt.Printf("Tokens: %v\n", tokens)
+		fmt.Println("No token present")
+		slog.Error("requests", "event", "quota.list_requests", "status", "no_token", "error", "No token present in context metadata")
+		return nil, status.Error(codes.NotFound, "No token present")
 	}
 
 	userIdToken, role, err := ParseAndValidateToken(strings.TrimPrefix(tokens[0], "Bearer "))
 	if err != nil {
+		slog.Error("requests", "event", "quota.list_requests", "status", "parse_failed", "error", err.Error())
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid token: %v", err)
 	}
 
 	if role != db.ADMIN {
+		slog.Error("requests", "event", "quota.list_requests", "status", "unauthorzied", "error", "User is not authorized to do make this action")
 		return nil, status.Error(codes.PermissionDenied, "User is not an admin")
 	}
 

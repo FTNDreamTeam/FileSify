@@ -638,7 +638,7 @@ func (s *UserServer) ListExpansionReq(ctx context.Context, req *userpb.ListExpan
 		return nil, status.Error(codes.PermissionDenied, "User is not an admin")
 	}
 
-	cursor, err := s.requestCollection.Find(ctx, bson.D{})
+	cursor, err := s.requestCollection.Find(ctx, bson.M{"status": db.ON_WAIT})
 	if err != nil {
 		slog.Error("list_requests", "event", "quota.list_requests", "status", "failed_loading", "error", err.Error())
 		return nil, status.Errorf(codes.Internal, "Failed finding all request documents:%v", err)
@@ -680,4 +680,148 @@ func (s *UserServer) ListExpansionReq(ctx context.Context, req *userpb.ListExpan
 		s.requestCollection.InsertOne(ctx, request)
 	}
 	return &userpb.ListExpansionReqResponse{Requests: result}, nil
+}
+
+func (s *UserServer) CreateExpansionReq(ctx context.Context, req *userpb.CreateExpansionReqRequest) (*userpb.CreateExpansionReqResponse, error) {
+	// Validation
+	if req.GetAmount() == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Requested amount cannot be zero")
+	}
+
+	const maxExpansionMB = 10240
+	if req.GetAmount() > maxExpansionMB {
+		return nil, status.Errorf(codes.InvalidArgument, "You cannot request more than 10 GB (%d MB) at once", maxExpansionMB)
+	}
+
+	// Get token
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		slog.Error("create_request", "event", "quota.create_request", "status", "no_metadata")
+		return nil, status.Error(codes.Internal, "Error loading metadata")
+	}
+
+	tokens := md.Get("authorization")
+	if len(tokens) < 1 {
+		slog.Error("create_request", "event", "quota.create_request", "status", "no_token")
+		return nil, status.Error(codes.Unauthenticated, "No token present")
+	}
+
+	// Validate token
+	userIdStr, _, err := ParseAndValidateToken(strings.TrimPrefix(tokens[0], "Bearer "))
+	if err != nil {
+		slog.Error("create_request", "event", "quota.create_request", "status", "invalid_token", "error", err.Error())
+		return nil, status.Errorf(codes.Unauthenticated, "Invalid token: %v", err)
+	}
+
+	userId, err := primitive.ObjectIDFromHex(userIdStr)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to parse user ID: %v", err)
+	}
+
+	// Get user
+	var user db.UserDBModel
+	err = s.dbCollection.FindOne(ctx, bson.M{"_id": userId}).Decode(&user)
+	if err != nil {
+		slog.Error("create_request", "event", "quota.create_request", "status", "user_not_found", "error", err.Error())
+		return nil, status.Errorf(codes.NotFound, "User not found")
+	}
+
+	// Check for previous request
+	count, err := s.requestCollection.CountDocuments(ctx, bson.M{"email": user.Email, "status": db.ON_WAIT})
+	if err == nil && count > 0 {
+		return nil, status.Error(codes.AlreadyExists, "You already have a pending request")
+	}
+
+	// Create request
+	request := db.StorageExpansionRequest{
+		ID:           primitive.NewObjectID(),
+		Email:        user.Email,
+		FirstName:    user.FirstName,
+		LastName:     user.LastName,
+		Amount:       req.GetAmount(),
+		StorageQuota: user.StorageQuota,
+		UsedQuota:    user.UsedQuota,
+		Role:         user.Role,
+		Status:       db.ON_WAIT,
+	}
+
+	// Save
+	_, err = s.requestCollection.InsertOne(ctx, request)
+	if err != nil {
+		slog.Error("create_request", "event", "quota.create_request", "status", "db_error", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "Failed to save request: %v", err)
+	}
+
+	slog.Info("create_request", "event", "quota.create_request", "status", "success", "user_id", userIdStr)
+
+	return &userpb.CreateExpansionReqResponse{
+		Message: "Storage expansion request submitted successfully",
+	}, nil
+}
+
+func (s *UserServer) HandleExpansionReq(ctx context.Context, req *userpb.HandleExpansionReqRequest) (*userpb.HandleExpansionReqResponse, error) {
+	// Validate Admin
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "Error loading metadata")
+	}
+
+	tokens := md.Get("authorization")
+	if len(tokens) < 1 {
+		return nil, status.Error(codes.Unauthenticated, "No token present")
+	}
+
+	_, role, err := ParseAndValidateToken(strings.TrimPrefix(tokens[0], "Bearer "))
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "Invalid token: %v", err)
+	}
+	if role != db.ADMIN {
+		return nil, status.Error(codes.PermissionDenied, "User is not an admin")
+	}
+
+	// Find request
+	var expansionReq db.StorageExpansionRequest
+	err = s.requestCollection.FindOne(ctx, bson.M{"email": req.GetEmail(), "status": db.ON_WAIT}).Decode(&expansionReq)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, status.Errorf(codes.NotFound, "No pending request found for %s", req.GetEmail())
+		}
+		return nil, status.Errorf(codes.Internal, "Database error: %v", err)
+	}
+
+	// Update if approved
+	if req.GetApprove() {
+		_, err = s.dbCollection.UpdateOne(
+			ctx,
+			bson.M{"email": req.GetEmail()},
+			bson.M{"$inc": bson.M{"storage_quota": int32(expansionReq.Amount)}},
+		)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "Failed to update user quota: %v", err)
+		}
+	}
+
+	// Update request status
+	newStatus := db.REJECTED
+	if req.GetApprove() {
+		newStatus = db.ACCEPTED
+	}
+
+	_, err = s.requestCollection.UpdateOne(
+		ctx,
+		bson.M{"_id": expansionReq.ID},
+		bson.M{"$set": bson.M{"status": newStatus}},
+	)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to update request status: %v", err)
+	}
+
+	action := "rejected"
+	if req.GetApprove() {
+		action = "approved"
+	}
+
+	return &userpb.HandleExpansionReqResponse{
+		Message: fmt.Sprintf("Request for %s successfully %s", req.GetEmail(), action),
+	}, nil
 }

@@ -107,7 +107,7 @@ type VerificationTokenModel struct {
 type ForgottenPasswordTokenModel struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
 	UserId     string             `bson:"user_id"`
-	ResetToken string             `bson:"verification_token"`
+	ResetToken string             `bson:"reset_token"`
 	Email      string             `bson:"email"`
 	CreatedAt  time.Time          `bson:"created_at"`
 }

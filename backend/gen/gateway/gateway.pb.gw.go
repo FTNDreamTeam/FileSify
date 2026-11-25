@@ -11,9 +11,9 @@ package gateway
 import (
 	"context"
 	"errors"
-	"gen/data-storage-service-gen"
-	"gen/notification-service-gen"
-	"gen/user-service-gen"
+	data_storage_service_gen "gen/data-storage-service-gen"
+	notification_service_gen "gen/notification-service-gen"
+	user_service_gen "gen/user-service-gen"
 	"io"
 	"net/http"
 
@@ -475,6 +475,60 @@ func local_request_GatewayService_ListUsers_0(ctx context.Context, marshaler run
 		metadata runtime.ServerMetadata
 	)
 	msg, err := server.ListUsers(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_GatewayService_CreateExpansionReq_0(ctx context.Context, marshaler runtime.Marshaler, client GatewayServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq user_service_gen.CreateExpansionReqRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.CreateExpansionReq(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_GatewayService_CreateExpansionReq_0(ctx context.Context, marshaler runtime.Marshaler, server GatewayServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq user_service_gen.CreateExpansionReqRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.CreateExpansionReq(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_GatewayService_HandleExpansionReq_0(ctx context.Context, marshaler runtime.Marshaler, client GatewayServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq user_service_gen.HandleExpansionReqRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.HandleExpansionReq(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_GatewayService_HandleExpansionReq_0(ctx context.Context, marshaler runtime.Marshaler, server GatewayServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq user_service_gen.HandleExpansionReqRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.HandleExpansionReq(ctx, &protoReq)
 	return msg, metadata, err
 }
 

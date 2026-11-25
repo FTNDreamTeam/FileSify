@@ -8,12 +8,13 @@ package user_service_gen
 
 import (
 	data_storage_service_gen "gen/data-storage-service-gen"
-	date "google.golang.org/genproto/googleapis/type/date"
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
+
+	date "google.golang.org/genproto/googleapis/type/date"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (

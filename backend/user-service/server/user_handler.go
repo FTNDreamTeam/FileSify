@@ -905,7 +905,7 @@ func (s *UserServer) RequestResetPassword(ctx context.Context, req *userpb.Reque
 
 	resetModel := &db.ForgottenPasswordTokenModel{
 		ID:         primitive.NewObjectID(),
-		UserId:     user.ID.String(),
+		UserId:     user.ID.Hex(),
 		ResetToken: resetToken,
 		Email:      email,
 		CreatedAt:  time.Now(),
@@ -933,7 +933,7 @@ func (s *UserServer) RequestResetPassword(ctx context.Context, req *userpb.Reque
 
 	}()
 
-	slog.Info("magic_link_requested", "event", "auth.magic_link.request", "status", "success", "user_id", user.ID.Hex())
+	slog.Info("reset_password_requested", "event", "auth.magic_link.request", "status", "success", "user_id", user.ID.Hex())
 
 	return &userpb.RequestResetPasswordResponse{}, nil
 }
@@ -970,7 +970,7 @@ func (s *UserServer) VerifyResetPassword(ctx context.Context, request *userpb.Ve
 		return nil, status.Errorf(codes.Internal, "failed to hash password: %v", err)
 	}
 
-	result, err := s.dbCollection.UpdateByID(ctx, objectID, bson.M{"$set": bson.M{"password": hashedPassword}})
+	result, err := s.dbCollection.UpdateByID(ctx, objectID, bson.M{"$set": bson.M{"password": string(hashedPassword)}})
 	if err != nil {
 		slog.Error("password_reset_failure", "event", "auth.password_reset.failed", "reason", "db_error", "status", "failure", "error", err.Error())
 		return nil, status.Errorf(codes.Internal, "failed to mark user as verified: %v", err)

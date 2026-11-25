@@ -1183,6 +1183,9 @@
             const formData = new FormData();
             formData.append('file', file);
 
+            // Current folder path
+            formData.append('path', currentFolderPath);
+
             const token = localStorage.getItem('token');
 
             // Send file

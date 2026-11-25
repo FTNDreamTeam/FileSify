@@ -29,6 +29,7 @@ message FileMetaData {
   google.type.Date date_created_at = 4;
   google.protobuf.Timestamp time_created_at = 5;
   string user_id = 6;
+  string checksum = 7;
 }
 
 message UploadFileRequest {

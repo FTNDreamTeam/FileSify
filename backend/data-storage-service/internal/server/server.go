@@ -3,6 +3,8 @@ package server
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"io"
 	"log"
 	"math"
@@ -21,6 +23,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 )
 
 type StorageServer struct {
@@ -146,6 +149,9 @@ func (s *StorageServer) UploadFile(stream pb.StorageService_UploadFileServer) er
 		log.Printf("Couldn't parse ObjectID from string:%v", err)
 	}
 
+	hasher := sha256.New()
+	multiWriter := io.MultiWriter(pipeWriter, hasher)
+
 	var totalBytes int32
 	for {
 		req, err := stream.Recv() //Begin receiveing through stream
@@ -158,9 +164,14 @@ func (s *StorageServer) UploadFile(stream pb.StorageService_UploadFileServer) er
 			return status.Errorf(codes.Internal, "Error receiving chunk: %v", err)
 		}
 
+		if trailingMeta := req.GetMetadata(); trailingMeta != nil {
+			proto.Merge(meta, trailingMeta)
+			continue
+		}
+
 		chunk := req.GetContent() //Get part of file through stream
 		if len(chunk) > 0 {
-			n, writeErr := pipeWriter.Write(chunk)
+			n, writeErr := multiWriter.Write(chunk)
 			if writeErr != nil {
 				pipeWriter.CloseWithError(writeErr)
 				return status.Errorf(codes.Internal, "Error writing to Silo stream: %v", writeErr)
@@ -171,6 +182,14 @@ func (s *StorageServer) UploadFile(stream pb.StorageService_UploadFileServer) er
 
 	if err := <-uploadErrCh; err != nil {
 		return status.Errorf(codes.Internal, "Failed to save file to Silo: %v", err)
+	}
+
+	actualChecksum := hex.EncodeToString(hasher.Sum(nil))
+	if meta.GetChecksum() == "" || meta.GetChecksum() != actualChecksum {
+		if delErr := s.Store.Delete(stream.Context(), "filesify", objectKey); delErr != nil {
+			log.Printf("Failed to delete corrupted object %s: %v", objectKey, delErr)
+		}
+		return status.Errorf(codes.DataLoss, "File integrity check failed: expected %s, got %s", meta.GetChecksum(), actualChecksum)
 	}
 
 	megaBytes := int32(math.Ceil(float64(totalBytes) / (1024 * 1024)))

@@ -22,6 +22,7 @@ service UserService {
   rpc DecreaseStorageQuota(storage.v1.ChangeQuotaRequest) returns (EmptyResponse) {} //When admin decides to decrease users storage quota
   rpc ChangeUsedQuota(storage.v1.ChangeQuotaRequest) returns (EmptyResponse) {} //When file gets uploaded/deleted changes the amount of storage used by user
   rpc CheckStorageQuota(storage.v1.CheckStorageQuotaRequest) returns (storage.v1.CheckStorageQuotaResponse) {} //Checks users remaining storage quota
+  rpc ListExpansionReq(ListExpansionReqRequest) returns (ListExpansionReqResponse) {}
 }
 
 message UserProfile {
@@ -135,6 +136,24 @@ message ValidateTokenRequest {
 
 message ValidateTokenResponse {
   string user_id = 1;
+  string role = 2;
 }
 
 message EmptyResponse {}
+
+message StorageExpansionRequest {
+  string email = 1;
+  string first_name = 2;
+  string last_name = 3;
+  uint32 amount = 4;
+  uint64 storage_quota = 5;
+  uint64 used_quota = 6;
+  uint32 role = 7;
+  uint32 status = 8;
+}
+
+message ListExpansionReqRequest {}
+
+message ListExpansionReqResponse {
+  repeated StorageExpansionRequest requests = 1;
+}

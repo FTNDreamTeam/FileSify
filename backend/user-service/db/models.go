@@ -8,6 +8,41 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type RequestStatus int
+
+const (
+	ON_WAIT RequestStatus = iota
+	ACCEPTED
+	REJECTED
+	STATUS_UKNOWN
+)
+
+func (r RequestStatus) String() string {
+	switch r {
+	case ON_WAIT:
+		return "on_wait"
+	case ACCEPTED:
+		return "accepted"
+	case REJECTED:
+		return "rejected"
+	default:
+		return "uknown"
+	}
+}
+
+func RequestStatusFromString(s string) RequestStatus {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case ON_WAIT.String():
+		return ON_WAIT
+	case ACCEPTED.String():
+		return ACCEPTED
+	case REJECTED.String():
+		return REJECTED
+	default:
+		return STATUS_UKNOWN
+	}
+}
+
 type Role int
 
 const (
@@ -24,6 +59,15 @@ func (r Role) String() string {
 		return "admin"
 	default:
 		return "uknown"
+	}
+}
+
+func (r Role) IsValid() bool {
+	switch r {
+	case USER, ADMIN:
+		return true
+	default:
+		return false
 	}
 }
 
@@ -66,4 +110,16 @@ type MagicLinkTokenModel struct {
 	MagicLinkToken string             `bson:"magic_link_token"`
 	Email          string             `bson:"email"`
 	CreatedAt      time.Time          `bson:"created_at"`
+}
+
+type StorageExpansionRequest struct {
+	ID           primitive.ObjectID `bson:"_id,omitempty"`
+	Email        string             `bson:"email"`
+	FirstName    string             `bson:"first_name"`
+	LastName     string             `bson:"last_name"`
+	Amount       uint32             `bson:"amount"`
+	StorageQuota int32              `bson:"storage_quota"`
+	UsedQuota    int32              `bson:"used_quota"`
+	Role         Role               `bson:"role"`
+	Status       RequestStatus      `bson:"status"`
 }

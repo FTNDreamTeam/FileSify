@@ -3,6 +3,7 @@ package server
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 
 type Claims struct {
 	UserID string `json:"user_id"`
+	Role   string `json:"role"`
 	jwt.RegisteredClaims
 }
 
@@ -41,7 +43,7 @@ func GenerateToken(userID, email string, role db.Role) (string, error) {
 	return signed, nil
 }
 
-func ParseAndValidateToken(tokenString string) (string, error) {
+func ParseAndValidateToken(tokenString string) (string, db.Role, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -51,19 +53,26 @@ func ParseAndValidateToken(tokenString string) (string, error) {
 	})
 
 	if err != nil {
-		return "", fmt.Errorf("Invalid token: %v", err)
+		log.Println("err at jwt.ParseWithClaims")
+		return "", db.UKNOWN, fmt.Errorf("Invalid token: %v", err)
 	}
 
 	if !token.Valid {
-		return "", errors.New("Token is not valid")
+		return "", db.UKNOWN, errors.New("Token is not valid")
 	}
 
-	if claims.UserID != "" {
-		return claims.UserID, nil
+	userID := claims.UserID
+	if userID == "" {
+		userID = claims.Subject
 	}
-	if claims.Subject != "" {
-		return claims.Subject, nil
+	if userID == "" {
+		return "", db.UKNOWN, errors.New("UserId not found in token claims")
+	}
+	role, _ := db.RoleFromString(claims.Role)
+	if !role.IsValid() {
+		return userID, db.UKNOWN, errors.New("Invalid or missing role in token claims")
 	}
 
-	return "", errors.New("user_id not found in token claims")
+	fmt.Println("userId" + userID)
+	return userID, role, nil
 }

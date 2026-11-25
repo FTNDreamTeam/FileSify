@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	httpTransport "github.com/FTNDreamTeam/FileSify/backend/api-gateway/internal/transport/http"
+	"github.com/FTNDreamTeam/FileSify/backend/api-gateway/internal/transport/rpc"
 
 	storagepb "gen/data-storage-service-gen"
 	pb "gen/gateway"
@@ -73,6 +74,12 @@ func (s *server) RenameFile(ctx context.Context, request *storagepb.RenameFileRe
 func (s *server) ListNotifications(ctx context.Context, request *notificationpb.ListNotificationsRequest) (*notificationpb.ListNotificationsResponse, error) {
 	return s.notificationClient.ListNotifications(ctx, request)
 }
+func (s *server) ListExpansionReq(ctx context.Context, request *userpb.ListExpansionReqRequest) (*userpb.ListExpansionReqResponse, error) {
+	//if md, ok := metadata.FromIncomingContext(ctx); ok {
+	//	ctx = metadata.NewOutgoingContext(ctx, md)
+	//}
+	return s.userClient.ListExpansionReq(ctx, request)
+}
 
 func main() {
 	configs := config.LoadConfigs()
@@ -87,6 +94,7 @@ func main() {
 	userConn, err := grpc.NewClient(
 		"user-service:"+configs.USER_SERVICE_PORT,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(rpc.ForwardMetadataInterceptor),
 	)
 	if err != nil {
 		log.Println("Failed to dial user-service:", err)
@@ -97,6 +105,7 @@ func main() {
 	storageConn, err := grpc.NewClient(
 		"data-storage-service:"+configs.STORAGE_PORT,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(rpc.ForwardMetadataInterceptor),
 	)
 	if err != nil {
 		log.Println("Failed to dial data-storage-service:", err)
@@ -106,6 +115,7 @@ func main() {
 	notificationConn, err := grpc.NewClient(
 		"notification-service:"+configs.NOTIFICATION_PORT,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(rpc.ForwardMetadataInterceptor),
 	)
 	if err != nil {
 		log.Println("Failed to dial notification-service:", err)

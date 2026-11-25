@@ -24,6 +24,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/genproto/googleapis/type/date"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -35,6 +36,7 @@ type UserServer struct {
 	mailClient             mailpb.MailServiceClient
 	twoFactorService       *TwoFactorService
 	storageClient          storagepb.StorageServiceClient
+	requestCollection      *mongo.Collection
 }
 
 func NewUserServer(
@@ -44,6 +46,7 @@ func NewUserServer(
 	mailClient mailpb.MailServiceClient,
 	twoFactorService *TwoFactorService,
 	storageClient storagepb.StorageServiceClient,
+	requestCollection *mongo.Collection,
 ) *UserServer {
 	return &UserServer{
 		dbCollection:           collection,
@@ -52,6 +55,7 @@ func NewUserServer(
 		mailClient:             mailClient,
 		twoFactorService:       twoFactorService,
 		storageClient:          storageClient,
+		requestCollection:      requestCollection,
 	}
 }
 
@@ -530,13 +534,14 @@ func (s *UserServer) Verify2FA(ctx context.Context, req *userpb.Verify2FARequest
 }
 
 func (s *UserServer) ValidateToken(ctx context.Context, req *userpb.ValidateTokenRequest) (*userpb.ValidateTokenResponse, error) {
-	userId, err := ParseAndValidateToken(req.GetToken())
+	userId, role, err := ParseAndValidateToken(req.GetToken())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "Invalid token")
 	}
 
 	return &userpb.ValidateTokenResponse{
 		UserId: userId,
+		Role:   role.String(),
 	}, nil
 }
 
@@ -573,4 +578,77 @@ func (s *UserServer) ChangeUsedQuota(ctx context.Context, req *storagepb.ChangeQ
 		return nil, status.Errorf(codes.NotFound, "Couldn't find user with ID: %s", req.GetUserId())
 	}
 	return &userpb.EmptyResponse{}, nil
+}
+
+func (s *UserServer) ListExpansionReq(ctx context.Context, req *userpb.ListExpansionReqRequest) (*userpb.ListExpansionReqResponse, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		fmt.Print("Error loading metadata")
+		slog.Error("requests", "event", "quota.list_requests", "status", "no_metadata", "error", "Error loading metadata from request context")
+		return nil, status.Error(codes.NotFound, "Error loading metadata")
+	}
+
+	tokens := md.Get("authorization")
+	if len(tokens) < 1 {
+		fmt.Println("No token present")
+		slog.Error("requests", "event", "quota.list_requests", "status", "no_token", "error", "No token present in context metadata")
+		return nil, status.Error(codes.NotFound, "No token present")
+	}
+
+	userIdToken, role, err := ParseAndValidateToken(strings.TrimPrefix(tokens[0], "Bearer "))
+	if err != nil {
+		slog.Error("requests", "event", "quota.list_requests", "status", "parse_failed", "error", err.Error())
+		return nil, status.Errorf(codes.Unauthenticated, "Invalid token: %v", err)
+	}
+
+	if role != db.ADMIN {
+		slog.Error("requests", "event", "quota.list_requests", "status", "unauthorzied", "error", "User is not authorized to do make this action")
+		return nil, status.Error(codes.PermissionDenied, "User is not an admin")
+	}
+
+	userId, err := primitive.ObjectIDFromHex(userIdToken)
+	if err != nil {
+		slog.Error("requests", "event", "quota.list_requests", "status", "parse_failed", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "Failed to parse userID as objectID:%v", err)
+	}
+	var user db.UserDBModel
+	err = s.dbCollection.FindOne(ctx, bson.M{"_id": userId}).Decode(&user)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			request := db.StorageExpansionRequest{ //TEST DELETE AFTER IMPLEMENTING SENDING REQUESTS
+				ID:           primitive.NewObjectID(),
+				Email:        "random@example.com",
+				FirstName:    "Test",
+				LastName:     "Test",
+				Amount:       3000,
+				StorageQuota: 2000,
+				UsedQuota:    100,
+				Role:         db.USER,
+				Status:       db.ON_WAIT,
+			}
+			s.requestCollection.InsertOne(ctx, request)
+			return nil, status.Errorf(codes.NotFound, "Couldn't find user with ID:%v", err)
+		}
+		log.Printf("Database error: %v", err)
+		return nil, status.Errorf(codes.Internal, "Failed to load user from db: %v", err)
+	}
+
+	if user.Role != db.ADMIN {
+		return nil, status.Error(codes.PermissionDenied, "User is not an admin")
+	}
+
+	cursor, err := s.requestCollection.Find(ctx, bson.D{})
+	if err != nil {
+		slog.Error("list_requests", "event", "quota.list_requests", "status", "failed_loading", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "Failed finding all request documents:%v", err)
+	}
+	defer cursor.Close(ctx)
+
+	var result []*userpb.StorageExpansionRequest
+	if err = cursor.All(ctx, &result); err != nil {
+		slog.Error("list_requests", "event", "quota.list_requests", "status", "failed_parsing", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "Failed to parse documents to requests:%v", err)
+	}
+
+	return &userpb.ListExpansionReqResponse{Requests: result}, nil
 }

@@ -24,6 +24,7 @@ service UserService {
   rpc CheckStorageQuota(storage.v1.CheckStorageQuotaRequest) returns (storage.v1.CheckStorageQuotaResponse) {} //Checks users remaining storage quota
   rpc ListExpansionReq(ListExpansionReqRequest) returns (ListExpansionReqResponse) {}
   rpc CreateExpansionReq(CreateExpansionReqRequest) returns (CreateExpansionReqResponse) {}
+  rpc HandleExpansionReq(HandleExpansionReqRequest) returns (HandleExpansionReqResponse) {}
 }
 
 message UserProfile {
@@ -164,5 +165,14 @@ message CreateExpansionReqRequest {
 }
 
 message CreateExpansionReqResponse {
+  string message = 1;
+}
+
+message HandleExpansionReqRequest {
+  string email = 1;
+  bool approve = 2;
+}
+
+message HandleExpansionReqResponse {
   string message = 1;
 }

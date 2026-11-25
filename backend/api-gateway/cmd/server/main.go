@@ -86,6 +86,9 @@ func (s *server) CreateExpansionReq(ctx context.Context, request *userpb.CreateE
 	return s.userClient.CreateExpansionReq(ctx, request)
 }
 
+func (s *server) HandleExpansionReq(ctx context.Context, request *userpb.HandleExpansionReqRequest) (*userpb.HandleExpansionReqResponse, error) {
+	return s.userClient.HandleExpansionReq(ctx, request)
+}
 func main() {
 	configs := config.LoadConfigs()
 

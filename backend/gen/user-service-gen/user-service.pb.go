@@ -1503,6 +1503,102 @@ func (x *CreateExpansionReqResponse) GetMessage() string {
 	return ""
 }
 
+type HandleExpansionReqRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+	Approve       bool                   `protobuf:"varint,2,opt,name=approve,proto3" json:"approve,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HandleExpansionReqRequest) Reset() {
+	*x = HandleExpansionReqRequest{}
+	mi := &file_user_service_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HandleExpansionReqRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HandleExpansionReqRequest) ProtoMessage() {}
+
+func (x *HandleExpansionReqRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_user_service_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HandleExpansionReqRequest.ProtoReflect.Descriptor instead.
+func (*HandleExpansionReqRequest) Descriptor() ([]byte, []int) {
+	return file_user_service_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *HandleExpansionReqRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *HandleExpansionReqRequest) GetApprove() bool {
+	if x != nil {
+		return x.Approve
+	}
+	return false
+}
+
+type HandleExpansionReqResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HandleExpansionReqResponse) Reset() {
+	*x = HandleExpansionReqResponse{}
+	mi := &file_user_service_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HandleExpansionReqResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HandleExpansionReqResponse) ProtoMessage() {}
+
+func (x *HandleExpansionReqResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_user_service_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HandleExpansionReqResponse.ProtoReflect.Descriptor instead.
+func (*HandleExpansionReqResponse) Descriptor() ([]byte, []int) {
+	return file_user_service_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *HandleExpansionReqResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 var File_user_service_proto protoreflect.FileDescriptor
 
 const file_user_service_proto_rawDesc = "" +
@@ -1600,7 +1696,12 @@ const file_user_service_proto_rawDesc = "" +
 	"\x19CreateExpansionReqRequest\x12\x16\n" +
 	"\x06amount\x18\x01 \x01(\rR\x06amount\"6\n" +
 	"\x1aCreateExpansionReqResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage2\xa4\f\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"K\n" +
+	"\x19HandleExpansionReqRequest\x12\x14\n" +
+	"\x05email\x18\x01 \x01(\tR\x05email\x12\x18\n" +
+	"\aapprove\x18\x02 \x01(\bR\aapprove\"6\n" +
+	"\x1aHandleExpansionReqResponse\x12\x18\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage2\x95\r\n" +
 	"\vUserService\x12]\n" +
 	"\fRegisterUser\x12$.user_service.v1.RegisterUserRequest\x1a%.user_service.v1.RegisterUserResponse\"\x00\x12T\n" +
 	"\tLoginUser\x12!.user_service.v1.LoginUserRequest\x1a\".user_service.v1.LoginUserResponse\"\x00\x12i\n" +
@@ -1617,7 +1718,8 @@ const file_user_service_proto_rawDesc = "" +
 	"\x0fChangeUsedQuota\x12\x1e.storage.v1.ChangeQuotaRequest\x1a\x1e.user_service.v1.EmptyResponse\"\x00\x12b\n" +
 	"\x11CheckStorageQuota\x12$.storage.v1.CheckStorageQuotaRequest\x1a%.storage.v1.CheckStorageQuotaResponse\"\x00\x12i\n" +
 	"\x10ListExpansionReq\x12(.user_service.v1.ListExpansionReqRequest\x1a).user_service.v1.ListExpansionReqResponse\"\x00\x12o\n" +
-	"\x12CreateExpansionReq\x12*.user_service.v1.CreateExpansionReqRequest\x1a+.user_service.v1.CreateExpansionReqResponse\"\x00B\x16Z\x14gen/user-service-genb\x06proto3"
+	"\x12CreateExpansionReq\x12*.user_service.v1.CreateExpansionReqRequest\x1a+.user_service.v1.CreateExpansionReqResponse\"\x00\x12o\n" +
+	"\x12HandleExpansionReq\x12*.user_service.v1.HandleExpansionReqRequest\x1a+.user_service.v1.HandleExpansionReqResponse\"\x00B\x16Z\x14gen/user-service-genb\x06proto3"
 
 var (
 	file_user_service_proto_rawDescOnce sync.Once
@@ -1631,7 +1733,7 @@ func file_user_service_proto_rawDescGZIP() []byte {
 	return file_user_service_proto_rawDescData
 }
 
-var file_user_service_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
+var file_user_service_proto_msgTypes = make([]protoimpl.MessageInfo, 30)
 var file_user_service_proto_goTypes = []any{
 	(*UserProfile)(nil),                                        // 0: user_service.v1.UserProfile
 	(*RegisterUserRequest)(nil),                                // 1: user_service.v1.RegisterUserRequest
@@ -1661,13 +1763,15 @@ var file_user_service_proto_goTypes = []any{
 	(*ListExpansionReqResponse)(nil),                           // 25: user_service.v1.ListExpansionReqResponse
 	(*CreateExpansionReqRequest)(nil),                          // 26: user_service.v1.CreateExpansionReqRequest
 	(*CreateExpansionReqResponse)(nil),                         // 27: user_service.v1.CreateExpansionReqResponse
-	(*date.Date)(nil),                                          // 28: google.type.Date
-	(*data_storage_service_gen.ChangeQuotaRequest)(nil),        // 29: storage.v1.ChangeQuotaRequest
-	(*data_storage_service_gen.CheckStorageQuotaRequest)(nil),  // 30: storage.v1.CheckStorageQuotaRequest
-	(*data_storage_service_gen.CheckStorageQuotaResponse)(nil), // 31: storage.v1.CheckStorageQuotaResponse
+	(*HandleExpansionReqRequest)(nil),                          // 28: user_service.v1.HandleExpansionReqRequest
+	(*HandleExpansionReqResponse)(nil),                         // 29: user_service.v1.HandleExpansionReqResponse
+	(*date.Date)(nil),                                          // 30: google.type.Date
+	(*data_storage_service_gen.ChangeQuotaRequest)(nil),        // 31: storage.v1.ChangeQuotaRequest
+	(*data_storage_service_gen.CheckStorageQuotaRequest)(nil),  // 32: storage.v1.CheckStorageQuotaRequest
+	(*data_storage_service_gen.CheckStorageQuotaResponse)(nil), // 33: storage.v1.CheckStorageQuotaResponse
 }
 var file_user_service_proto_depIdxs = []int32{
-	28, // 0: user_service.v1.UserProfile.password_valid:type_name -> google.type.Date
+	30, // 0: user_service.v1.UserProfile.password_valid:type_name -> google.type.Date
 	0,  // 1: user_service.v1.RegisterUserResponse.user:type_name -> user_service.v1.UserProfile
 	0,  // 2: user_service.v1.LoginUserResponse.user:type_name -> user_service.v1.UserProfile
 	23, // 3: user_service.v1.ListExpansionReqResponse.requests:type_name -> user_service.v1.StorageExpansionRequest
@@ -1681,30 +1785,32 @@ var file_user_service_proto_depIdxs = []int32{
 	16, // 11: user_service.v1.UserService.SendTwoFactor:input_type -> user_service.v1.SendTwoFactorRequest
 	18, // 12: user_service.v1.UserService.Verify2FA:input_type -> user_service.v1.Verify2FARequest
 	20, // 13: user_service.v1.UserService.ValidateToken:input_type -> user_service.v1.ValidateTokenRequest
-	29, // 14: user_service.v1.UserService.IncreaseStorageQuota:input_type -> storage.v1.ChangeQuotaRequest
-	29, // 15: user_service.v1.UserService.DecreaseStorageQuota:input_type -> storage.v1.ChangeQuotaRequest
-	29, // 16: user_service.v1.UserService.ChangeUsedQuota:input_type -> storage.v1.ChangeQuotaRequest
-	30, // 17: user_service.v1.UserService.CheckStorageQuota:input_type -> storage.v1.CheckStorageQuotaRequest
+	31, // 14: user_service.v1.UserService.IncreaseStorageQuota:input_type -> storage.v1.ChangeQuotaRequest
+	31, // 15: user_service.v1.UserService.DecreaseStorageQuota:input_type -> storage.v1.ChangeQuotaRequest
+	31, // 16: user_service.v1.UserService.ChangeUsedQuota:input_type -> storage.v1.ChangeQuotaRequest
+	32, // 17: user_service.v1.UserService.CheckStorageQuota:input_type -> storage.v1.CheckStorageQuotaRequest
 	24, // 18: user_service.v1.UserService.ListExpansionReq:input_type -> user_service.v1.ListExpansionReqRequest
 	26, // 19: user_service.v1.UserService.CreateExpansionReq:input_type -> user_service.v1.CreateExpansionReqRequest
-	2,  // 20: user_service.v1.UserService.RegisterUser:output_type -> user_service.v1.RegisterUserResponse
-	4,  // 21: user_service.v1.UserService.LoginUser:output_type -> user_service.v1.LoginUserResponse
-	6,  // 22: user_service.v1.UserService.SendVerification:output_type -> user_service.v1.SendVerificationResponse
-	8,  // 23: user_service.v1.UserService.VerifyAccount:output_type -> user_service.v1.VerifyAccountResponse
-	10, // 24: user_service.v1.UserService.RequestMagicLink:output_type -> user_service.v1.RequestMagicLinkResponse
-	4,  // 25: user_service.v1.UserService.VerifyMagicLink:output_type -> user_service.v1.LoginUserResponse
-	15, // 26: user_service.v1.UserService.ChangePassword:output_type -> user_service.v1.ChangePasswordResponse
-	17, // 27: user_service.v1.UserService.SendTwoFactor:output_type -> user_service.v1.SendTwoFactorResponse
-	19, // 28: user_service.v1.UserService.Verify2FA:output_type -> user_service.v1.Verify2FAResponse
-	21, // 29: user_service.v1.UserService.ValidateToken:output_type -> user_service.v1.ValidateTokenResponse
-	22, // 30: user_service.v1.UserService.IncreaseStorageQuota:output_type -> user_service.v1.EmptyResponse
-	22, // 31: user_service.v1.UserService.DecreaseStorageQuota:output_type -> user_service.v1.EmptyResponse
-	22, // 32: user_service.v1.UserService.ChangeUsedQuota:output_type -> user_service.v1.EmptyResponse
-	31, // 33: user_service.v1.UserService.CheckStorageQuota:output_type -> storage.v1.CheckStorageQuotaResponse
-	25, // 34: user_service.v1.UserService.ListExpansionReq:output_type -> user_service.v1.ListExpansionReqResponse
-	27, // 35: user_service.v1.UserService.CreateExpansionReq:output_type -> user_service.v1.CreateExpansionReqResponse
-	20, // [20:36] is the sub-list for method output_type
-	4,  // [4:20] is the sub-list for method input_type
+	28, // 20: user_service.v1.UserService.HandleExpansionReq:input_type -> user_service.v1.HandleExpansionReqRequest
+	2,  // 21: user_service.v1.UserService.RegisterUser:output_type -> user_service.v1.RegisterUserResponse
+	4,  // 22: user_service.v1.UserService.LoginUser:output_type -> user_service.v1.LoginUserResponse
+	6,  // 23: user_service.v1.UserService.SendVerification:output_type -> user_service.v1.SendVerificationResponse
+	8,  // 24: user_service.v1.UserService.VerifyAccount:output_type -> user_service.v1.VerifyAccountResponse
+	10, // 25: user_service.v1.UserService.RequestMagicLink:output_type -> user_service.v1.RequestMagicLinkResponse
+	4,  // 26: user_service.v1.UserService.VerifyMagicLink:output_type -> user_service.v1.LoginUserResponse
+	15, // 27: user_service.v1.UserService.ChangePassword:output_type -> user_service.v1.ChangePasswordResponse
+	17, // 28: user_service.v1.UserService.SendTwoFactor:output_type -> user_service.v1.SendTwoFactorResponse
+	19, // 29: user_service.v1.UserService.Verify2FA:output_type -> user_service.v1.Verify2FAResponse
+	21, // 30: user_service.v1.UserService.ValidateToken:output_type -> user_service.v1.ValidateTokenResponse
+	22, // 31: user_service.v1.UserService.IncreaseStorageQuota:output_type -> user_service.v1.EmptyResponse
+	22, // 32: user_service.v1.UserService.DecreaseStorageQuota:output_type -> user_service.v1.EmptyResponse
+	22, // 33: user_service.v1.UserService.ChangeUsedQuota:output_type -> user_service.v1.EmptyResponse
+	33, // 34: user_service.v1.UserService.CheckStorageQuota:output_type -> storage.v1.CheckStorageQuotaResponse
+	25, // 35: user_service.v1.UserService.ListExpansionReq:output_type -> user_service.v1.ListExpansionReqResponse
+	27, // 36: user_service.v1.UserService.CreateExpansionReq:output_type -> user_service.v1.CreateExpansionReqResponse
+	29, // 37: user_service.v1.UserService.HandleExpansionReq:output_type -> user_service.v1.HandleExpansionReqResponse
+	21, // [21:38] is the sub-list for method output_type
+	4,  // [4:21] is the sub-list for method input_type
 	4,  // [4:4] is the sub-list for extension type_name
 	4,  // [4:4] is the sub-list for extension extendee
 	0,  // [0:4] is the sub-list for field type_name
@@ -1721,7 +1827,7 @@ func file_user_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_user_service_proto_rawDesc), len(file_user_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   28,
+			NumMessages:   30,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

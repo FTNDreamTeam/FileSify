@@ -98,4 +98,11 @@ service GatewayService {
       body: "*"
     };
   }
+
+  rpc HandleExpansionReq(user_service.v1.HandleExpansionReqRequest) returns (user_service.v1.HandleExpansionReqResponse) {
+    option (google.api.http) = {
+      post: "/api/quota/handle"
+      body: "*"
+    };
+  }
 }

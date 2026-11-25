@@ -29,7 +29,7 @@ var File_gateway_proto protoreflect.FileDescriptor
 const file_gateway_proto_rawDesc = "" +
 	"\n" +
 	"\rgateway.proto\x12\n" +
-	"gateway.v1\x1a\x1adata-storage-service.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1anotification-service.proto\x1a\x12user-service.proto2\xf2\x0e\n" +
+	"gateway.v1\x1a\x1adata-storage-service.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1anotification-service.proto\x1a\x12user-service.proto2\xda\x0f\n" +
 	"\x0eGatewayService\x12u\n" +
 	"\fRegisterUser\x12$.user_service.v1.RegisterUserRequest\x1a%.user_service.v1.RegisterUserResponse\"\x18\x82\xd3\xe4\x93\x02\x12:\x01*\"\r/api/register\x12i\n" +
 	"\tLoginUser\x12!.user_service.v1.LoginUserRequest\x1a\".user_service.v1.LoginUserResponse\"\x15\x82\xd3\xe4\x93\x02\x0f:\x01*\"\n" +
@@ -47,7 +47,9 @@ const file_gateway_proto_rawDesc = "" +
 	"\x11ListNotifications\x12).notification.v1.ListNotificationsRequest\x1a*.notification.v1.ListNotificationsResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/api/notifications\x12\x84\x01\n" +
 	"\x10ListExpansionReq\x12(.user_service.v1.ListExpansionReqRequest\x1a).user_service.v1.ListExpansionReqResponse\"\x1b\x82\xd3\xe4\x93\x02\x15\x12\x13/api/quota/requests\x12\x8c\x01\n" +
 	"\x12CreateExpansionReq\x12*.user_service.v1.CreateExpansionReqRequest\x1a+.user_service.v1.CreateExpansionReqResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/api/quota/request\x12\x8b\x01\n" +
-	"\x12HandleExpansionReq\x12*.user_service.v1.HandleExpansionReqRequest\x1a+.user_service.v1.HandleExpansionReqResponse\"\x1c\x82\xd3\xe4\x93\x02\x16:\x01*\"\x11/api/quota/handleB\rZ\vgen/gatewayb\x06proto3"
+	"\x12HandleExpansionReq\x12*.user_service.v1.HandleExpansionReqRequest\x1a+.user_service.v1.HandleExpansionReqResponse\"\x1c\x82\xd3\xe4\x93\x02\x16:\x01*\"\x11/api/quota/handle\x12f\n" +
+	"\tListUsers\x12!.user_service.v1.ListUsersRequest\x1a\".user_service.v1.ListUsersResponse\"\x12\x82\xd3\xe4\x93\x02\f\x12\n" +
+	"/api/usersB\rZ\vgen/gatewayb\x06proto3"
 
 var file_gateway_proto_goTypes = []any{
 	(*user_service_gen.RegisterUserRequest)(nil),               // 0: user_service.v1.RegisterUserRequest
@@ -65,20 +67,22 @@ var file_gateway_proto_goTypes = []any{
 	(*user_service_gen.ListExpansionReqRequest)(nil),           // 12: user_service.v1.ListExpansionReqRequest
 	(*user_service_gen.CreateExpansionReqRequest)(nil),         // 13: user_service.v1.CreateExpansionReqRequest
 	(*user_service_gen.HandleExpansionReqRequest)(nil),         // 14: user_service.v1.HandleExpansionReqRequest
-	(*user_service_gen.RegisterUserResponse)(nil),              // 15: user_service.v1.RegisterUserResponse
-	(*user_service_gen.LoginUserResponse)(nil),                 // 16: user_service.v1.LoginUserResponse
-	(*user_service_gen.VerifyAccountResponse)(nil),             // 17: user_service.v1.VerifyAccountResponse
-	(*user_service_gen.RequestMagicLinkResponse)(nil),          // 18: user_service.v1.RequestMagicLinkResponse
-	(*user_service_gen.ChangePasswordResponse)(nil),            // 19: user_service.v1.ChangePasswordResponse
-	(*user_service_gen.Verify2FAResponse)(nil),                 // 20: user_service.v1.Verify2FAResponse
-	(*data_storage_service_gen.CreateFolderResponse)(nil),      // 21: storage.v1.CreateFolderResponse
-	(*data_storage_service_gen.ListFilesResponse)(nil),         // 22: storage.v1.ListFilesResponse
-	(*data_storage_service_gen.RenameFolderResponse)(nil),      // 23: storage.v1.RenameFolderResponse
-	(*data_storage_service_gen.RenameFileResponse)(nil),        // 24: storage.v1.RenameFileResponse
-	(*notification_service_gen.ListNotificationsResponse)(nil), // 25: notification.v1.ListNotificationsResponse
-	(*user_service_gen.ListExpansionReqResponse)(nil),          // 26: user_service.v1.ListExpansionReqResponse
-	(*user_service_gen.CreateExpansionReqResponse)(nil),        // 27: user_service.v1.CreateExpansionReqResponse
-	(*user_service_gen.HandleExpansionReqResponse)(nil),        // 28: user_service.v1.HandleExpansionReqResponse
+	(*user_service_gen.ListUsersRequest)(nil),                  // 15: user_service.v1.ListUsersRequest
+	(*user_service_gen.RegisterUserResponse)(nil),              // 16: user_service.v1.RegisterUserResponse
+	(*user_service_gen.LoginUserResponse)(nil),                 // 17: user_service.v1.LoginUserResponse
+	(*user_service_gen.VerifyAccountResponse)(nil),             // 18: user_service.v1.VerifyAccountResponse
+	(*user_service_gen.RequestMagicLinkResponse)(nil),          // 19: user_service.v1.RequestMagicLinkResponse
+	(*user_service_gen.ChangePasswordResponse)(nil),            // 20: user_service.v1.ChangePasswordResponse
+	(*user_service_gen.Verify2FAResponse)(nil),                 // 21: user_service.v1.Verify2FAResponse
+	(*data_storage_service_gen.CreateFolderResponse)(nil),      // 22: storage.v1.CreateFolderResponse
+	(*data_storage_service_gen.ListFilesResponse)(nil),         // 23: storage.v1.ListFilesResponse
+	(*data_storage_service_gen.RenameFolderResponse)(nil),      // 24: storage.v1.RenameFolderResponse
+	(*data_storage_service_gen.RenameFileResponse)(nil),        // 25: storage.v1.RenameFileResponse
+	(*notification_service_gen.ListNotificationsResponse)(nil), // 26: notification.v1.ListNotificationsResponse
+	(*user_service_gen.ListExpansionReqResponse)(nil),          // 27: user_service.v1.ListExpansionReqResponse
+	(*user_service_gen.CreateExpansionReqResponse)(nil),        // 28: user_service.v1.CreateExpansionReqResponse
+	(*user_service_gen.HandleExpansionReqResponse)(nil),        // 29: user_service.v1.HandleExpansionReqResponse
+	(*user_service_gen.ListUsersResponse)(nil),                 // 30: user_service.v1.ListUsersResponse
 }
 var file_gateway_proto_depIdxs = []int32{
 	0,  // 0: gateway.v1.GatewayService.RegisterUser:input_type -> user_service.v1.RegisterUserRequest
@@ -96,23 +100,25 @@ var file_gateway_proto_depIdxs = []int32{
 	12, // 12: gateway.v1.GatewayService.ListExpansionReq:input_type -> user_service.v1.ListExpansionReqRequest
 	13, // 13: gateway.v1.GatewayService.CreateExpansionReq:input_type -> user_service.v1.CreateExpansionReqRequest
 	14, // 14: gateway.v1.GatewayService.HandleExpansionReq:input_type -> user_service.v1.HandleExpansionReqRequest
-	15, // 15: gateway.v1.GatewayService.RegisterUser:output_type -> user_service.v1.RegisterUserResponse
-	16, // 16: gateway.v1.GatewayService.LoginUser:output_type -> user_service.v1.LoginUserResponse
-	17, // 17: gateway.v1.GatewayService.VerifyAccount:output_type -> user_service.v1.VerifyAccountResponse
-	18, // 18: gateway.v1.GatewayService.RequestMagicLink:output_type -> user_service.v1.RequestMagicLinkResponse
-	16, // 19: gateway.v1.GatewayService.VerifyMagicLink:output_type -> user_service.v1.LoginUserResponse
-	19, // 20: gateway.v1.GatewayService.ChangePassword:output_type -> user_service.v1.ChangePasswordResponse
-	20, // 21: gateway.v1.GatewayService.Verify2FA:output_type -> user_service.v1.Verify2FAResponse
-	21, // 22: gateway.v1.GatewayService.CreateFolder:output_type -> storage.v1.CreateFolderResponse
-	22, // 23: gateway.v1.GatewayService.ListFiles:output_type -> storage.v1.ListFilesResponse
-	23, // 24: gateway.v1.GatewayService.RenameFolder:output_type -> storage.v1.RenameFolderResponse
-	24, // 25: gateway.v1.GatewayService.RenameFile:output_type -> storage.v1.RenameFileResponse
-	25, // 26: gateway.v1.GatewayService.ListNotifications:output_type -> notification.v1.ListNotificationsResponse
-	26, // 27: gateway.v1.GatewayService.ListExpansionReq:output_type -> user_service.v1.ListExpansionReqResponse
-	27, // 28: gateway.v1.GatewayService.CreateExpansionReq:output_type -> user_service.v1.CreateExpansionReqResponse
-	28, // 29: gateway.v1.GatewayService.HandleExpansionReq:output_type -> user_service.v1.HandleExpansionReqResponse
-	15, // [15:30] is the sub-list for method output_type
-	0,  // [0:15] is the sub-list for method input_type
+	15, // 15: gateway.v1.GatewayService.ListUsers:input_type -> user_service.v1.ListUsersRequest
+	16, // 16: gateway.v1.GatewayService.RegisterUser:output_type -> user_service.v1.RegisterUserResponse
+	17, // 17: gateway.v1.GatewayService.LoginUser:output_type -> user_service.v1.LoginUserResponse
+	18, // 18: gateway.v1.GatewayService.VerifyAccount:output_type -> user_service.v1.VerifyAccountResponse
+	19, // 19: gateway.v1.GatewayService.RequestMagicLink:output_type -> user_service.v1.RequestMagicLinkResponse
+	17, // 20: gateway.v1.GatewayService.VerifyMagicLink:output_type -> user_service.v1.LoginUserResponse
+	20, // 21: gateway.v1.GatewayService.ChangePassword:output_type -> user_service.v1.ChangePasswordResponse
+	21, // 22: gateway.v1.GatewayService.Verify2FA:output_type -> user_service.v1.Verify2FAResponse
+	22, // 23: gateway.v1.GatewayService.CreateFolder:output_type -> storage.v1.CreateFolderResponse
+	23, // 24: gateway.v1.GatewayService.ListFiles:output_type -> storage.v1.ListFilesResponse
+	24, // 25: gateway.v1.GatewayService.RenameFolder:output_type -> storage.v1.RenameFolderResponse
+	25, // 26: gateway.v1.GatewayService.RenameFile:output_type -> storage.v1.RenameFileResponse
+	26, // 27: gateway.v1.GatewayService.ListNotifications:output_type -> notification.v1.ListNotificationsResponse
+	27, // 28: gateway.v1.GatewayService.ListExpansionReq:output_type -> user_service.v1.ListExpansionReqResponse
+	28, // 29: gateway.v1.GatewayService.CreateExpansionReq:output_type -> user_service.v1.CreateExpansionReqResponse
+	29, // 30: gateway.v1.GatewayService.HandleExpansionReq:output_type -> user_service.v1.HandleExpansionReqResponse
+	30, // 31: gateway.v1.GatewayService.ListUsers:output_type -> user_service.v1.ListUsersResponse
+	16, // [16:32] is the sub-list for method output_type
+	0,  // [0:16] is the sub-list for method input_type
 	0,  // [0:0] is the sub-list for extension type_name
 	0,  // [0:0] is the sub-list for extension extendee
 	0,  // [0:0] is the sub-list for field type_name

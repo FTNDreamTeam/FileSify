@@ -37,6 +37,7 @@ const (
 	GatewayService_ListExpansionReq_FullMethodName   = "/gateway.v1.GatewayService/ListExpansionReq"
 	GatewayService_CreateExpansionReq_FullMethodName = "/gateway.v1.GatewayService/CreateExpansionReq"
 	GatewayService_HandleExpansionReq_FullMethodName = "/gateway.v1.GatewayService/HandleExpansionReq"
+	GatewayService_ListUsers_FullMethodName          = "/gateway.v1.GatewayService/ListUsers"
 )
 
 // GatewayServiceClient is the client API for GatewayService service.
@@ -58,6 +59,7 @@ type GatewayServiceClient interface {
 	ListExpansionReq(ctx context.Context, in *user_service_gen.ListExpansionReqRequest, opts ...grpc.CallOption) (*user_service_gen.ListExpansionReqResponse, error)
 	CreateExpansionReq(ctx context.Context, in *user_service_gen.CreateExpansionReqRequest, opts ...grpc.CallOption) (*user_service_gen.CreateExpansionReqResponse, error)
 	HandleExpansionReq(ctx context.Context, in *user_service_gen.HandleExpansionReqRequest, opts ...grpc.CallOption) (*user_service_gen.HandleExpansionReqResponse, error)
+	ListUsers(ctx context.Context, in *user_service_gen.ListUsersRequest, opts ...grpc.CallOption) (*user_service_gen.ListUsersResponse, error)
 }
 
 type gatewayServiceClient struct {
@@ -218,6 +220,16 @@ func (c *gatewayServiceClient) HandleExpansionReq(ctx context.Context, in *user_
 	return out, nil
 }
 
+func (c *gatewayServiceClient) ListUsers(ctx context.Context, in *user_service_gen.ListUsersRequest, opts ...grpc.CallOption) (*user_service_gen.ListUsersResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(user_service_gen.ListUsersResponse)
+	err := c.cc.Invoke(ctx, GatewayService_ListUsers_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GatewayServiceServer is the server API for GatewayService service.
 // All implementations must embed UnimplementedGatewayServiceServer
 // for forward compatibility.
@@ -237,6 +249,7 @@ type GatewayServiceServer interface {
 	ListExpansionReq(context.Context, *user_service_gen.ListExpansionReqRequest) (*user_service_gen.ListExpansionReqResponse, error)
 	CreateExpansionReq(context.Context, *user_service_gen.CreateExpansionReqRequest) (*user_service_gen.CreateExpansionReqResponse, error)
 	HandleExpansionReq(context.Context, *user_service_gen.HandleExpansionReqRequest) (*user_service_gen.HandleExpansionReqResponse, error)
+	ListUsers(context.Context, *user_service_gen.ListUsersRequest) (*user_service_gen.ListUsersResponse, error)
 	mustEmbedUnimplementedGatewayServiceServer()
 }
 
@@ -291,6 +304,9 @@ func (UnimplementedGatewayServiceServer) CreateExpansionReq(context.Context, *us
 }
 func (UnimplementedGatewayServiceServer) HandleExpansionReq(context.Context, *user_service_gen.HandleExpansionReqRequest) (*user_service_gen.HandleExpansionReqResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method HandleExpansionReq not implemented")
+}
+func (UnimplementedGatewayServiceServer) ListUsers(context.Context, *user_service_gen.ListUsersRequest) (*user_service_gen.ListUsersResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListUsers not implemented")
 }
 func (UnimplementedGatewayServiceServer) mustEmbedUnimplementedGatewayServiceServer() {}
 func (UnimplementedGatewayServiceServer) testEmbeddedByValue()                        {}
@@ -583,6 +599,24 @@ func _GatewayService_HandleExpansionReq_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GatewayService_ListUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(user_service_gen.ListUsersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServiceServer).ListUsers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GatewayService_ListUsers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServiceServer).ListUsers(ctx, req.(*user_service_gen.ListUsersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GatewayService_ServiceDesc is the grpc.ServiceDesc for GatewayService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -649,6 +683,10 @@ var GatewayService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "HandleExpansionReq",
 			Handler:    _GatewayService_HandleExpansionReq_Handler,
+		},
+		{
+			MethodName: "ListUsers",
+			Handler:    _GatewayService_ListUsers_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

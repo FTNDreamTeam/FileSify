@@ -1238,6 +1238,7 @@
             }
         });
     })();
+
     // ---------- File list and folder browsing ----------
     (function initFileList() {
         'use strict';
@@ -1915,7 +1916,7 @@
         // Load users
         async function loadUsers() {
             try {
-                const res = await fetch('/api/admin/users', {
+                const res = await fetch('/api/users', {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
 
@@ -1967,7 +1968,7 @@
             }
         }
 
-        // ---------- Approve/Reject Action ----------
+        // Approve/reject
         window.handleQuotaAction = async function(email, isApprove) {
             const action = isApprove ? 'approve' : 'reject';
             if (!confirm(`Are you sure you want to ${action} the request for ${email}?`)) return;

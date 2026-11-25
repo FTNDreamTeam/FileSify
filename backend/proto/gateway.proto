@@ -105,4 +105,8 @@ service GatewayService {
       body: "*"
     };
   }
+
+  rpc ListUsers(user_service.v1.ListUsersRequest) returns (user_service.v1.ListUsersResponse) {
+    option (google.api.http) = {get: "/api/users"};
+  }
 }

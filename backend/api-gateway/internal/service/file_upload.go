@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	storagepb "gen/data-storage-service-gen"
@@ -93,9 +95,12 @@ func (s *FileUploadService) Upload(context context.Context, input UploadInput) e
 		return fmt.Errorf("%w: Failed while streaming metadata: %v", ErrUpstreamFailed, err)
 	}
 
+	hasher := sha256.New()
+	teeReader := io.TeeReader(input.FileContent, hasher)
+
 	buf := make([]byte, 32*1024) //32kb for the buffer
 	for {
-		n, readErr := input.FileContent.Read(buf) //Starts reading the file
+		n, readErr := teeReader.Read(buf) //Starts reading the file
 		if n > 0 {
 			sendErr := stream.Send(&storagepb.UploadFileRequest{ //Sends part of file through RPC to storage client
 				Data: &storagepb.UploadFileRequest_Content{
@@ -112,6 +117,17 @@ func (s *FileUploadService) Upload(context context.Context, input UploadInput) e
 		if readErr != nil {
 			return fmt.Errorf(": Error reading file stream: %w", readErr)
 		}
+	}
+
+	checksum := hex.EncodeToString(hasher.Sum(nil))
+	if err := stream.Send(&storagepb.UploadFileRequest{
+		Data: &storagepb.UploadFileRequest_Metadata{
+			Metadata: &storagepb.FileMetaData{
+				Checksum: checksum,
+			},
+		},
+	}); err != nil {
+		return fmt.Errorf("Couldn't generate checksum for file:%v", err)
 	}
 
 	if _, err := stream.CloseAndRecv(); err != nil {

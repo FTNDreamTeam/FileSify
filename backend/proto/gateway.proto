@@ -91,4 +91,11 @@ service GatewayService {
   rpc ListExpansionReq(user_service.v1.ListExpansionReqRequest) returns (user_service.v1.ListExpansionReqResponse) {
     option (google.api.http) = {get: "/api/quota/requests"};
   }
+
+  rpc CreateExpansionReq(user_service.v1.CreateExpansionReqRequest) returns (user_service.v1.CreateExpansionReqResponse) {
+    option (google.api.http) = {
+      post: "/api/quota/request"
+      body: "*"
+    };
+  }
 }

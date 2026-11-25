@@ -681,3 +681,75 @@ func (s *UserServer) ListExpansionReq(ctx context.Context, req *userpb.ListExpan
 	}
 	return &userpb.ListExpansionReqResponse{Requests: result}, nil
 }
+
+func (s *UserServer) CreateExpansionReq(ctx context.Context, req *userpb.CreateExpansionReqRequest) (*userpb.CreateExpansionReqResponse, error) {
+	// Validation
+	if req.GetAmount() == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Requested amount cannot be zero")
+	}
+
+	// Get token
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		slog.Error("create_request", "event", "quota.create_request", "status", "no_metadata")
+		return nil, status.Error(codes.Internal, "Error loading metadata")
+	}
+
+	tokens := md.Get("authorization")
+	if len(tokens) < 1 {
+		slog.Error("create_request", "event", "quota.create_request", "status", "no_token")
+		return nil, status.Error(codes.Unauthenticated, "No token present")
+	}
+
+	// Validate token
+	userIdStr, _, err := ParseAndValidateToken(strings.TrimPrefix(tokens[0], "Bearer "))
+	if err != nil {
+		slog.Error("create_request", "event", "quota.create_request", "status", "invalid_token", "error", err.Error())
+		return nil, status.Errorf(codes.Unauthenticated, "Invalid token: %v", err)
+	}
+
+	userId, err := primitive.ObjectIDFromHex(userIdStr)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to parse user ID: %v", err)
+	}
+
+	// Get user
+	var user db.UserDBModel
+	err = s.dbCollection.FindOne(ctx, bson.M{"_id": userId}).Decode(&user)
+	if err != nil {
+		slog.Error("create_request", "event", "quota.create_request", "status", "user_not_found", "error", err.Error())
+		return nil, status.Errorf(codes.NotFound, "User not found")
+	}
+
+	// Check for previous request
+	count, err := s.requestCollection.CountDocuments(ctx, bson.M{"email": user.Email, "status": db.ON_WAIT})
+	if err == nil && count > 0 {
+		return nil, status.Error(codes.AlreadyExists, "You already have a pending request")
+	}
+
+	// Create request
+	request := db.StorageExpansionRequest{
+		ID:           primitive.NewObjectID(),
+		Email:        user.Email,
+		FirstName:    user.FirstName,
+		LastName:     user.LastName,
+		Amount:       req.GetAmount(),
+		StorageQuota: user.StorageQuota,
+		UsedQuota:    user.UsedQuota,
+		Role:         user.Role,
+		Status:       db.ON_WAIT,
+	}
+
+	// Save
+	_, err = s.requestCollection.InsertOne(ctx, request)
+	if err != nil {
+		slog.Error("create_request", "event", "quota.create_request", "status", "db_error", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "Failed to save request: %v", err)
+	}
+
+	slog.Info("create_request", "event", "quota.create_request", "status", "success", "user_id", userIdStr)
+
+	return &userpb.CreateExpansionReqResponse{
+		Message: "Storage expansion request submitted successfully",
+	}, nil
+}

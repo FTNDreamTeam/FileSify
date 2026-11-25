@@ -82,6 +82,10 @@ func (s *server) ListExpansionReq(ctx context.Context, request *userpb.ListExpan
 	return s.userClient.ListExpansionReq(ctx, request)
 }
 
+func (s *server) CreateExpansionReq(ctx context.Context, request *userpb.CreateExpansionReqRequest) (*userpb.CreateExpansionReqResponse, error) {
+	return s.userClient.CreateExpansionReq(ctx, request)
+}
+
 func main() {
 	configs := config.LoadConfigs()
 

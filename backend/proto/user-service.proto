@@ -23,6 +23,7 @@ service UserService {
   rpc ChangeUsedQuota(storage.v1.ChangeQuotaRequest) returns (EmptyResponse) {} //When file gets uploaded/deleted changes the amount of storage used by user
   rpc CheckStorageQuota(storage.v1.CheckStorageQuotaRequest) returns (storage.v1.CheckStorageQuotaResponse) {} //Checks users remaining storage quota
   rpc ListExpansionReq(ListExpansionReqRequest) returns (ListExpansionReqResponse) {}
+  rpc CreateExpansionReq(CreateExpansionReqRequest) returns (CreateExpansionReqResponse) {}
 }
 
 message UserProfile {
@@ -156,4 +157,12 @@ message ListExpansionReqRequest {}
 
 message ListExpansionReqResponse {
   repeated StorageExpansionRequest requests = 1;
+}
+
+message CreateExpansionReqRequest {
+  uint32 amount = 1;
+}
+
+message CreateExpansionReqResponse {
+  string message = 1;
 }

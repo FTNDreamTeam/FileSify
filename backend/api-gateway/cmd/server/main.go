@@ -75,9 +75,9 @@ func (s *server) ListNotifications(ctx context.Context, request *notificationpb.
 	return s.notificationClient.ListNotifications(ctx, request)
 }
 func (s *server) ListExpansionReq(ctx context.Context, request *userpb.ListExpansionReqRequest) (*userpb.ListExpansionReqResponse, error) {
-	if md, ok := metadata.FromIncomingContext(ctx); ok {
-		ctx = metadata.NewOutgoingContext(ctx, md)
-	}
+	//if md, ok := metadata.FromIncomingContext(ctx); ok {
+	//	ctx = metadata.NewOutgoingContext(ctx, md)
+	//}
 	return s.userClient.ListExpansionReq(ctx, request)
 }
 
@@ -136,6 +136,12 @@ func main() {
 	gwConn, err := grpc.NewClient(
 		"api-gateway:"+configs.GATEWAY_PORT,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+			if md, ok := metadata.FromIncomingContext(ctx); ok {
+				ctx = metadata.NewOutgoingContext(ctx, md)
+			}
+			return invoker(ctx, method, req, reply, cc, opts...)
+		}),
 	)
 	if err != nil {
 		log.Println("Failed to dial gateway gRPC:", err)

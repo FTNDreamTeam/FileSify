@@ -1359,10 +1359,14 @@
 
             // Kebab menu opens the rename dialog (folders only)
             const menuBtn = tr.querySelector('.file-actions .btn-icon');
-            if (menuBtn && file.isDirectory && openRenameDialog) {
+            if (menuBtn) {
                 menuBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();   // don't navigate into the folder
-                    openRenameDialog(file);
+                    e.stopPropagation();
+                    if (file.isDirectory) {
+                        if (window.openRenameFolderDialog) window.openRenameFolderDialog(file);
+                    } else {
+                        if (window.openRenameFileDialog) window.openRenameFileDialog(file);
+                    }
                 });
             }
 
@@ -1525,6 +1529,100 @@
                         oldPath: target.oldPath,
                         newPath: newPath,
                         token:   token
+                    })
+                });
+
+                // Response check
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.message || `Rename failed (HTTP ${res.status})`);
+
+                // Success - close and refresh table
+                dialog.close('success');
+                window.dispatchEvent(new CustomEvent('files-changed'));
+
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                // Restore button
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = original;
+            }
+        });
+    })();
+
+    // ---------- File renaming dialog ----------
+    window.openRenameFileDialog = null;
+
+    (function initFileRename() {
+        // Element definition
+        const dialog = document.getElementById('renameFileDialog');
+        if (!dialog) return;
+
+        const input      = document.getElementById('renameFileInput');
+        const confirmBtn = document.getElementById('renameFileConfirm');
+        const alertEl    = document.getElementById('renameFileAlert');
+
+        let target = null;
+
+        // Dialog alert
+        function showError(msg) {
+            alertEl.textContent = msg;
+            alertEl.className = 'alert alert-danger mb-3';
+            alertEl.classList.remove('d-none');
+        }
+
+        // Cancel + backdrop
+        wireDialogClose(dialog);
+
+        // Called from the file row kebab
+        window.openRenameFileDialog = function (file) {
+            // We only need the relative path for the backend
+            target = { oldPath: file.path, leafName: file.name };
+
+            input.value = file.name;
+            alertEl.classList.add('d-none');
+            dialog.showModal();
+            setTimeout(() => { input.focus(); input.select(); }, 100);
+        };
+
+        // Enter submits
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); confirmBtn.click(); }
+        });
+
+        // Confirm button
+        confirmBtn.addEventListener('click', async () => {
+            if (!target) return;
+
+            const newName = input.value.trim();
+
+            // Name validation
+            if (!newName)                                         { showError('Please enter a name.'); return; }
+            if (newName === target.leafName)                      { dialog.close('cancel'); return; }
+            if (newName.includes('/') || newName.includes('\\')) { showError('Name cannot contain slashes.'); return; }
+            if (newName.length > 100)                             { showError('Name is too long (max 100 characters).'); return; }
+
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.replace('login.html'); return; }
+
+            // Loading state
+            const original = confirmBtn.innerHTML;
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Renaming…';
+            alertEl.classList.add('d-none');
+
+            // Send rename request
+            try {
+                const res = await fetch('/api/storage/files', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        old_path: target.oldPath,
+                        new_name: newName,
+                        token:    token
                     })
                 });
 

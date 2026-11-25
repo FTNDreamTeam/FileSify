@@ -688,6 +688,11 @@ func (s *UserServer) CreateExpansionReq(ctx context.Context, req *userpb.CreateE
 		return nil, status.Error(codes.InvalidArgument, "Requested amount cannot be zero")
 	}
 
+	const maxExpansionMB = 10240
+	if req.GetAmount() > maxExpansionMB {
+		return nil, status.Errorf(codes.InvalidArgument, "You cannot request more than 10 GB (%d MB) at once", maxExpansionMB)
+	}
+
 	// Get token
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {

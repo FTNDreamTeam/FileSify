@@ -825,3 +825,55 @@ func (s *UserServer) HandleExpansionReq(ctx context.Context, req *userpb.HandleE
 		Message: fmt.Sprintf("Request for %s successfully %s", req.GetEmail(), action),
 	}, nil
 }
+
+func (s *UserServer) ListUsers(ctx context.Context, req *userpb.ListUsersRequest) (*userpb.ListUsersResponse, error) {
+	// 1. Validate Admin via Metadata
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "Error loading metadata")
+	}
+
+	tokens := md.Get("authorization")
+	if len(tokens) < 1 {
+		return nil, status.Error(codes.Unauthenticated, "No token present")
+	}
+
+	_, role, err := ParseAndValidateToken(strings.TrimPrefix(tokens[0], "Bearer "))
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "Invalid token: %v", err)
+	}
+
+	if role != db.ADMIN {
+		return nil, status.Error(codes.PermissionDenied, "User is not an admin")
+	}
+
+	// 2. Fetch all users from MongoDB
+	cursor, err := s.dbCollection.Find(ctx, bson.D{})
+	if err != nil {
+		slog.Error("list_users", "event", "admin.list_users", "status", "failed_loading", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "Failed finding users: %v", err)
+	}
+	defer cursor.Close(ctx)
+
+	var dbUsers []db.UserDBModel
+	if err = cursor.All(ctx, &dbUsers); err != nil {
+		slog.Error("list_users", "event", "admin.list_users", "status", "failed_parsing", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "Failed to parse users: %v", err)
+	}
+
+	// 3. Map DB structs to Protobuf structs
+	var result []*userpb.UserProfile
+	for _, u := range dbUsers {
+		result = append(result, &userpb.UserProfile{
+			Id:           u.ID.Hex(),
+			Email:        u.Email,
+			FirstName:    u.FirstName,
+			LastName:     u.LastName,
+			StorageQuota: u.StorageQuota,
+			UsedQuota:    u.UsedQuota,
+			Role:         u.Role.String(),
+		})
+	}
+
+	return &userpb.ListUsersResponse{Users: result}, nil
+}

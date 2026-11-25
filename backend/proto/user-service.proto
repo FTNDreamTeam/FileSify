@@ -25,6 +25,7 @@ service UserService {
   rpc ListExpansionReq(ListExpansionReqRequest) returns (ListExpansionReqResponse) {}
   rpc CreateExpansionReq(CreateExpansionReqRequest) returns (CreateExpansionReqResponse) {}
   rpc HandleExpansionReq(HandleExpansionReqRequest) returns (HandleExpansionReqResponse) {}
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {}
 }
 
 message UserProfile {
@@ -175,4 +176,10 @@ message HandleExpansionReqRequest {
 
 message HandleExpansionReqResponse {
   string message = 1;
+}
+
+message ListUsersRequest {}
+
+message ListUsersResponse {
+  repeated UserProfile users = 1;
 }

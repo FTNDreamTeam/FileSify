@@ -37,6 +37,7 @@ const (
 	UserService_ListExpansionReq_FullMethodName     = "/user_service.v1.UserService/ListExpansionReq"
 	UserService_CreateExpansionReq_FullMethodName   = "/user_service.v1.UserService/CreateExpansionReq"
 	UserService_HandleExpansionReq_FullMethodName   = "/user_service.v1.UserService/HandleExpansionReq"
+	UserService_ListUsers_FullMethodName            = "/user_service.v1.UserService/ListUsers"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -60,6 +61,7 @@ type UserServiceClient interface {
 	ListExpansionReq(ctx context.Context, in *ListExpansionReqRequest, opts ...grpc.CallOption) (*ListExpansionReqResponse, error)
 	CreateExpansionReq(ctx context.Context, in *CreateExpansionReqRequest, opts ...grpc.CallOption) (*CreateExpansionReqResponse, error)
 	HandleExpansionReq(ctx context.Context, in *HandleExpansionReqRequest, opts ...grpc.CallOption) (*HandleExpansionReqResponse, error)
+	ListUsers(ctx context.Context, in *ListUsersRequest, opts ...grpc.CallOption) (*ListUsersResponse, error)
 }
 
 type userServiceClient struct {
@@ -240,6 +242,16 @@ func (c *userServiceClient) HandleExpansionReq(ctx context.Context, in *HandleEx
 	return out, nil
 }
 
+func (c *userServiceClient) ListUsers(ctx context.Context, in *ListUsersRequest, opts ...grpc.CallOption) (*ListUsersResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListUsersResponse)
+	err := c.cc.Invoke(ctx, UserService_ListUsers_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -261,6 +273,7 @@ type UserServiceServer interface {
 	ListExpansionReq(context.Context, *ListExpansionReqRequest) (*ListExpansionReqResponse, error)
 	CreateExpansionReq(context.Context, *CreateExpansionReqRequest) (*CreateExpansionReqResponse, error)
 	HandleExpansionReq(context.Context, *HandleExpansionReqRequest) (*HandleExpansionReqResponse, error)
+	ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -321,6 +334,9 @@ func (UnimplementedUserServiceServer) CreateExpansionReq(context.Context, *Creat
 }
 func (UnimplementedUserServiceServer) HandleExpansionReq(context.Context, *HandleExpansionReqRequest) (*HandleExpansionReqResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method HandleExpansionReq not implemented")
+}
+func (UnimplementedUserServiceServer) ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListUsers not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -649,6 +665,24 @@ func _UserService_HandleExpansionReq_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_ListUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListUsersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ListUsers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_ListUsers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ListUsers(ctx, req.(*ListUsersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -723,6 +757,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "HandleExpansionReq",
 			Handler:    _UserService_HandleExpansionReq_Handler,
+		},
+		{
+			MethodName: "ListUsers",
+			Handler:    _UserService_ListUsers_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

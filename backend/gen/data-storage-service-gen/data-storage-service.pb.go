@@ -119,6 +119,7 @@ type FileMetaData struct {
 	DateCreatedAt *date.Date             `protobuf:"bytes,4,opt,name=date_created_at,json=dateCreatedAt,proto3" json:"date_created_at,omitempty"`
 	TimeCreatedAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=time_created_at,json=timeCreatedAt,proto3" json:"time_created_at,omitempty"`
 	UserId        string                 `protobuf:"bytes,6,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Checksum      string                 `protobuf:"bytes,7,opt,name=checksum,proto3" json:"checksum,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -191,6 +192,13 @@ func (x *FileMetaData) GetTimeCreatedAt() *timestamppb.Timestamp {
 func (x *FileMetaData) GetUserId() string {
 	if x != nil {
 		return x.UserId
+	}
+	return ""
+}
+
+func (x *FileMetaData) GetChecksum() string {
+	if x != nil {
+		return x.Checksum
 	}
 	return ""
 }
@@ -819,14 +827,15 @@ const file_data_storage_service_proto_rawDesc = "" +
 	"\x04path\x18\x01 \x01(\tR\x04path\x12\x19\n" +
 	"\x05token\x18\x02 \x01(\tH\x00R\x05token\x88\x01\x01B\b\n" +
 	"\x06_token\"\x16\n" +
-	"\x14CreateFolderResponse\"\xeb\x01\n" +
+	"\x14CreateFolderResponse\"\x87\x02\n" +
 	"\fFileMetaData\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1b\n" +
 	"\tmime_type\x18\x02 \x01(\tR\bmimeType\x12\x12\n" +
 	"\x04path\x18\x03 \x01(\tR\x04path\x129\n" +
 	"\x0fdate_created_at\x18\x04 \x01(\v2\x11.google.type.DateR\rdateCreatedAt\x12B\n" +
 	"\x0ftime_created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\rtimeCreatedAt\x12\x17\n" +
-	"\auser_id\x18\x06 \x01(\tR\x06userId\"o\n" +
+	"\auser_id\x18\x06 \x01(\tR\x06userId\x12\x1a\n" +
+	"\bchecksum\x18\a \x01(\tR\bchecksum\"o\n" +
 	"\x11UploadFileRequest\x126\n" +
 	"\bmetadata\x18\x01 \x01(\v2\x18.storage.v1.FileMetaDataH\x00R\bmetadata\x12\x1a\n" +
 	"\acontent\x18\x02 \x01(\fH\x00R\acontentB\x06\n" +

@@ -1546,5 +1546,201 @@
         });
     })();
 
+    // ---------- Notifications page ----------
+    (function initNotificationsPage() {
+        'use strict';
+
+        const container = document.getElementById('notificationsContainer');
+        if (!container) return;
+
+        const countEl = document.getElementById('notificationCount');
+
+        // "2 hours ago" formatting
+        function timeAgo(iso) {
+            // protojson may send Timestamp as {seconds, nanos} object OR RFC3339 string
+            let t;
+            if (iso && typeof iso === 'object' && iso.seconds != null) {
+                t = Number(iso.seconds) * 1000;
+            } else {
+                t = new Date(iso).getTime();
+            }
+            if (!Number.isFinite(t)) return '';
+
+            const diff = Math.max(0, Date.now() - t);
+            const sec  = Math.floor(diff / 1000);
+            const min  = Math.floor(sec / 60);
+            const hr   = Math.floor(min / 60);
+            const day  = Math.floor(hr / 24);
+
+            if (sec < 60) return 'just now';
+            if (min < 60) return min + (min === 1 ? ' minute ago' : ' minutes ago');
+            if (hr  < 24) return hr  + (hr  === 1 ? ' hour ago'   : ' hours ago');
+            if (day < 7)  return day + (day === 1 ? ' day ago'    : ' days ago');
+            return new Date(t).toLocaleDateString();
+        }
+
+        // Bucket into Today / Yesterday / Earlier
+        function groupByDay(items) {
+            const now = new Date();
+            const startToday     = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            const startYesterday = startToday - 86400000;
+
+            const groups = { today: [], yesterday: [], earlier: [] };
+            for (const n of items) {
+                const raw = n.createdAt;
+                const t = (raw && typeof raw === 'object' && raw.seconds != null)
+                    ? Number(raw.seconds) * 1000
+                    : new Date(raw).getTime();
+                if      (t >= startToday)     groups.today.push(n);
+                else if (t >= startYesterday) groups.yesterday.push(n);
+                else                          groups.earlier.push(n);
+            }
+            return groups;
+        }
+
+        function iconFor(type) {
+            switch (type) {
+                case 'share':       return 'bi-people-fill';
+                case 'new_version': return 'bi-arrow-up-circle-fill';
+                case 'new_file':    return 'bi-file-earmark-plus-fill';
+                default:            return 'bi-info-circle-fill';
+            }
+        }
+
+        function escapeHtml(s) {
+            return String(s || '').replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
+
+        function renderItem(n) {
+            const iconType = ['share', 'new_version', 'new_file', 'system'].includes(n.type)
+                ? n.type
+                : 'system';
+
+            const item = document.createElement('div');
+            item.className = 'notification-item' + (n.isRead ? '' : ' unread');
+
+            item.innerHTML = `
+            <div class="notification-icon type-${iconType}">
+                <i class="bi ${iconFor(n.type)}"></i>
+            </div>
+            <div class="notification-content">
+                <div class="notification-title">${escapeHtml(n.title)}</div>
+                <div class="notification-body">${escapeHtml(n.body)}</div>
+                <div class="notification-time">${escapeHtml(timeAgo(n.createdAt))}</div>
+            </div>
+            <span class="notification-dot"></span>`;
+
+            // Click a folder notification → open that folder on the dashboard
+            if (n.resourceType === 'folder' && n.resourceId) {
+                item.style.cursor = 'pointer';
+                item.addEventListener('click', () => {
+                    window.location.href = 'dashboard.html?path=' + encodeURIComponent(n.resourceId);
+                });
+            }
+
+            return item;
+        }
+
+        function renderGroup(label, items) {
+            if (items.length === 0) return null;
+            const section = document.createElement('div');
+            section.className = 'notification-group';
+            section.innerHTML = `<div class="notification-group-label">${escapeHtml(label)}</div>`;
+            for (const n of items) section.appendChild(renderItem(n));
+            return section;
+        }
+
+        async function load() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.replace('login.html'); return; }
+
+            const userRaw = localStorage.getItem('user');
+            if (!userRaw) {
+                container.innerHTML = '<div class="notification-empty text-danger">User session missing. Please sign in again.</div>';
+                return;
+            }
+            let user;
+            try { user = JSON.parse(userRaw); } catch {
+                container.innerHTML = '<div class="notification-empty text-danger">User session is malformed.</div>';
+                return;
+            }
+            const userId = user.id;
+            if (!userId) {
+                container.innerHTML = '<div class="notification-empty text-danger">User id missing from session.</div>';
+                return;
+            }
+
+            container.innerHTML = '<div class="notification-empty">Loading notifications…</div>';
+
+            try {
+                // TEST ONLY: sends the ObjectId as `token`. Backend currently uses req.Token
+                // directly as the user_id partition key. Switch to sending the JWT once
+                // user-service validation is wired into notification-service.
+                const res = await fetch('/api/notifications', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: userId })
+                });
+
+                if (res.status === 401) { window.location.replace('login.html'); return; }
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    throw new Error(data.message || `HTTP ${res.status}`);
+                }
+
+                const data = await res.json();
+                const notifications = data.notifications || [];
+
+                if (countEl) {
+                    if (notifications.length === 0) {
+                        countEl.textContent = 'No notifications';
+                    } else {
+                        const unread = notifications.filter(n => !n.isRead).length;
+                        countEl.textContent = unread > 0
+                            ? unread + ' unread'
+                            : notifications.length + (notifications.length === 1 ? ' notification' : ' notifications');
+                    }
+                }
+
+                if (notifications.length === 0) {
+                    container.innerHTML = `
+                    <div class="notification-empty">
+                        <i class="bi bi-bell-slash" style="font-size:2.5rem; color:#c7cbd6;"></i>
+                        <div class="mt-2">No notifications yet.</div>
+                        <div style="font-size:0.82rem; margin-top:0.4rem;">When someone shares a folder or file with you, you'll see it here.</div>
+                    </div>`;
+                    return;
+                }
+
+                // Newest first (Cassandra clustering already does this — defensive sort)
+                notifications.sort((a, b) => {
+                    const ta = (a.createdAt && typeof a.createdAt === 'object' && a.createdAt.seconds != null)
+                        ? Number(a.createdAt.seconds) : new Date(a.createdAt).getTime() / 1000;
+                    const tb = (b.createdAt && typeof b.createdAt === 'object' && b.createdAt.seconds != null)
+                        ? Number(b.createdAt.seconds) : new Date(b.createdAt).getTime() / 1000;
+                    return tb - ta;
+                });
+
+                const groups = groupByDay(notifications);
+
+                container.innerHTML = '';
+                const sections = [
+                    renderGroup('Today',     groups.today),
+                    renderGroup('Yesterday', groups.yesterday),
+                    renderGroup('Earlier',   groups.earlier),
+                ];
+                for (const s of sections) if (s) container.appendChild(s);
+
+            } catch (err) {
+                container.innerHTML =
+                    `<div class="notification-empty text-danger">Failed to load notifications: ${escapeHtml(err.message)}</div>`;
+            }
+        }
+
+        load();
+    })();
+
 
 })();

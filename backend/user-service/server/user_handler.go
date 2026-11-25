@@ -593,7 +593,7 @@ func (s *UserServer) ListExpansionReq(ctx context.Context, req *userpb.ListExpan
 		fmt.Printf("Tokens: %v\n", tokens)
 	}
 
-	userId, role, err := ParseAndValidateToken(tokens[0])
+	userIdToken, role, err := ParseAndValidateToken(strings.TrimPrefix(tokens[0], "Bearer "))
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid token: %v", err)
 	}
@@ -602,15 +602,49 @@ func (s *UserServer) ListExpansionReq(ctx context.Context, req *userpb.ListExpan
 		return nil, status.Error(codes.PermissionDenied, "User is not an admin")
 	}
 
+	userId, err := primitive.ObjectIDFromHex(userIdToken)
+	if err != nil {
+		slog.Error("requests", "event", "quota.list_requests", "status", "parse_failed", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "Failed to parse userID as objectID:%v", err)
+	}
 	var user db.UserDBModel
 	err = s.dbCollection.FindOne(ctx, bson.M{"_id": userId}).Decode(&user)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
+			request := db.StorageExpansionRequest{ //TEST DELETE AFTER IMPLEMENTING SENDING REQUESTS
+				ID:           primitive.NewObjectID(),
+				Email:        "random@example.com",
+				FirstName:    "Test",
+				LastName:     "Test",
+				Amount:       3000,
+				StorageQuota: 2000,
+				UsedQuota:    100,
+				Role:         db.USER,
+				Status:       db.ON_WAIT,
+			}
+			s.requestCollection.InsertOne(ctx, request)
 			return nil, status.Errorf(codes.NotFound, "Couldn't find user with ID:%v", err)
 		}
 		log.Printf("Database error: %v", err)
 		return nil, status.Errorf(codes.Internal, "Failed to load user from db: %v", err)
 	}
 
-	return &userpb.ListExpansionReqResponse{Requests: []*userpb.StorageExpansionRequest{nil}}, nil
+	if user.Role != db.ADMIN {
+		return nil, status.Error(codes.PermissionDenied, "User is not an admin")
+	}
+
+	cursor, err := s.requestCollection.Find(ctx, bson.D{})
+	if err != nil {
+		slog.Error("list_requests", "event", "quota.list_requests", "status", "failed_loading", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "Failed finding all request documents:%v", err)
+	}
+	defer cursor.Close(ctx)
+
+	var result []*userpb.StorageExpansionRequest
+	if err = cursor.All(ctx, &result); err != nil {
+		slog.Error("list_requests", "event", "quota.list_requests", "status", "failed_parsing", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "Failed to parse documents to requests:%v", err)
+	}
+
+	return &userpb.ListExpansionReqResponse{Requests: result}, nil
 }

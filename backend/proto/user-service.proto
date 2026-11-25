@@ -142,8 +142,14 @@ message ValidateTokenResponse {
 message EmptyResponse {}
 
 message StorageExpansionRequest {
-  string user_id = 1;
-  int32 amount = 2;
+  string email = 1;
+  string first_name = 2;
+  string last_name = 3;
+  uint32 amount = 4;
+  uint64 storage_quota = 5;
+  uint64 used_quota = 6;
+  uint32 role = 7;
+  uint32 status = 8;
 }
 
 message ListExpansionReqRequest {}

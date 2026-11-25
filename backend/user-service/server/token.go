@@ -3,6 +3,7 @@ package server
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -11,8 +12,8 @@ import (
 )
 
 type Claims struct {
-	UserID string  `json:"user_id"`
-	Role   db.Role `json:"role"`
+	UserID string `json:"user_id"`
+	Role   string `json:"role"`
 	jwt.RegisteredClaims
 }
 
@@ -52,6 +53,7 @@ func ParseAndValidateToken(tokenString string) (string, db.Role, error) {
 	})
 
 	if err != nil {
+		log.Println("err at jwt.ParseWithClaims")
 		return "", db.UKNOWN, fmt.Errorf("Invalid token: %v", err)
 	}
 
@@ -66,9 +68,11 @@ func ParseAndValidateToken(tokenString string) (string, db.Role, error) {
 	if userID == "" {
 		return "", db.UKNOWN, errors.New("UserId not found in token claims")
 	}
-	if !claims.Role.IsValid() {
+	role, _ := db.RoleFromString(claims.Role)
+	if !role.IsValid() {
 		return userID, db.UKNOWN, errors.New("Invalid or missing role in token claims")
 	}
 
-	return userID, claims.Role, nil
+	fmt.Println("userId" + userID)
+	return userID, role, nil
 }

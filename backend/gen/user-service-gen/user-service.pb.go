@@ -1237,8 +1237,14 @@ func (*EmptyResponse) Descriptor() ([]byte, []int) {
 
 type StorageExpansionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Amount        int32                  `protobuf:"varint,2,opt,name=amount,proto3" json:"amount,omitempty"`
+	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+	FirstName     string                 `protobuf:"bytes,2,opt,name=first_name,json=firstName,proto3" json:"first_name,omitempty"`
+	LastName      string                 `protobuf:"bytes,3,opt,name=last_name,json=lastName,proto3" json:"last_name,omitempty"`
+	Amount        uint32                 `protobuf:"varint,4,opt,name=amount,proto3" json:"amount,omitempty"`
+	StorageQuota  uint64                 `protobuf:"varint,5,opt,name=storage_quota,json=storageQuota,proto3" json:"storage_quota,omitempty"`
+	UsedQuota     uint64                 `protobuf:"varint,6,opt,name=used_quota,json=usedQuota,proto3" json:"used_quota,omitempty"`
+	Role          uint32                 `protobuf:"varint,7,opt,name=role,proto3" json:"role,omitempty"`
+	Status        uint32                 `protobuf:"varint,8,opt,name=status,proto3" json:"status,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1273,16 +1279,58 @@ func (*StorageExpansionRequest) Descriptor() ([]byte, []int) {
 	return file_user_service_proto_rawDescGZIP(), []int{23}
 }
 
-func (x *StorageExpansionRequest) GetUserId() string {
+func (x *StorageExpansionRequest) GetEmail() string {
 	if x != nil {
-		return x.UserId
+		return x.Email
 	}
 	return ""
 }
 
-func (x *StorageExpansionRequest) GetAmount() int32 {
+func (x *StorageExpansionRequest) GetFirstName() string {
+	if x != nil {
+		return x.FirstName
+	}
+	return ""
+}
+
+func (x *StorageExpansionRequest) GetLastName() string {
+	if x != nil {
+		return x.LastName
+	}
+	return ""
+}
+
+func (x *StorageExpansionRequest) GetAmount() uint32 {
 	if x != nil {
 		return x.Amount
+	}
+	return 0
+}
+
+func (x *StorageExpansionRequest) GetStorageQuota() uint64 {
+	if x != nil {
+		return x.StorageQuota
+	}
+	return 0
+}
+
+func (x *StorageExpansionRequest) GetUsedQuota() uint64 {
+	if x != nil {
+		return x.UsedQuota
+	}
+	return 0
+}
+
+func (x *StorageExpansionRequest) GetRole() uint32 {
+	if x != nil {
+		return x.Role
+	}
+	return 0
+}
+
+func (x *StorageExpansionRequest) GetStatus() uint32 {
+	if x != nil {
+		return x.Status
 	}
 	return 0
 }
@@ -1446,10 +1494,18 @@ const file_user_service_proto_rawDesc = "" +
 	"\x15ValidateTokenResponse\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x12\n" +
 	"\x04role\x18\x02 \x01(\tR\x04role\"\x0f\n" +
-	"\rEmptyResponse\"J\n" +
-	"\x17StorageExpansionRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x16\n" +
-	"\x06amount\x18\x02 \x01(\x05R\x06amount\"\x19\n" +
+	"\rEmptyResponse\"\xf3\x01\n" +
+	"\x17StorageExpansionRequest\x12\x14\n" +
+	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1d\n" +
+	"\n" +
+	"first_name\x18\x02 \x01(\tR\tfirstName\x12\x1b\n" +
+	"\tlast_name\x18\x03 \x01(\tR\blastName\x12\x16\n" +
+	"\x06amount\x18\x04 \x01(\rR\x06amount\x12#\n" +
+	"\rstorage_quota\x18\x05 \x01(\x04R\fstorageQuota\x12\x1d\n" +
+	"\n" +
+	"used_quota\x18\x06 \x01(\x04R\tusedQuota\x12\x12\n" +
+	"\x04role\x18\a \x01(\rR\x04role\x12\x16\n" +
+	"\x06status\x18\b \x01(\rR\x06status\"\x19\n" +
 	"\x17ListExpansionReqRequest\"`\n" +
 	"\x18ListExpansionReqResponse\x12D\n" +
 	"\brequests\x18\x01 \x03(\v2(.user_service.v1.StorageExpansionRequestR\brequests2\xb3\v\n" +

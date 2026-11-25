@@ -3,9 +3,10 @@ package config
 import "os"
 
 type Config struct {
-	PORT           string
-	CASSANDRA_HOST string
-	KEYSPACE       string
+	PORT              string
+	CASSANDRA_HOST    string
+	KEYSPACE          string
+	USER_SERVICE_PORT string
 }
 
 func LoadConfigs() Config {
@@ -17,10 +18,15 @@ func LoadConfigs() Config {
 	if host == "" {
 		host = "cassandra"
 	}
+	userPort := os.Getenv("USER_SERVICE_PORT")
+	if userPort == "" {
+		userPort = "8082" // Default user service port
+	}
 
 	return Config{
-		PORT:           port,
-		CASSANDRA_HOST: host,
-		KEYSPACE:       "filesify",
+		PORT:              port,
+		CASSANDRA_HOST:    host,
+		KEYSPACE:          "filesify",
+		USER_SERVICE_PORT: userPort,
 	}
 }

@@ -1550,14 +1550,14 @@
     (function initNotificationsPage() {
         'use strict';
 
+        // Element definition
         const container = document.getElementById('notificationsContainer');
         if (!container) return;
 
         const countEl = document.getElementById('notificationCount');
 
-        // "2 hours ago" formatting
+        // Formatting
         function timeAgo(iso) {
-            // protojson may send Timestamp as {seconds, nanos} object OR RFC3339 string
             let t;
             if (iso && typeof iso === 'object' && iso.seconds != null) {
                 t = Number(iso.seconds) * 1000;
@@ -1579,7 +1579,6 @@
             return new Date(t).toLocaleDateString();
         }
 
-        // Bucket into Today / Yesterday / Earlier
         function groupByDay(items) {
             const now = new Date();
             const startToday     = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
@@ -1613,6 +1612,7 @@
             }[c]));
         }
 
+        // Adding items as a block
         function renderItem(n) {
             const iconType = ['share', 'new_version', 'new_file', 'system'].includes(n.type)
                 ? n.type
@@ -1632,7 +1632,6 @@
             </div>
             <span class="notification-dot"></span>`;
 
-            // Click a folder notification → open that folder on the dashboard
             if (n.resourceType === 'folder' && n.resourceId) {
                 item.style.cursor = 'pointer';
                 item.addEventListener('click', () => {
@@ -1652,39 +1651,32 @@
             return section;
         }
 
+        // Load
         async function load() {
             const token = localStorage.getItem('token');
             if (!token) { window.location.replace('login.html'); return; }
 
-            const userRaw = localStorage.getItem('user');
-            if (!userRaw) {
-                container.innerHTML = '<div class="notification-empty text-danger">User session missing. Please sign in again.</div>';
-                return;
-            }
-            let user;
-            try { user = JSON.parse(userRaw); } catch {
-                container.innerHTML = '<div class="notification-empty text-danger">User session is malformed.</div>';
-                return;
-            }
-            const userId = user.id;
-            if (!userId) {
-                container.innerHTML = '<div class="notification-empty text-danger">User id missing from session.</div>';
-                return;
-            }
-
             container.innerHTML = '<div class="notification-empty">Loading notifications…</div>';
 
             try {
-                // TEST ONLY: sends the ObjectId as `token`. Backend currently uses req.Token
-                // directly as the user_id partition key. Switch to sending the JWT once
-                // user-service validation is wired into notification-service.
+                // Send the JWT
                 const res = await fetch('/api/notifications', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token: userId })
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ token: token })
                 });
 
-                if (res.status === 401) { window.location.replace('login.html'); return; }
+                if (res.status === 401) {
+                    // Token is invalid or expired - kick back to login
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.replace('login.html');
+                    return;
+                }
+
                 if (!res.ok) {
                     const data = await res.json().catch(() => ({}));
                     throw new Error(data.message || `HTTP ${res.status}`);
@@ -1704,6 +1696,7 @@
                     }
                 }
 
+                // No notification
                 if (notifications.length === 0) {
                     container.innerHTML = `
                     <div class="notification-empty">
@@ -1714,7 +1707,7 @@
                     return;
                 }
 
-                // Newest first (Cassandra clustering already does this — defensive sort)
+                // Sort
                 notifications.sort((a, b) => {
                     const ta = (a.createdAt && typeof a.createdAt === 'object' && a.createdAt.seconds != null)
                         ? Number(a.createdAt.seconds) : new Date(a.createdAt).getTime() / 1000;
@@ -1739,6 +1732,7 @@
             }
         }
 
+        // Load
         load();
     })();
 

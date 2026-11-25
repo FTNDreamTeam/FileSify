@@ -7,9 +7,11 @@ import (
 
 	"github.com/gocql/gocql"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 
 	notificationpb "gen/notification-service-gen"
+	userpb "gen/user-service-gen"
 
 	"github.com/FTNDreamTeam/FileSify/backend/notification-service/internal/config"
 	"github.com/FTNDreamTeam/FileSify/backend/notification-service/internal/repo"
@@ -32,9 +34,20 @@ func main() {
 	}
 	defer session.Close()
 
+	// Dial user-service for token validation
+	userConn, err := grpc.NewClient(
+		"user-service:"+configs.USER_SERVICE_PORT,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatalf("Failed to dial user-service: %v", err)
+	}
+	defer userConn.Close()
+	userClient := userpb.NewUserServiceClient(userConn)
+
 	// Setup Layers (DI)
 	notificationRepo := repo.NewNotificationRepo(session)
-	notificationService := service.NewNotificationService(notificationRepo)
+	notificationService := service.NewNotificationService(notificationRepo, userClient)
 	notificationHandler := grpcTransport.NewNotificationHandler(notificationService)
 
 	// Start gRPC Server

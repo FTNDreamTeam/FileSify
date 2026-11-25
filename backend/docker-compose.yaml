@@ -149,6 +149,7 @@ services:
       - user-network
     depends_on:
       - cassandra
+      - user-service
 
   cassandra:
     image: cassandra:4.1

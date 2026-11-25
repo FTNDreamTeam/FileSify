@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Notifications — FileSify</title>
+    <meta name="description" content="FileSify — your notifications.">
+    <link rel="icon" type="image/x-icon" href="../img/filesify_icon.png">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../CSS/styles.css">
+    <script>
+        (function () {
+            'use strict';
+            const path = window.location.pathname;
+            const page = path.split('/').pop() || 'index.html';
+            const publicPages = ['login.html', 'register.html', 'index.html'];
+            if (publicPages.includes(page)) return;
+
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.replace('login.html'); return; }
+
+            try {
+                const parts = token.split('.');
+                if (parts.length !== 3) throw new Error('not a JWT');
+                let b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+                while (b64.length % 4) b64 += '=';
+                const payload = JSON.parse(atob(b64));
+                if (typeof payload.exp !== 'number' || payload.exp * 1000 <= Date.now()) throw new Error('expired');
+            } catch {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.replace('login.html');
+            }
+        })();
+    </script>
+</head>
+<body class="app-shell">
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg fixed-top navbar-glass py-2">
+    <div class="container-fluid px-3 px-lg-4 d-flex align-items-center gap-2">
+        <button class="icon-btn d-lg-none" type="button"
+                data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar"
+                aria-controls="mobileSidebar" aria-label="Open menu">
+            <i class="bi bi-list"></i>
+        </button>
+        <a class="navbar-brand d-flex align-items-center gap-2 fw-bold m-0" href="dashboard.html">
+            <span class="brand-mark"><i class="bi bi-cloud-fill"></i></span>
+            <span class="d-none d-sm-inline">FileSify</span>
+        </a>
+        <div class="search-wrap d-none d-md-block flex-grow-1 ms-3">
+            <i class="bi bi-search"></i>
+            <input type="text" placeholder="Search files and folders..." aria-label="Search">
+        </div>
+        <div class="d-flex align-items-center gap-2 ms-auto">
+            <button class="btn btn-brand rounded-pill px-3 d-none d-sm-inline-flex" id="uploadButtonNavbar">
+                <i class="bi bi-cloud-arrow-up me-1"></i> Upload
+            </button>
+            <a class="icon-btn" href="notifications.html" aria-label="Notifications">
+                <i class="bi bi-bell"></i>
+            </a>
+            <div class="dropdown">
+                <button class="btn p-0 border-0 bg-transparent" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="avatar"><i class="bi bi-person"></i></span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2">
+                    <li class="px-3 py-2">
+                        <div class="fw-semibold small">Profile</div>
+                        <div class="text-soft" style="font-size:.78rem;">john.miller@example.com</div>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item small" href="#"><i class="bi bi-key me-2"></i>Change password</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item small text-danger" href="login.html" id="logoutTrigger"><i class="bi bi-box-arrow-right me-2"></i>Sign out</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Mobile sidebar -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="mobileSidebar" style="width:280px">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title fw-bold">FileSify</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        <div class="offcanvas-sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">My Drive</div>
+                <a class="sidebar-link" href="dashboard.html"><i class="bi bi-hdd"></i>All Files</a>
+                <a class="sidebar-link" href="#"><i class="bi bi-people"></i>Shared with me</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Collaboration</div>
+                <a class="sidebar-link" href="#"><i class="bi bi-diagram-3"></i>Groups</a>
+                <a class="sidebar-link" href="#"><i class="bi bi-share"></i>Shared by me</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Account</div>
+                <a class="sidebar-link active" href="notifications.html"><i class="bi bi-bell"></i>Notifications</a>
+                <a class="sidebar-link" href="#"><i class="bi bi-clock-history"></i>Activity</a>
+                <a class="sidebar-link" href="#"><i class="bi bi-graph-up"></i>Analytics</a>
+                <a class="sidebar-link" href="#"><i class="bi bi-speedometer2"></i>Storage quota</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="layout">
+
+    <!-- Desktop sidebar -->
+    <aside class="sidebar d-none d-lg-flex">
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">My Drive</div>
+            <a class="sidebar-link" href="dashboard.html"><i class="bi bi-hdd"></i>All Files</a>
+            <a class="sidebar-link" href="#"><i class="bi bi-people"></i>Shared with me</a>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">Collaboration</div>
+            <a class="sidebar-link" href="#"><i class="bi bi-diagram-3"></i>Groups</a>
+            <a class="sidebar-link" href="#"><i class="bi bi-share"></i>Shared by me</a>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">Account</div>
+            <a class="sidebar-link active" href="notifications.html"><i class="bi bi-bell"></i>Notifications</a>
+            <a class="sidebar-link" href="#"><i class="bi bi-clock-history"></i>Activity</a>
+            <a class="sidebar-link" href="#"><i class="bi bi-graph-up"></i>Analytics</a>
+            <a class="sidebar-link" href="#"><i class="bi bi-speedometer2"></i>Storage quota</a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <h1>Notifications</h1>
+                <p class="text-soft mb-0" style="font-size:.9rem;">Updates about the files and folders shared with you.</p>
+            </div>
+        </div>
+
+        <div class="file-card">
+            <div class="file-header">
+                <h6 class="mt-1 mb-0">Your notifications</h6>
+                <div class="text-soft small" id="notificationCount">—</div>
+            </div>
+            <div id="notificationsContainer" class="notifications-list">
+                <div class="notification-empty">Loading notifications…</div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Logout dialog -->
+<dialog class="dialog" id="logoutDialog" aria-labelledby="logoutDialogTitle">
+    <div class="dialog-header">
+        <h2 class="dialog-title" id="logoutDialogTitle">Sign out?</h2>
+        <button type="button" class="dialog-close" data-dialog-close aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <div class="dialog-body">
+        You are about to be signed out of FileSify.<br>Are you sure?
+    </div>
+    <div class="dialog-footer">
+        <button type="button" class="btn btn-outline-brand rounded-pill px-3" data-dialog-close>Cancel</button>
+        <button type="button" class="btn btn-brand rounded-pill px-3" id="logoutConfirm">
+            <i class="bi bi-box-arrow-right me-1"></i> Sign out
+        </button>
+    </div>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../JS/app.js"></script>
+<script>
+    (function fillUserInfo() {
+        const raw = localStorage.getItem('user');
+        if (!raw) return;
+        let user;
+        try { user = JSON.parse(raw); } catch { return; }
+        document.querySelectorAll('.dropdown-menu .text-soft').forEach(el => {
+            el.textContent = user.email || '';
+        });
+    })();
+</script>
+</body>
+</html>

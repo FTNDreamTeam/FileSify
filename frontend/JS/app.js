@@ -2007,5 +2007,97 @@
         }
     })();
 
+    // ---------- Request Quota Dialog ----------
+    (function initRequestQuotaDialog() {
+        'use strict';
+
+        // Declaration
+        const triggers = document.querySelectorAll('.request-btn');
+        const dialog = document.getElementById('requestQuotaDialog');
+        if (!dialog || triggers.length === 0) return;
+
+        const input = document.getElementById('quotaAmountInput');
+        const confirmBtn = document.getElementById('requestQuotaConfirm');
+        const alertEl = document.getElementById('quotaAlert');
+
+        // Alert helper
+        function showAlert(msg, type) {
+            alertEl.textContent = msg;
+            alertEl.className = `alert alert-${type} mb-3`;
+            alertEl.classList.remove('d-none');
+        }
+
+        function hideAlert() {
+            alertEl.classList.add('d-none');
+            alertEl.textContent = '';
+        }
+
+        // Open dialog
+        triggers.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                input.value = '';
+                hideAlert();
+                dialog.showModal();
+                setTimeout(() => input.focus(), 100);
+            });
+        });
+
+        // Cancel + backdrop
+        wireDialogClose(dialog);
+
+        // Submit request
+        confirmBtn.addEventListener('click', async () => {
+            hideAlert();
+            const amount = Number(input.value);
+
+            // Frontend validation
+            if (!amount || amount <= 0) {
+                showAlert('Please enter a valid amount greater than 0.', 'danger');
+                return;
+            }
+
+            if (amount > 10240) {
+                showAlert('You cannot request more than 10 GB (10240 MB) at once.', 'danger');
+                return;
+            }
+
+            const originalText = confirmBtn.innerHTML;
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Sending…';
+
+            const token = localStorage.getItem('token');
+
+            // Send
+            try {
+                const res = await fetch('/api/quota/request', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ amount: amount })
+                });
+
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    showAlert(data.message || `Request failed (HTTP ${res.status})`, 'danger');
+                    return;
+                }
+
+                // Success
+                showAlert('Request submitted successfully! An admin will review it soon.', 'success');
+                setTimeout(() => dialog.close('success'), 2000);
+
+            } catch (err) {
+                showAlert('Network error. Please check your connection and try again.', 'danger');
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = originalText;
+            }
+        });
+    })();
+
 
 })();

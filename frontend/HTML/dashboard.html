@@ -412,6 +412,27 @@
     </div>
 </dialog>
 
+<!-- Request Quota Dialog -->
+<dialog class="dialog" id="requestQuotaDialog" aria-labelledby="requestQuotaTitle">
+    <div class="dialog-header">
+        <h2 class="dialog-title" id="requestQuotaTitle">Request Storage Increase</h2>
+        <button type="button" class="dialog-close" data-dialog-close aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <div class="dialog-body" style="text-align: left;">
+        <div id="quotaAlert" class="alert d-none mb-3" role="alert"></div>
+        <label for="quotaAmountInput" class="form-label">How much extra space do you need? (in MB)</label>
+        <input type="number" class="form-control" id="quotaAmountInput" placeholder="e.g., 5000" min="1" max="10240" required>
+        <div class="field-hint mt-1">Maximum request at once: 10 GB (10240 MB).</div>
+    </div>
+    <div class="dialog-footer">
+        <button type="button" class="btn btn-outline-brand rounded-pill px-3" data-dialog-close>Cancel</button>
+        <button type="button" class="btn btn-brand rounded-pill px-3" id="requestQuotaConfirm">
+            <i class="bi bi-send me-1"></i> Send Request
+        </button>
+    </div>
+</dialog>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../JS/app.js"></script>
 <script>

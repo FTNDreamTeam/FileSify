@@ -387,6 +387,27 @@
     </div>
 </dialog>
 
+<!-- Rename File Dialog -->
+<dialog class="dialog" id="renameFileDialog" aria-labelledby="renameFileTitle">
+    <div class="dialog-header">
+        <h2 class="dialog-title" id="renameFileTitle">Rename file</h2>
+        <button type="button" class="dialog-close" data-dialog-close aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <div class="dialog-body" style="text-align: left;">
+        <div id="renameFileAlert" class="alert d-none mb-3" role="alert"></div>
+        <label for="renameFileInput" class="form-label">New file name</label>
+        <input type="text" class="form-control" id="renameFileInput" required>
+    </div>
+    <div class="dialog-footer">
+        <button type="button" class="btn btn-outline-brand rounded-pill px-3" data-dialog-close>Cancel</button>
+        <button type="button" class="btn btn-brand rounded-pill px-3" id="renameFileConfirm">
+            <i class="bi bi-pencil me-1"></i> Rename
+        </button>
+    </div>
+</dialog>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../JS/app.js"></script>
 <script>

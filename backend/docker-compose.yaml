@@ -172,6 +172,22 @@ services:
     networks:
       - user-network
 
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy-proxy
+    restart: unless-stopped
+    ports:
+      - "${CADDY_HTTP_PORT}:${CADDY_HTTP_PORT}"
+      - "${CADDY_HTTPS_PORT}:${CADDY_HTTPS_PORT}"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - user-network
+    depends_on:
+      - api-gateway
+
 networks:
   user-network: #isolated user network
   storage-network: #isolated storage network
@@ -181,3 +197,5 @@ volumes:
   user-data:
   silo-data:
   cassandra_data:
+  caddy_data:
+  caddy_config:

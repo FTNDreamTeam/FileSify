@@ -1837,5 +1837,175 @@
         load();
     })();
 
+    // ---------- Admin Dashboard ----------
+    (function initAdminDashboard() {
+        'use strict';
+
+        const requestsTbody = document.getElementById('quotaRequestTableBody');
+        const usersTbody    = document.getElementById('allUsersTableBody');
+        if (!requestsTbody || !usersTbody) return;
+
+        const token = localStorage.getItem('token');
+        if (!token) { window.location.replace('login.html'); return; }
+
+        // Universal size formatter (Input is in Megabytes)
+        function formatSize(mb) {
+            if (!mb || mb <= 0) return '0 MB';
+            if (mb < 1024) return mb + ' MB';
+            return (mb / 1024).toFixed(2) + ' GB';
+        }
+
+        // Load pending requests
+        async function loadRequests() {
+            try {
+                const res = await fetch('/api/quota/requests', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if (res.status === 401) { window.location.replace('login.html'); return; }
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                const data = await res.json();
+                const requests = data.requests || [];
+
+
+                // Update badge
+                const badge = document.getElementById('pendingBadge');
+                if (badge) badge.textContent = requests.length;
+
+                if (requests.length === 0) {
+                    requestsTbody.innerHTML = `<tr><td colspan="5" class="text-soft p-3 text-center">No pending requests.</td></tr>`;
+                    return;
+                }
+
+                requestsTbody.innerHTML = '';
+                requests.forEach(req => {
+                    // Convert string numbers to numbers
+                    const currentQuota = Number(req.storageQuota || 0);
+                    const usedQuota = Number(req.usedQuota || 0);
+                    const requestedAmt = Number(req.amount || 0);
+
+                    // Fallbacks for missing names
+                    const fName = req.firstName || '';
+                    const lName = req.lastName || '';
+                    const email = req.email || 'Unknown Email';
+                    const fullName = (fName || lName) ? `${fName} ${lName}`.trim() : 'Unknown User';
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>
+                            <div class="fw-semibold">${fullName}</div>
+                            <small class="text-soft">${email}</small>
+                        </td>
+                        <td class="text-soft">${formatSize(currentQuota)}</td>
+                        <td class="text-soft">${formatSize(usedQuota)}</td>
+                        <td class="fw-semibold text-success">+${formatSize(requestedAmt)}</td>
+                        <td class="file-actions text-end">
+                            <button class="btn btn-sm btn-success rounded-pill px-3 me-1" onclick="handleQuotaAction('${email}', true)">Approve</button>
+                            <button class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="handleQuotaAction('${email}', false)">Reject</button>
+                        </td>
+                    `;
+                    requestsTbody.appendChild(tr);
+                });
+            } catch (err) {
+                requestsTbody.innerHTML = `<tr><td colspan="5" class="text-danger p-3 text-center">Failed to load requests: ${err.message}</td></tr>`;
+            }
+        }
+
+        // Load users
+        async function loadUsers() {
+            try {
+                const res = await fetch('/api/admin/users', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if (res.status === 401) { window.location.replace('login.html'); return; }
+                if (!res.ok) throw new Error(`HTTP ${res.status} - Endpoint might not be implemented yet`);
+
+                const data = await res.json();
+                const users = data.users || [];
+
+                console.log("API Response Data (Users):", users);
+
+                if (users.length === 0) {
+                    usersTbody.innerHTML = `<tr><td colspan="5" class="text-soft p-3 text-center">No users found.</td></tr>`;
+                    return;
+                }
+
+                usersTbody.innerHTML = '';
+                users.forEach(user => {
+                    const used = Number(user.usedQuota || 0);
+                    const total = Number(user.storageQuota || 1);
+                    const percentage = Math.min(100, Math.round((used / total) * 100));
+
+                    const fName = user.firstName || '';
+                    const lName = user.lastName || '';
+                    const fullName = (fName || lName) ? `${fName} ${lName}`.trim() : 'Unknown User';
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>
+                            <div class="fw-semibold">${fullName}</div>
+                            <small class="text-soft">ID: ${user.id || '—'}</small>
+                        </td>
+                        <td class="text-soft">${user.email}</td>
+                        <td class="text-soft">${formatSize(total)}</td>
+                        <td class="text-soft">${formatSize(used)}</td>
+                        <td style="width: 20%;">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress flex-grow-1" style="height: 6px;">
+                                    <div class="progress-bar ${percentage > 90 ? 'bg-danger' : 'bg-success'}" style="width: ${percentage}%"></div>
+                                </div>
+                                <small class="text-soft" style="width: 35px;">${percentage}%</small>
+                            </div>
+                        </td>
+                    `;
+                    usersTbody.appendChild(tr);
+                });
+            } catch (err) {
+                usersTbody.innerHTML = `<tr><td colspan="5" class="text-danger p-3 text-center">Failed to load users: ${err.message}</td></tr>`;
+            }
+        }
+
+        // ---------- Approve/Reject Action ----------
+        window.handleQuotaAction = async function(email, isApprove) {
+            const action = isApprove ? 'approve' : 'reject';
+            if (!confirm(`Are you sure you want to ${action} the request for ${email}?`)) return;
+
+            try {
+
+                const res = await fetch(`/api/quota/handle`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email: email, approve: isApprove })
+                });
+
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    throw new Error(data.message || `HTTP ${res.status}`);
+                }
+
+                // Reload
+                loadRequests();
+
+            } catch (err) {
+                alert('Action failed: ' + err.message);
+            }
+        };
+
+
+        // Load
+        loadRequests();
+
+        // Load users if tab clicked
+        const usersTab = document.getElementById('users-tab');
+        if (usersTab) {
+            usersTab.addEventListener('click', loadUsers);
+        }
+    })();
+
 
 })();

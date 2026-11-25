@@ -10,4 +10,5 @@ service MailService {
   rpc SendVerification(user_service.v1.SendVerificationRequest) returns (user_service.v1.SendVerificationResponse) {}
   rpc SendMagicLink(user_service.v1.SendMagicLinkRequest) returns (user_service.v1.SendMagicLinkResponse) {}
   rpc SendTwoFactor(user_service.v1.SendTwoFactorRequest) returns (user_service.v1.SendTwoFactorResponse) {}
+  rpc SendResetLink(user_service.v1.SendResetLinkRequest) returns (user_service.v1.SendResetLinkResponse) {}
 }

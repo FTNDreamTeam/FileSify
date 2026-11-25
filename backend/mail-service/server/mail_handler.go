@@ -106,6 +106,37 @@ const magicLinkEmailTemplate = `
 </html>
 `
 
+const resetPasswordTemplate = `
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<style>
+		body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+		.container { max-width: 600px; margin: 20px auto; background: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+		h2 { color: #333333; }
+		p { color: #555555; line-height: 1.6; }
+		.button { display: inline-block; background-color: #4f46e5; color: white !important; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 15px; }
+		.footer { margin-top: 30px; font-size: 12px; color: #999999; border-top: 1px solid #eeeeee; padding-top: 10px; }
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h2>Hi {{.FirstName}},</h2>
+		<p>Click the button below to reset you FileSify account password. This link is valid for <strong>12 hours</strong> and can only be used once.</p>
+		<p>
+			<a href="{{.ResetLink}}" class="button">Reset Link</a>
+		</p>
+		<p>If the button doesn't work, copy and paste this link into your browser:</p>
+		<p style="word-break: break-all;"><a href="{{.ResetLink}}">{{.ResetLink}}</a></p>
+		<div class="footer">
+			If you didn't request this email, you can safely ignore it — your account is not at risk.
+		</div>
+	</div>
+</body>
+</html>
+`
+
 type MailServer struct {
 	mailpb.UnimplementedMailServiceServer
 	userClient userpb.UserServiceClient
@@ -134,6 +165,11 @@ type MagicLinkTemplateData struct {
 type TwoFactorTemplateData struct {
 	FirstName string
 	Code      string
+}
+
+type ResetPasswordTemplateData struct {
+	FirstName string
+	ResetLink string
 }
 
 func SendMail(ctx context.Context, payload EmailPayload) error {
@@ -296,4 +332,53 @@ func (s *MailServer) SendTwoFactor(ctx context.Context, req *userpb.SendTwoFacto
 	return &userpb.SendTwoFactorResponse{
 		Message: "OTP sent to mail",
 	}, nil
+}
+
+func (s *MailServer) SendResetLink(ctx context.Context, req *userpb.SendResetLinkRequest) (*userpb.SendResetLinkResponse, error) {
+	if req.GetEmail() == "" || req.GetResetLink() == "" {
+		return nil, status.Error(codes.InvalidArgument, "Email and reset link url are required fields")
+	}
+
+	tmpl, err := template.New("reset-link").Parse(resetPasswordTemplate)
+	if err != nil {
+		log.Printf("[MailService] Failed to parse reset-link template: %v", err)
+		return nil, status.Errorf(codes.Internal, "failed to parse template: %v", err)
+	}
+
+	data := ResetPasswordTemplateData{
+		FirstName: req.GetUsername(),
+		ResetLink: req.GetResetLink(),
+	}
+
+	var bodyBuffer bytes.Buffer
+	if err := tmpl.Execute(&bodyBuffer, data); err != nil {
+		log.Printf("[MailService] Failed to execute reset-link template: %v", err)
+		return nil, status.Errorf(codes.Internal, "failed to inject template data: %v", err)
+	}
+
+	smtpAddress := os.Getenv("SMTP_ADDRESS")
+	if smtpAddress == "" {
+		smtpAddress = "mailhog:1025"
+	}
+
+	from := "noreply@filesify.com"
+	to := req.GetEmail()
+
+	var rawMessage bytes.Buffer
+	fmt.Fprintf(&rawMessage, "From: %s\r\n", from)
+	fmt.Fprintf(&rawMessage, "To: %s\r\n", to)
+	fmt.Fprintf(&rawMessage, "Subject: %s\r\n", "Reset Password Link")
+	rawMessage.WriteString("MIME-Version: 1.0\r\n")
+	rawMessage.WriteString("Content-Type: text/html; charset=\"utf-8\"\r\n")
+	rawMessage.WriteString("\r\n")
+	rawMessage.Write(bodyBuffer.Bytes())
+
+	if err := smtp.SendMail(smtpAddress, nil, from, []string{to}, rawMessage.Bytes()); err != nil {
+		log.Printf("[MailService] Failed to send reset-link email to %s: %v", to, err)
+		return nil, status.Errorf(codes.Unavailable, "failed to send email via mail relay: %v", err)
+	}
+
+	log.Printf("[MailService] Reset link sent to %s", to)
+
+	return &userpb.SendResetLinkResponse{}, nil
 }

@@ -164,6 +164,10 @@
             <div class="progress"><div class="progress-bar" style="width:68%"></div></div>
             <a href="#" class="request-btn"><i class="bi bi-arrow-up-circle me-1"></i>Request more space</a>
         </div>
+        <div class="sidebar-section" id="adminSidebarSection" style="display: none;">
+            <div class="sidebar-section-title">Admin</div>
+            <a class="sidebar-link" href="admin-dashboard.html"><i class="bi bi-shield-lock"></i>Admin Dashboard</a>
+        </div>
     </aside>
 
     <main class="main-content">
@@ -417,19 +421,76 @@
             console.warn('[dashboard] no user in localStorage — using placeholders');
             return;
         }
+
         let user;
         try { user = JSON.parse(raw); } catch {
             console.warn('[dashboard] user JSON is malformed');
             return;
         }
 
+        // 1. Update Email in Dropdown
         document.querySelectorAll('.dropdown-menu .text-soft').forEach(el => {
             el.textContent = user.email || '';
         });
 
+        // 2. Show Admin Sidebar if applicable
+        const token = localStorage.getItem('token');
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                if (payload.role === 'admin') {
+                    document.getElementById('adminSidebarSection').style.display = 'block';
+                }
+            } catch (e) {}
+        }
+
+        // 3. Storage Quota Logic
+        const usedMB = Number(user.usedQuota || 0);
+        const totalMB = Number(user.storageQuota || 0);
+
+        function formatMB(mb) {
+            if (!mb || mb <= 0) return '0 MB';
+            if (mb < 1024) return mb + ' MB';
+            return (mb / 1024).toFixed(2) + ' GB';
+        }
+
+        const usedText = formatMB(usedMB);
+        const totalText = formatMB(totalMB);
+        const percentage = totalMB > 0 ? Math.min(100, Math.round((usedMB / totalMB) * 100)) : 0;
+
+        // Update all sidebar quota text (Both Desktop & Mobile sidebars)
+        document.querySelectorAll('.quota-value').forEach(el => {
+            el.textContent = `${usedText} / ${totalText}`;
+        });
+
+        // Update all sidebar progress bars
+        document.querySelectorAll('.sidebar-quota .progress-bar').forEach(el => {
+            el.style.width = `${percentage}%`;
+            if (percentage >= 90) {
+                el.classList.add('bg-danger');
+            } else {
+                el.classList.remove('bg-danger');
+            }
+        });
+
+        // Update the Dashboard Stat Card ("Storage used")
+        document.querySelectorAll('.stat-card').forEach(card => {
+            const label = card.querySelector('.stat-label');
+            if (label && label.textContent.includes('Storage used')) {
+                const valueEl = card.querySelector('.stat-value');
+                if (valueEl) {
+                    let usedVal = usedMB;
+                    let usedUnit = 'MB';
+                    if (usedMB >= 1024) {
+                        usedVal = (usedMB / 1024).toFixed(1);
+                        usedUnit = 'GB';
+                    }
+                    valueEl.innerHTML = `${usedVal} <small>${usedUnit} of ${totalText}</small>`;
+                }
+            }
+        });
 
     })();
-
 </script>
 </body>
 </html>

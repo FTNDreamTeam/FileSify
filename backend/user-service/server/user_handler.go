@@ -453,6 +453,7 @@ func (s *UserServer) LoginUser(ctx context.Context, req *userpb.LoginUserRequest
 				Day:   int32(user.PasswordActive.Time().Day()),
 			},
 			StorageQuota: user.StorageQuota,
+			UsedQuota:    user.UsedQuota,
 		},
 	}, nil
 }
@@ -644,11 +645,39 @@ func (s *UserServer) ListExpansionReq(ctx context.Context, req *userpb.ListExpan
 	}
 	defer cursor.Close(ctx)
 
-	var result []*userpb.StorageExpansionRequest
-	if err = cursor.All(ctx, &result); err != nil {
+	var dbRequests []db.StorageExpansionRequest
+	if err = cursor.All(ctx, &dbRequests); err != nil {
 		slog.Error("list_requests", "event", "quota.list_requests", "status", "failed_parsing", "error", err.Error())
 		return nil, status.Errorf(codes.Internal, "Failed to parse documents to requests:%v", err)
 	}
 
+	var result []*userpb.StorageExpansionRequest
+	for _, r := range dbRequests {
+		result = append(result, &userpb.StorageExpansionRequest{
+			Email:        r.Email,
+			FirstName:    r.FirstName,
+			LastName:     r.LastName,
+			Amount:       r.Amount,
+			StorageQuota: uint64(r.StorageQuota),
+			UsedQuota:    uint64(r.UsedQuota),
+			Role:         uint32(r.Role),
+			Status:       uint32(r.Status),
+		})
+	}
+
+	if len(result) < 1 {
+		request := db.StorageExpansionRequest{ //TEST DELETE AFTER IMPLEMENTING SENDING REQUESTS
+			ID:           primitive.NewObjectID(),
+			Email:        "random@example.com",
+			FirstName:    "Test",
+			LastName:     "Test",
+			Amount:       3000,
+			StorageQuota: 2000,
+			UsedQuota:    100,
+			Role:         db.USER,
+			Status:       db.ON_WAIT,
+		}
+		s.requestCollection.InsertOne(ctx, request)
+	}
 	return &userpb.ListExpansionReqResponse{Requests: result}, nil
 }

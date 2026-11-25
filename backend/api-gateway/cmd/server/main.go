@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	httpTransport "github.com/FTNDreamTeam/FileSify/backend/api-gateway/internal/transport/http"
+	"github.com/FTNDreamTeam/FileSify/backend/api-gateway/internal/transport/rpc"
 
 	storagepb "gen/data-storage-service-gen"
 	pb "gen/gateway"
@@ -18,7 +19,6 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -94,6 +94,7 @@ func main() {
 	userConn, err := grpc.NewClient(
 		"user-service:"+configs.USER_SERVICE_PORT,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(rpc.ForwardMetadataInterceptor),
 	)
 	if err != nil {
 		log.Println("Failed to dial user-service:", err)
@@ -104,6 +105,7 @@ func main() {
 	storageConn, err := grpc.NewClient(
 		"data-storage-service:"+configs.STORAGE_PORT,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(rpc.ForwardMetadataInterceptor),
 	)
 	if err != nil {
 		log.Println("Failed to dial data-storage-service:", err)
@@ -113,6 +115,7 @@ func main() {
 	notificationConn, err := grpc.NewClient(
 		"notification-service:"+configs.NOTIFICATION_PORT,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(rpc.ForwardMetadataInterceptor),
 	)
 	if err != nil {
 		log.Println("Failed to dial notification-service:", err)
@@ -136,12 +139,6 @@ func main() {
 	gwConn, err := grpc.NewClient(
 		"api-gateway:"+configs.GATEWAY_PORT,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithUnaryInterceptor(func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-			if md, ok := metadata.FromIncomingContext(ctx); ok {
-				ctx = metadata.NewOutgoingContext(ctx, md)
-			}
-			return invoker(ctx, method, req, reply, cc, opts...)
-		}),
 	)
 	if err != nil {
 		log.Println("Failed to dial gateway gRPC:", err)

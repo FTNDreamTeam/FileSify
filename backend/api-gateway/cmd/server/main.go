@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/FTNDreamTeam/FileSify/backend/api-gateway/internal/middleware"
 	httpTransport "github.com/FTNDreamTeam/FileSify/backend/api-gateway/internal/transport/http"
 	"github.com/FTNDreamTeam/FileSify/backend/api-gateway/internal/transport/rpc"
 
@@ -52,6 +53,7 @@ func (s *server) VerifyMagicLink(ctx context.Context, request *userpb.VerifyMagi
 func (s *server) ChangePassword(ctx context.Context, request *userpb.ChangePasswordRequest) (*userpb.ChangePasswordResponse, error) {
 	return s.userClient.ChangePassword(ctx, request)
 }
+
 func (s *server) Verify2FA(ctx context.Context, request *userpb.Verify2FARequest) (*userpb.Verify2FAResponse, error) {
 	return s.userClient.Verify2FA(ctx, request)
 }
@@ -67,6 +69,7 @@ func (s *server) ListFiles(ctx context.Context, request *storagepb.ListFilesRequ
 func (s *server) RenameFolder(ctx context.Context, request *storagepb.RenameFolderRequest) (*storagepb.RenameFolderResponse, error) {
 	return s.storageClient.RenameFolder(ctx, request)
 }
+
 func (s *server) RenameFile(ctx context.Context, request *storagepb.RenameFileRequest) (*storagepb.RenameFileResponse, error) {
 	return s.storageClient.RenameFile(ctx, request)
 }
@@ -74,10 +77,8 @@ func (s *server) RenameFile(ctx context.Context, request *storagepb.RenameFileRe
 func (s *server) ListNotifications(ctx context.Context, request *notificationpb.ListNotificationsRequest) (*notificationpb.ListNotificationsResponse, error) {
 	return s.notificationClient.ListNotifications(ctx, request)
 }
+
 func (s *server) ListExpansionReq(ctx context.Context, request *userpb.ListExpansionReqRequest) (*userpb.ListExpansionReqResponse, error) {
-	//if md, ok := metadata.FromIncomingContext(ctx); ok {
-	//	ctx = metadata.NewOutgoingContext(ctx, md)
-	//}
 	return s.userClient.ListExpansionReq(ctx, request)
 }
 
@@ -112,6 +113,7 @@ func main() {
 	}
 	storageClient := storagepb.NewStorageServiceClient(storageConn)
 
+	// Dial notification-service
 	notificationConn, err := grpc.NewClient(
 		"notification-service:"+configs.NOTIFICATION_PORT,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -149,16 +151,20 @@ func main() {
 		log.Println("Failed to register gateway:", err)
 	}
 
-	// ONE public port: /api/* goes to gwmux, everything else to the file server
-	root := http.NewServeMux()
-	root.Handle("/api/", gwmux)
-	root.Handle("/", http.FileServer(http.Dir("./frontend")))
-
 	uploadService := service.NewFileUploadService(storageClient, userClient)
 	uploadHandler := httpTransport.NewFileUploadHandler(uploadService)
-	if err := uploadHandler.RegisterRoutes(gwmux); err != nil { //Register the upload route for files
+	if err := uploadHandler.RegisterRoutes(gwmux); err != nil {
 		log.Printf("Failed to route to /api/file:%s", err)
 	}
+
+	// Rate limiter
+	rl := middleware.NewRateLimiter()
+	rateLimitedAPI := rl.Middleware(gwmux)
+
+	// Limit just the api requests
+	root := http.NewServeMux()
+	root.Handle("/api/", rateLimitedAPI)
+	root.Handle("/", http.FileServer(http.Dir("./frontend")))
 
 	httpServer := &http.Server{
 		Addr:    ":8080",

@@ -200,22 +200,28 @@
         });
 
         // Password help dialog
+        // Password help dialog
         (function initPasswordHelpDialog() {
-            // Password help dialog element definition
             const dialog = document.getElementById('passwordHelpDialog');
             if (!dialog) return;
 
             const dialogEmail = document.getElementById('passwordHelpEmail');
             const feedback = document.getElementById('passwordHelpFeedback');
             const alertEl = document.getElementById('passwordHelpAlert');
+            const magicLinkBtn = document.getElementById('magicLinkBtn');
             const forgottenBtn = document.getElementById('forgottenPasswordBtn');
             const expiredBtn = document.getElementById('expiredPasswordBtn');
 
-            // Dialog alert
+            // Diagnostic: warn if any expected button is missing
+            ['magicLinkBtn', 'forgottenPasswordBtn', 'expiredPasswordBtn'].forEach(id => {
+                if (!document.getElementById(id)) {
+                    console.warn(`[password-help] #${id} not found in HTML — its action will not be wired.`);
+                }
+            });
+
             function showAlert(message, type) { setAlert(alertEl, message, type, 'mb-0'); }
             function hideAlert() { clearAlert(alertEl); }
 
-            // Email validation
             function validateEmail() {
                 const msg = emailError(dialogEmail.value);
                 feedback.textContent = msg;
@@ -225,28 +231,31 @@
 
             wireDialogClose(dialog);
 
-            // Live validation on blur and re-validation on input if already invalid
             dialogEmail.addEventListener('blur', validateEmail);
             dialogEmail.addEventListener('input', () => {
                 if (dialogEmail.classList.contains('is-invalid')) validateEmail();
             });
 
-            // Magic link sending for forgotten pasword
-            async function sendMagicLink(btn, reasonLabel) {
+            // Generic "send an email for this account" action.
+            // Endpoint + success message are passed in, so both buttons share this code path.
+            async function sendEmailAction(btn, endpoint, successMessage, label) {
+                console.log(`[password-help] ${label} clicked → POST ${endpoint}`);
+
                 hideAlert();
                 if (!validateEmail()) {
+                    console.log(`[password-help] ${label} aborted: email invalid`);
                     dialogEmail.focus();
                     return;
                 }
 
                 const originalText = btn.innerHTML;
-                const otherBtn = btn === forgottenBtn ? expiredBtn : forgottenBtn;
-                btn.disabled = true;
-                otherBtn.disabled = true;
+
+                // Disable every action button we know about (guarded — a missing button is fine)
+                [magicLinkBtn, forgottenBtn, expiredBtn].forEach(b => { if (b) b.disabled = true; });
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Sending…';
 
                 try {
-                    const res = await fetch('/api/auth/magic-link/request', {
+                    const res = await fetch(endpoint, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email: dialogEmail.value.trim() })
@@ -254,45 +263,62 @@
                     const data = await res.json().catch(() => ({}));
 
                     if (!res.ok) {
+                        console.warn(`[password-help] ${label} failed HTTP ${res.status}`, data);
                         showAlert(data.message || `Request failed (HTTP ${res.status}).`, 'danger');
                         return;
                     }
 
-                    showAlert(
-                        data.message ||
-                        `If an account exists for that email, we've sent you a sign-in link. Check your inbox.`,
-                        'success'
-                    );
-                } catch {
+                    console.log(`[password-help] ${label} OK`, data);
+                    showAlert(data.message || successMessage, 'success');
+                } catch (err) {
+                    console.error(`[password-help] ${label} network error`, err);
                     showAlert('Network error. Please check your connection and try again.', 'danger');
                 } finally {
-                    btn.disabled = false;
-                    otherBtn.disabled = false;
+                    [magicLinkBtn, forgottenBtn, expiredBtn].forEach(b => { if (b) b.disabled = false; });
                     btn.innerHTML = originalText;
                 }
             }
 
-            // Forgotten password button
-            forgottenBtn.addEventListener('click', () => sendMagicLink(forgottenBtn, 'forgotten'));
+            // Magic-link button — sign-in link
+            if (magicLinkBtn) {
+                magicLinkBtn.addEventListener('click', () =>
+                    sendEmailAction(
+                        magicLinkBtn,
+                        '/api/auth/magic-link/request',
+                        "If an account exists for that email, we've sent you a sign-in link. Check your inbox.",
+                        'magic-link'
+                    )
+                );
+            }
 
-            // Expired password dialog open
-            expiredBtn.addEventListener('click', () => {
-                if (!validateEmail()) {
-                    dialogEmail.focus();
-                    return;
-                }
-                const emailValue = dialogEmail.value.trim();
-                dialog.close('expired');
+            // Forgotten password button — RequestResetPassword RPC (POST /api/auth/forgotten-password)
+            if (forgottenBtn) {
+                forgottenBtn.addEventListener('click', () =>
+                    sendEmailAction(
+                        forgottenBtn,
+                        '/api/auth/forgotten-password',
+                        "If an account exists for that email, we've sent you a password reset link. Check your inbox.",
+                        'forgotten-password'
+                    )
+                );
+            }
 
-                const changeDlg = document.getElementById('changePasswordDialog');
-                if (!changeDlg) return;
-
-                // Pre-fill the email from dialog 1
-                const cpEmail = document.getElementById('cpEmail');
-                if (cpEmail) cpEmail.value = emailValue;
-
-                changeDlg.showModal();
-            });
+            // Expired password — opens the change-password dialog
+            if (expiredBtn) {
+                expiredBtn.addEventListener('click', () => {
+                    if (!validateEmail()) {
+                        dialogEmail.focus();
+                        return;
+                    }
+                    const emailValue = dialogEmail.value.trim();
+                    dialog.close('expired');
+                    const changeDlg = document.getElementById('changePasswordDialog');
+                    if (!changeDlg) return;
+                    const cpEmail = document.getElementById('cpEmail');
+                    if (cpEmail) cpEmail.value = emailValue;
+                    changeDlg.showModal();
+                });
+            }
         })();
 
         // Login form submit

@@ -109,4 +109,18 @@ service GatewayService {
   rpc ListUsers(user_service.v1.ListUsersRequest) returns (user_service.v1.ListUsersResponse) {
     option (google.api.http) = {get: "/api/users"};
   }
+
+  rpc RequestResetPassword(user_service.v1.RequestResetPasswordRequest) returns (user_service.v1.RequestResetPasswordResponse) {
+    option (google.api.http) = {
+      post: "/api/auth/forgotten-password"
+      body: "*"
+    };
+  }
+
+  rpc VerifyResetPassword(user_service.v1.VerifyResetPasswordRequest) returns (user_service.v1.VerifyResetPasswordResponse) {
+    option (google.api.http) = {
+      post: "/api/auth/forgotten-password/verify"
+      body: "*"
+    };
+  }
 }

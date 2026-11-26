@@ -26,6 +26,8 @@ service UserService {
   rpc CreateExpansionReq(CreateExpansionReqRequest) returns (CreateExpansionReqResponse) {}
   rpc HandleExpansionReq(HandleExpansionReqRequest) returns (HandleExpansionReqResponse) {}
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {}
+  rpc RequestResetPassword(RequestResetPasswordRequest) returns (RequestResetPasswordResponse) {}
+  rpc VerifyResetPassword(VerifyResetPasswordRequest) returns (VerifyResetPasswordResponse) {}
 }
 
 message UserProfile {
@@ -160,6 +162,27 @@ message ListExpansionReqRequest {}
 message ListExpansionReqResponse {
   repeated StorageExpansionRequest requests = 1;
 }
+
+message RequestResetPasswordRequest {
+  string email = 1;
+}
+message RequestResetPasswordResponse {}
+
+message SendResetLinkRequest {
+  string email = 1;
+  string username = 2;
+  string reset_link = 3;
+  int64 expires_at_unix = 4;
+}
+
+message SendResetLinkResponse {}
+
+message VerifyResetPasswordRequest {
+  string reset_token = 1;
+  string new_password = 2;
+}
+
+message VerifyResetPasswordResponse {}
 
 message CreateExpansionReqRequest {
   uint32 amount = 1;

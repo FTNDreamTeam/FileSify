@@ -25,10 +25,10 @@
 
     // ---------- Password rules ----------
     const PASSWORD_RULES = {
-        length : v => v.length >= 12,
-        upper  : v => /[A-Z]/.test(v),
-        lower  : v => /[a-z]/.test(v),
-        digit  : v => /[0-9]/.test(v),
+        length: v => v.length >= 12,
+        upper: v => /[A-Z]/.test(v),
+        lower: v => /[a-z]/.test(v),
+        digit: v => /[0-9]/.test(v),
         special: v => /[^A-Za-z0-9]/.test(v)
     };
     function passwordMeetsAll(v) {
@@ -40,10 +40,10 @@
         let label = 'Password strength';
         let color = '#e2e8f0';
         if (value.length > 0) {
-            if (met <= 2)       { label = 'Weak';   color = '#dc3545'; }
-            else if (met <= 3)  { label = 'Fair';   color = '#f59e0b'; }
-            else if (met === 4) { label = 'Good';   color = '#0ea5e9'; }
-            else                { label = 'Strong'; color = '#16a34a'; }
+            if (met <= 2) { label = 'Weak'; color = '#dc3545'; }
+            else if (met <= 3) { label = 'Fair'; color = '#f59e0b'; }
+            else if (met === 4) { label = 'Good'; color = '#0ea5e9'; }
+            else { label = 'Strong'; color = '#16a34a'; }
         }
         return { met, label, color };
     }
@@ -112,7 +112,7 @@
         dialog.addEventListener('click', (e) => {
             const r = dialog.getBoundingClientRect();
             const outside = e.clientX < r.left || e.clientX > r.right ||
-                e.clientY < r.top  || e.clientY > r.bottom;
+                e.clientY < r.top || e.clientY > r.bottom;
             if (outside) dialog.close('cancel');
         });
     }
@@ -123,10 +123,10 @@
         const form = document.getElementById('loginForm');
         if (!form) return;
 
-        const email         = document.getElementById('loginEmail');
-        const password      = document.getElementById('loginPassword');
+        const email = document.getElementById('loginEmail');
+        const password = document.getElementById('loginPassword');
         const emailFeedback = email.parentElement.querySelector('.invalid-feedback');
-        const problemLink    = document.getElementById('passwordProblemLink');
+        const problemLink = document.getElementById('passwordProblemLink');
         const loginAlert = document.getElementById('loginAlert');
 
         // Login alert
@@ -185,8 +185,8 @@
             if (!dlg) return;
 
             const dialogEmail = document.getElementById('passwordHelpEmail');
-            const feedback    = document.getElementById('passwordHelpFeedback');
-            const alertEl     = document.getElementById('passwordHelpAlert');
+            const feedback = document.getElementById('passwordHelpFeedback');
+            const alertEl = document.getElementById('passwordHelpAlert');
 
             dialogEmail.value = email.value.trim();
             dialogEmail.classList.remove('is-valid', 'is-invalid');
@@ -205,11 +205,11 @@
             const dialog = document.getElementById('passwordHelpDialog');
             if (!dialog) return;
 
-            const dialogEmail      = document.getElementById('passwordHelpEmail');
-            const feedback         = document.getElementById('passwordHelpFeedback');
-            const alertEl          = document.getElementById('passwordHelpAlert');
-            const forgottenBtn     = document.getElementById('forgottenPasswordBtn');
-            const expiredBtn       = document.getElementById('expiredPasswordBtn');
+            const dialogEmail = document.getElementById('passwordHelpEmail');
+            const feedback = document.getElementById('passwordHelpFeedback');
+            const alertEl = document.getElementById('passwordHelpAlert');
+            const forgottenBtn = document.getElementById('forgottenPasswordBtn');
+            const expiredBtn = document.getElementById('expiredPasswordBtn');
 
             // Dialog alert
             function showAlert(message, type) { setAlert(alertEl, message, type, 'mb-0'); }
@@ -240,16 +240,16 @@
                 }
 
                 const originalText = btn.innerHTML;
-                const otherBtn     = btn === forgottenBtn ? expiredBtn : forgottenBtn;
+                const otherBtn = btn === forgottenBtn ? expiredBtn : forgottenBtn;
                 btn.disabled = true;
                 otherBtn.disabled = true;
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Sending…';
 
                 try {
                     const res = await fetch('/api/auth/magic-link/request', {
-                        method:  'POST',
+                        method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body:    JSON.stringify({ email: dialogEmail.value.trim() })
+                        body: JSON.stringify({ email: dialogEmail.value.trim() })
                     });
                     const data = await res.json().catch(() => ({}));
 
@@ -303,7 +303,7 @@
 
             // Validation
             const okEmail = validateEmail();
-            const okPw    = validatePassword();
+            const okPw = validatePassword();
             if (!okEmail || !okPw) {
                 const firstInvalid = form.querySelector('.is-invalid');
                 if (firstInvalid) {
@@ -321,10 +321,10 @@
             // Send login credentials
             try {
                 const res = await fetch('/api/login', {
-                    method:  'POST',
+                    method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body:    JSON.stringify({
-                        email:    email.value.trim(),
+                    body: JSON.stringify({
+                        email: email.value.trim(),
                         password: password.value
                     })
                 });
@@ -397,14 +397,14 @@
         if (!form) return;
 
         const firstName = document.getElementById('firstName');
-        const lastName  = document.getElementById('lastName');
-        const email     = document.getElementById('email');
-        const password  = document.getElementById('password');
-        const confirm   = document.getElementById('confirmPassword');
-        const terms     = document.getElementById('terms');
+        const lastName = document.getElementById('lastName');
+        const email = document.getElementById('email');
+        const password = document.getElementById('password');
+        const confirm = document.getElementById('confirmPassword');
+        const terms = document.getElementById('terms');
 
-        const ruleList      = document.getElementById('ruleList');
-        const strengthFill  = document.getElementById('strengthFill');
+        const ruleList = document.getElementById('ruleList');
+        const strengthFill = document.getElementById('strengthFill');
         const strengthLabel = document.getElementById('strengthLabel');
         const emailFeedback = document.getElementById('emailFeedback');
 
@@ -463,10 +463,10 @@
 
         // Validation on every change
         bindLive(firstName, () => validateName(firstName));
-        bindLive(lastName,  () => validateName(lastName));
-        bindLive(email,     validateEmail);
-        bindLive(password,  validatePassword);
-        bindLive(confirm,   validateConfirm);
+        bindLive(lastName, () => validateName(lastName));
+        bindLive(email, validateEmail);
+        bindLive(password, validatePassword);
+        bindLive(confirm, validateConfirm);
 
         // Password bar update on change
         password.addEventListener('input', updatePasswordUI);
@@ -510,16 +510,16 @@
             // Send register credentials
             try {
                 const payload = {
-                    email:     email.value.trim(),
-                    password:  password.value,
+                    email: email.value.trim(),
+                    password: password.value,
                     firstName: firstName.value.trim(),
-                    lastName:  lastName.value.trim()
+                    lastName: lastName.value.trim()
                 };
 
                 const res = await fetch('/api/register', {
-                    method:  'POST',
+                    method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body:    JSON.stringify(payload)
+                    body: JSON.stringify(payload)
                 });
 
                 // Response check
@@ -569,7 +569,7 @@
         if (!elLoading) return;
 
         const elSuccess = document.getElementById('state-success');
-        const elError   = document.getElementById('state-error');
+        const elError = document.getElementById('state-error');
         const elNoToken = document.getElementById('state-no-token');
 
         function show(el) {
@@ -578,7 +578,7 @@
         }
 
         const params = new URLSearchParams(window.location.search);
-        const token  = params.get('token');
+        const token = params.get('token');
 
         if (!token) {
             show(elNoToken);
@@ -613,7 +613,7 @@
     (function initLogoutDialog() {
         // Dialog element definition
         const trigger = document.getElementById('logoutTrigger');
-        const dialog  = document.getElementById('logoutDialog');
+        const dialog = document.getElementById('logoutDialog');
         if (!trigger || !dialog) return;
 
         const confirmBtn = document.getElementById('logoutConfirm');
@@ -646,7 +646,7 @@
         if (!elLoading) return;
 
         const elSuccess = document.getElementById('magic-success');
-        const elError   = document.getElementById('magic-error');
+        const elError = document.getElementById('magic-error');
         const elNoToken = document.getElementById('magic-no-token');
 
         function show(el) {
@@ -664,9 +664,9 @@
 
         // Send token
         fetch('/api/auth/magic-link/verify', {
-            method:  'POST',
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ token })
+            body: JSON.stringify({ token })
         })
             .then(async (res) => {
                 const data = await res.json().catch(() => ({}));
@@ -701,16 +701,16 @@
         const dialog = document.getElementById('changePasswordDialog');
         if (!dialog) return;
 
-        const email          = document.getElementById('cpEmail');
-        const current        = document.getElementById('cpCurrentPassword');
-        const newPw          = document.getElementById('cpNewPassword');
-        const confirm        = document.getElementById('cpConfirmPassword');
-        const ruleList       = document.getElementById('cpRuleList');
-        const strengthFill   = document.getElementById('cpStrengthFill');
-        const strengthLabel  = document.getElementById('cpStrengthLabel');
-        const emailFeedback  = document.getElementById('cpEmailFeedback');
-        const alertEl        = document.getElementById('changePwAlert');
-        const submitBtn      = document.getElementById('cpSubmitBtn');
+        const email = document.getElementById('cpEmail');
+        const current = document.getElementById('cpCurrentPassword');
+        const newPw = document.getElementById('cpNewPassword');
+        const confirm = document.getElementById('cpConfirmPassword');
+        const ruleList = document.getElementById('cpRuleList');
+        const strengthFill = document.getElementById('cpStrengthFill');
+        const strengthLabel = document.getElementById('cpStrengthLabel');
+        const emailFeedback = document.getElementById('cpEmailFeedback');
+        const alertEl = document.getElementById('changePwAlert');
+        const submitBtn = document.getElementById('cpSubmitBtn');
 
         // Password change alert
         function showAlert(message, type) { setAlert(alertEl, message, type); }
@@ -728,8 +728,8 @@
             return mark(current, current.value.length > 0);
         }
 
-        function validateNewPw()      { return mark(newPw, passwordMeetsAll(newPw.value)); }
-        function validateConfirm()    { return mark(confirm, confirm.value.length > 0 && confirm.value === newPw.value); }
+        function validateNewPw() { return mark(newPw, passwordMeetsAll(newPw.value)); }
+        function validateConfirm() { return mark(confirm, confirm.value.length > 0 && confirm.value === newPw.value); }
 
         // Password progress bar
         function updatePasswordUI() {
@@ -740,14 +740,14 @@
         const bindLive = createLiveBinder();
 
         // Validation on every change
-        bindLive(email,   validateEmail);
+        bindLive(email, validateEmail);
         bindLive(current, validateCurrent);
-        bindLive(newPw,   validateNewPw);
+        bindLive(newPw, validateNewPw);
         bindLive(confirm, validateConfirm);
 
         // Password bar update on change
         newPw.addEventListener('input', updatePasswordUI);
-        newPw.addEventListener('blur',  updatePasswordUI);
+        newPw.addEventListener('blur', updatePasswordUI);
 
         // Cancel + backdrop
         wireDialogClose(dialog);
@@ -769,7 +769,7 @@
             hideAlert();
 
             // Validation check
-            const results = [ validateEmail(), validateCurrent(), validateNewPw(), validateConfirm() ];
+            const results = [validateEmail(), validateCurrent(), validateNewPw(), validateConfirm()];
             updatePasswordUI();
             if (results.includes(false)) {
                 const firstInvalid = dialog.querySelector('.is-invalid');
@@ -784,19 +784,19 @@
             // Send data
             try {
                 const res = await fetch('/api/auth/password-reset', {
-                    method:  'POST',
+                    method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body:    JSON.stringify({
-                        email:           email.value.trim(),
+                    body: JSON.stringify({
+                        email: email.value.trim(),
                         currentPassword: current.value,
-                        newPassword:     newPw.value
+                        newPassword: newPw.value
                     })
                 });
                 const data = await res.json().catch(() => ({}));
 
-                email.value   = '';
+                email.value = '';
                 current.value = '';
-                newPw.value   = '';
+                newPw.value = '';
                 confirm.value = '';
 
                 // Reset validation state
@@ -834,10 +834,10 @@
         const form = document.getElementById('twoFactorForm');
         if (!form) return;
 
-        const codeInput   = document.getElementById('tfCode');
+        const codeInput = document.getElementById('tfCode');
         const targetEmail = document.getElementById('tfTargetEmail');
-        const alertEl     = document.getElementById('tfAlert');
-        const backLink    = document.getElementById('tfBackLink');
+        const alertEl = document.getElementById('tfAlert');
+        const backLink = document.getElementById('tfBackLink');
 
         const pendingToken = sessionStorage.getItem('pending_token');
         const pendingEmail = sessionStorage.getItem('pending_email');
@@ -895,11 +895,11 @@
             // Send code
             try {
                 const res = await fetch('/api/twofactor/verify', {
-                    method:  'POST',
+                    method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body:    JSON.stringify({
+                    body: JSON.stringify({
                         pendingToken: pendingToken,
-                        code:         codeInput.value.trim()
+                        code: codeInput.value.trim()
                     })
                 });
 
@@ -907,14 +907,14 @@
                 const data = await res.json().catch(() => ({}));
 
                 if (!res.ok) {
-                    const raw  = (data.message || '').toLowerCase();
-                    const isSessionExpired  = res.status === 404 || data.code === 5 ||
+                    const raw = (data.message || '').toLowerCase();
+                    const isSessionExpired = res.status === 404 || data.code === 5 ||
                         raw.includes('session expired') ||
                         raw.includes('login session');
                     const isTooManyAttempts = raw.includes('too many');
-                    const isCodeExpired     = raw.includes('code expired') ||
+                    const isCodeExpired = raw.includes('code expired') ||
                         raw.includes('not found');
-                    const isWrongCode       = raw.includes('do not match') ||
+                    const isWrongCode = raw.includes('do not match') ||
                         raw.includes('invalid verification code');
 
                     if (isSessionExpired) {
@@ -956,10 +956,10 @@
                 // Decode JWT
                 const claims = decodeJwtPayload(data.token);
                 const userObj = {
-                    id:        claims.sub   || '',
-                    email:     claims.email || pendingEmail || '',
+                    id: claims.sub || '',
+                    email: claims.email || pendingEmail || '',
                     firstName: '',
-                    lastName:  '',
+                    lastName: '',
                     passwordValid: null
                 };
 
@@ -988,12 +988,12 @@
     (function initCreateFolderDialog() {
         // Element definition
         const trigger = document.getElementById('newFolderButton');
-        const dialog  = document.getElementById('createFolderDialog');
+        const dialog = document.getElementById('createFolderDialog');
         if (!trigger || !dialog) return;
 
-        const input      = document.getElementById('folderNameInput');
+        const input = document.getElementById('folderNameInput');
         const confirmBtn = document.getElementById('createFolderConfirm');
-        const alertEl    = document.getElementById('folderAlert');
+        const alertEl = document.getElementById('folderAlert');
 
         trigger.addEventListener('click', (e) => {
             e.preventDefault();
@@ -1043,7 +1043,7 @@
                         'Authorization': 'Bearer ' + token
                     },
                     body: JSON.stringify({
-                        path:  newPath,
+                        path: newPath,
                         token: token
                     })
                 });
@@ -1084,16 +1084,16 @@
         if (!dialog) return;
 
         const triggerNavbar = document.getElementById('uploadButtonNavbar');
-        const triggerPage   = document.getElementById('uploadButtonPage');
-        const fileInput     = document.getElementById('uploadFileInput');
-        const alertEl       = document.getElementById('uploadAlert');
-        const fileInfo      = document.getElementById('uploadFileInfo');
-        const fileNameEl    = document.getElementById('uploadFileName');
-        const fileSizeEl    = document.getElementById('uploadFileSize');
-        const progressWrap  = document.getElementById('uploadProgressWrap');
-        const progressBar   = document.getElementById('uploadProgressBar');
-        const progressText  = document.getElementById('uploadProgressText');
-        const submitBtn     = document.getElementById('uploadFileConfirm');
+        const triggerPage = document.getElementById('uploadButtonPage');
+        const fileInput = document.getElementById('uploadFileInput');
+        const alertEl = document.getElementById('uploadAlert');
+        const fileInfo = document.getElementById('uploadFileInfo');
+        const fileNameEl = document.getElementById('uploadFileName');
+        const fileSizeEl = document.getElementById('uploadFileSize');
+        const progressWrap = document.getElementById('uploadProgressWrap');
+        const progressBar = document.getElementById('uploadProgressBar');
+        const progressText = document.getElementById('uploadProgressText');
+        const submitBtn = document.getElementById('uploadFileConfirm');
 
         const MAX_SIZE = 100 * 1024 * 1024; // 100 MB
 
@@ -1132,7 +1132,7 @@
 
         // Opening button click
         if (triggerNavbar) triggerNavbar.addEventListener('click', openDialog);
-        if (triggerPage)   triggerPage.addEventListener('click', openDialog);
+        if (triggerPage) triggerPage.addEventListener('click', openDialog);
 
         // Cancel + backdrop
         wireDialogClose(dialog);
@@ -1191,9 +1191,9 @@
             // Send file
             try {
                 const res = await fetch('/api/storage/file', {
-                    method:  'POST',
+                    method: 'POST',
                     headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-                    body:    formData
+                    body: formData
                 });
 
                 // Response check
@@ -1244,11 +1244,11 @@
         'use strict';
 
         // Element definition
-        const tbody       = document.getElementById('fileTableBody');
+        const tbody = document.getElementById('fileTableBody');
         if (!tbody) return;
 
         // Breadcrumb and item-count elements
-        const bc          = document.querySelector('.breadcrumb');
+        const bc = document.querySelector('.breadcrumb');
         const fileCountEl = document.getElementById('fileCount');
 
         // Build a URL for a folder path - real href so ctrl+click / open-in-new-tab work
@@ -1405,7 +1405,7 @@
                     throw new Error(data.message || `HTTP ${res.status}`);
                 }
 
-                const data  = await res.json();
+                const data = await res.json();
                 const files = data.files || [];
 
                 // Item count in the header
@@ -1461,9 +1461,9 @@
         const dialog = document.getElementById('renameFolderDialog');
         if (!dialog) return;
 
-        const input      = document.getElementById('renameFolderInput');
+        const input = document.getElementById('renameFolderInput');
         const confirmBtn = document.getElementById('renameFolderConfirm');
-        const alertEl    = document.getElementById('renameFolderAlert');
+        const alertEl = document.getElementById('renameFolderAlert');
 
         let target = null;
 
@@ -1480,9 +1480,9 @@
         // Called from the folder row kebab
         openRenameDialog = function (file) {
             // Split file.path into parent + leaf for newPath construction
-            const trimmed   = file.path.endsWith('/') ? file.path.slice(0, -1) : file.path;
+            const trimmed = file.path.endsWith('/') ? file.path.slice(0, -1) : file.path;
             const lastSlash = trimmed.lastIndexOf('/');
-            const parent    = lastSlash >= 0 ? trimmed.slice(0, lastSlash + 1) : '';
+            const parent = lastSlash >= 0 ? trimmed.slice(0, lastSlash + 1) : '';
 
             target = { oldPath: file.path, parent, leafName: file.name };
 
@@ -1504,10 +1504,10 @@
             const newName = input.value.trim();
 
             // Name validation
-            if (!newName)                                         { showError('Please enter a name.'); return; }
-            if (newName === target.leafName)                      { dialog.close('cancel'); return; }
+            if (!newName) { showError('Please enter a name.'); return; }
+            if (newName === target.leafName) { dialog.close('cancel'); return; }
             if (newName.includes('/') || newName.includes('\\')) { showError('Name cannot contain slashes.'); return; }
-            if (newName.length > 100)                             { showError('Name is too long (max 100 characters).'); return; }
+            if (newName.length > 100) { showError('Name is too long (max 100 characters).'); return; }
 
             const token = localStorage.getItem('token');
             if (!token) { window.location.replace('login.html'); return; }
@@ -1532,7 +1532,7 @@
                     body: JSON.stringify({
                         oldPath: target.oldPath,
                         newPath: newPath,
-                        token:   token
+                        token: token
                     })
                 });
 
@@ -1562,9 +1562,9 @@
         const dialog = document.getElementById('renameFileDialog');
         if (!dialog) return;
 
-        const input      = document.getElementById('renameFileInput');
+        const input = document.getElementById('renameFileInput');
         const confirmBtn = document.getElementById('renameFileConfirm');
-        const alertEl    = document.getElementById('renameFileAlert');
+        const alertEl = document.getElementById('renameFileAlert');
 
         let target = null;
 
@@ -1601,10 +1601,10 @@
             const newName = input.value.trim();
 
             // Name validation
-            if (!newName)                                         { showError('Please enter a name.'); return; }
-            if (newName === target.leafName)                      { dialog.close('cancel'); return; }
+            if (!newName) { showError('Please enter a name.'); return; }
+            if (newName === target.leafName) { dialog.close('cancel'); return; }
             if (newName.includes('/') || newName.includes('\\')) { showError('Name cannot contain slashes.'); return; }
-            if (newName.length > 100)                             { showError('Name is too long (max 100 characters).'); return; }
+            if (newName.length > 100) { showError('Name is too long (max 100 characters).'); return; }
 
             const token = localStorage.getItem('token');
             if (!token) { window.location.replace('login.html'); return; }
@@ -1626,7 +1626,7 @@
                     body: JSON.stringify({
                         old_path: target.oldPath,
                         new_name: newName,
-                        token:    token
+                        token: token
                     })
                 });
 
@@ -1669,21 +1669,21 @@
             if (!Number.isFinite(t)) return '';
 
             const diff = Math.max(0, Date.now() - t);
-            const sec  = Math.floor(diff / 1000);
-            const min  = Math.floor(sec / 60);
-            const hr   = Math.floor(min / 60);
-            const day  = Math.floor(hr / 24);
+            const sec = Math.floor(diff / 1000);
+            const min = Math.floor(sec / 60);
+            const hr = Math.floor(min / 60);
+            const day = Math.floor(hr / 24);
 
             if (sec < 60) return 'just now';
             if (min < 60) return min + (min === 1 ? ' minute ago' : ' minutes ago');
-            if (hr  < 24) return hr  + (hr  === 1 ? ' hour ago'   : ' hours ago');
-            if (day < 7)  return day + (day === 1 ? ' day ago'    : ' days ago');
+            if (hr < 24) return hr + (hr === 1 ? ' hour ago' : ' hours ago');
+            if (day < 7) return day + (day === 1 ? ' day ago' : ' days ago');
             return new Date(t).toLocaleDateString();
         }
 
         function groupByDay(items) {
             const now = new Date();
-            const startToday     = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
             const startYesterday = startToday - 86400000;
 
             const groups = { today: [], yesterday: [], earlier: [] };
@@ -1692,19 +1692,19 @@
                 const t = (raw && typeof raw === 'object' && raw.seconds != null)
                     ? Number(raw.seconds) * 1000
                     : new Date(raw).getTime();
-                if      (t >= startToday)     groups.today.push(n);
+                if (t >= startToday) groups.today.push(n);
                 else if (t >= startYesterday) groups.yesterday.push(n);
-                else                          groups.earlier.push(n);
+                else groups.earlier.push(n);
             }
             return groups;
         }
 
         function iconFor(type) {
             switch (type) {
-                case 'share':       return 'bi-people-fill';
+                case 'share': return 'bi-people-fill';
                 case 'new_version': return 'bi-arrow-up-circle-fill';
-                case 'new_file':    return 'bi-file-earmark-plus-fill';
-                default:            return 'bi-info-circle-fill';
+                case 'new_file': return 'bi-file-earmark-plus-fill';
+                default: return 'bi-info-circle-fill';
             }
         }
 
@@ -1822,9 +1822,9 @@
 
                 container.innerHTML = '';
                 const sections = [
-                    renderGroup('Today',     groups.today),
+                    renderGroup('Today', groups.today),
                     renderGroup('Yesterday', groups.yesterday),
-                    renderGroup('Earlier',   groups.earlier),
+                    renderGroup('Earlier', groups.earlier),
                 ];
                 for (const s of sections) if (s) container.appendChild(s);
 
@@ -1843,7 +1843,7 @@
         'use strict';
 
         const requestsTbody = document.getElementById('quotaRequestTableBody');
-        const usersTbody    = document.getElementById('allUsersTableBody');
+        const usersTbody = document.getElementById('allUsersTableBody');
         if (!requestsTbody || !usersTbody) return;
 
         const token = localStorage.getItem('token');
@@ -1968,8 +1968,8 @@
             }
         }
 
-        // Approve/reject
-        window.handleQuotaAction = async function(email, isApprove) {
+        // ---------- Approve/Reject Action ----------
+        window.handleQuotaAction = async function (email, isApprove) {
             const action = isApprove ? 'approve' : 'reject';
             if (!confirm(`Are you sure you want to ${action} the request for ${email}?`)) return;
 
@@ -2101,4 +2101,132 @@
     })();
 
 
+    // ---------- Reset password page ----------
+    (function initResetPasswordPage() {
+        'use strict';
+
+        // Element definition
+        const form = document.getElementById('resetPasswordForm');
+        if (!form) return;
+
+        const formArea = document.getElementById('resetFormArea');
+        const missingBox = document.getElementById('resetMissingToken');
+        const successBox = document.getElementById('resetSuccess');
+        const alertEl = document.getElementById('resetAlert');
+        const submitBtn = document.getElementById('resetSubmitBtn');
+
+        const password = document.getElementById('password');
+        const confirm = document.getElementById('confirmPassword');
+        const ruleList = document.getElementById('ruleList');
+        const strengthFill = document.getElementById('strengthFill');
+        const strengthLabel = document.getElementById('strengthLabel');
+
+        // Token from the URL: reset-password.html?token=...
+        const token = (new URLSearchParams(window.location.search).get('token') || '').trim();
+
+        // No token — link was truncated or copied incompletely
+        if (!token) {
+            formArea.classList.add('d-none');
+            missingBox.classList.remove('d-none');
+            return;
+        }
+
+        // Alert helpers
+        function showAlert(message, type) { setAlert(alertEl, message, type || 'danger'); }
+        function hideAlert() { clearAlert(alertEl); }
+
+        // Password validation — uses shared PASSWORD_RULES via passwordMeetsAll
+        function validatePassword() { return mark(password, passwordMeetsAll(password.value)); }
+        function validateConfirm() {
+            return mark(confirm, confirm.value.length > 0 && confirm.value === password.value);
+        }
+
+        // Strength meter — shared renderStrength
+        function updatePasswordUI() {
+            renderStrength(ruleList, strengthFill, strengthLabel, password.value);
+            if (confirm.value.length > 0) validateConfirm();
+        }
+
+        // Live validation (blur → then revalidate on input)
+        const bindLive = createLiveBinder();
+        bindLive(password, validatePassword);
+        bindLive(confirm, validateConfirm);
+
+        // Update the meter as the user types
+        password.addEventListener('input', updatePasswordUI);
+        password.addEventListener('blur', updatePasswordUI);
+
+        // Show / hide toggles — shared bindPasswordToggle
+        bindPasswordToggle('pwToggle', password);
+        bindPasswordToggle('pwToggle2', confirm);
+
+        // Initial paint
+        updatePasswordUI();
+
+        // Submit
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            hideAlert();
+
+            // Validate
+            const results = [validatePassword(), validateConfirm()];
+            updatePasswordUI();
+            if (results.includes(false)) {
+                const firstInvalid = form.querySelector('.is-invalid');
+                if (firstInvalid) {
+                    firstInvalid.focus();
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return;
+            }
+
+            // Guard against sending the raw token as the password
+            if (password.value === token) {
+                showAlert('The new password must be different from the reset token.', 'danger');
+                password.focus();
+                return;
+            }
+
+            const originalHtml = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML =
+                '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Updating…';
+
+            try {
+                const res = await fetch('/api/auth/forgotten-password/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reset_token: token, newPassword: password.value })
+                });
+
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    const raw = (data.message || '').toLowerCase();
+
+                    if (raw.includes('expired') ||
+                        raw.includes('invalid') ||
+                        raw.includes('used') ||
+                        res.status === 400 || res.status === 404 || res.status === 410) {
+                        showAlert('This reset link is invalid or has expired. Request a new one.', 'danger');
+                    } else if (res.status >= 500) {
+                        showAlert('Server error. Please try again in a moment.', 'danger');
+                    } else {
+                        showAlert(data.message || `Reset failed (HTTP ${res.status}).`, 'danger');
+                    }
+                    return;
+                }
+
+                // Success — swap to the success panel
+                formArea.classList.add('d-none');
+                successBox.classList.remove('d-none');
+
+            } catch {
+                showAlert('Network error. Please check your connection and try again.', 'danger');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalHtml;
+            }
+        });
+    })();
 })();

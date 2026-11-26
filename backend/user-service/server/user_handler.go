@@ -30,13 +30,14 @@ import (
 
 type UserServer struct {
 	userpb.UnimplementedUserServiceServer
-	dbCollection           *mongo.Collection
-	verificationCollection *mongo.Collection
-	magicLinkCollection    *mongo.Collection
-	mailClient             mailpb.MailServiceClient
-	twoFactorService       *TwoFactorService
-	storageClient          storagepb.StorageServiceClient
-	requestCollection      *mongo.Collection
+	dbCollection                *mongo.Collection
+	verificationCollection      *mongo.Collection
+	magicLinkCollection         *mongo.Collection
+	mailClient                  mailpb.MailServiceClient
+	twoFactorService            *TwoFactorService
+	storageClient               storagepb.StorageServiceClient
+	requestCollection           *mongo.Collection
+	forgottenPasswordCollection *mongo.Collection
 }
 
 func NewUserServer(
@@ -47,15 +48,17 @@ func NewUserServer(
 	twoFactorService *TwoFactorService,
 	storageClient storagepb.StorageServiceClient,
 	requestCollection *mongo.Collection,
+	forgottenPasswordCollection *mongo.Collection,
 ) *UserServer {
 	return &UserServer{
-		dbCollection:           collection,
-		verificationCollection: verificationCollection,
-		magicLinkCollection:    magicLinkCollection,
-		mailClient:             mailClient,
-		twoFactorService:       twoFactorService,
-		storageClient:          storageClient,
-		requestCollection:      requestCollection,
+		dbCollection:                collection,
+		verificationCollection:      verificationCollection,
+		magicLinkCollection:         magicLinkCollection,
+		mailClient:                  mailClient,
+		twoFactorService:            twoFactorService,
+		storageClient:               storageClient,
+		requestCollection:           requestCollection,
+		forgottenPasswordCollection: forgottenPasswordCollection,
 	}
 }
 
@@ -876,4 +879,112 @@ func (s *UserServer) ListUsers(ctx context.Context, req *userpb.ListUsersRequest
 	}
 
 	return &userpb.ListUsersResponse{Users: result}, nil
+}
+
+func (s *UserServer) RequestResetPassword(ctx context.Context, req *userpb.RequestResetPasswordRequest) (*userpb.RequestResetPasswordResponse, error) {
+	email := req.GetEmail()
+	if err := validateEmail(email); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Email not valid:%v", err)
+	}
+
+	var user db.UserDBModel
+	err := s.dbCollection.FindOne(ctx, bson.M{"email": email}).Decode(&user)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			slog.Warn("forgotten_password", "event", "auth.password_reset.failed", "reason", "no_user", "status", "failure")
+			return nil, status.Error(codes.Unauthenticated, "Invalid email or password")
+		}
+		log.Printf("Database error: %v", err)
+		return nil, status.Errorf(codes.Internal, "User lookup failed: %v", err)
+
+	}
+
+	resetToken := uuid.New().String()
+	resetLink := "http://localhost:8080/HTML/reset-password.html?token=forgotten" + resetToken
+	expiresAt := time.Now().Add(12 * time.Hour).Unix()
+
+	resetModel := &db.ForgottenPasswordTokenModel{
+		ID:         primitive.NewObjectID(),
+		UserId:     user.ID.Hex(),
+		ResetToken: resetToken,
+		Email:      email,
+		CreatedAt:  time.Now(),
+	}
+
+	_, err = s.forgottenPasswordCollection.InsertOne(ctx, resetModel)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to save reset token: %v", err)
+	}
+
+	go func() {
+		mailCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		_, mailErr := s.mailClient.SendResetLink(mailCtx, &userpb.SendResetLinkRequest{
+			Email:         email,
+			Username:      user.FirstName,
+			ResetLink:     resetLink,
+			ExpiresAtUnix: expiresAt,
+		})
+
+		if mailErr != nil {
+			log.Printf("Asynchronous email dispatch failed for %s: %v", email, mailErr)
+		}
+
+	}()
+
+	slog.Info("reset_password_requested", "event", "auth.magic_link.request", "status", "success", "user_id", user.ID.Hex())
+
+	return &userpb.RequestResetPasswordResponse{}, nil
+}
+
+func (s *UserServer) VerifyResetPassword(ctx context.Context, request *userpb.VerifyResetPasswordRequest) (*userpb.VerifyResetPasswordResponse, error) {
+	token := strings.TrimPrefix(request.GetResetToken(), "forgotten")
+	if token == "" {
+		return nil, status.Error(codes.InvalidArgument, "Password reset token is required")
+	}
+
+	if err := validatePassword(request.GetNewPassword()); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Invalid password:%v", err)
+	}
+
+	var forgottenPasswordToken db.ForgottenPasswordTokenModel
+	err := s.forgottenPasswordCollection.FindOne(ctx, bson.M{"reset_token": token}).Decode(&forgottenPasswordToken)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			slog.Warn("password_reset_failure", "event", "auth.password_reset.failed", "reason", "invalid_token", "status", "failure")
+			return nil, status.Error(codes.NotFound, "Reset password token is invalid or has expired")
+		}
+		slog.Error("password_reset_failure", "event", "auth.password_reset.failed", "reason", "db_error", "status", "failure", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "Reset password token lookup failed: %v", err)
+	}
+
+	objectID, err := primitive.ObjectIDFromHex(forgottenPasswordToken.UserId)
+	if err != nil {
+		slog.Error("password_reset_failure", "event", "auth.veripassword_resetfy.failed", "reason", "invalid_user_id", "status", "failure", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "invalid user id in token: %v", err)
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.GetNewPassword()), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to hash password: %v", err)
+	}
+
+	result, err := s.dbCollection.UpdateByID(ctx, objectID, bson.M{"$set": bson.M{"password": string(hashedPassword)}})
+	if err != nil {
+		slog.Error("password_reset_failure", "event", "auth.password_reset.failed", "reason", "db_error", "status", "failure", "error", err.Error())
+		return nil, status.Errorf(codes.Internal, "failed to mark user as verified: %v", err)
+	}
+	if result.MatchedCount == 0 {
+		slog.Error("password_reset_failure", "event", "auth.password_reset.failed", "reason", "user_not_found", "status", "failure")
+		return nil, status.Error(codes.Internal, "user associated with token not found")
+	}
+
+	if _, err := s.verificationCollection.DeleteOne(ctx, bson.M{"_id": forgottenPasswordToken.ID}); err != nil {
+		slog.Warn("reset_password_cleanup_failed", "event", "auth.password_reset.cleanup", "error", err.Error())
+	}
+
+	slog.Info("reset_password_success", "event", "auth.password_reset", "user_id", forgottenPasswordToken.UserId, "status", "success")
+
+	return &userpb.VerifyResetPasswordResponse{}, nil
 }

@@ -104,6 +104,14 @@ type VerificationTokenModel struct {
 	CreatedAt         time.Time          `bson:"created_at"`
 }
 
+type ForgottenPasswordTokenModel struct {
+	ID         primitive.ObjectID `bson:"_id,omitempty"`
+	UserId     string             `bson:"user_id"`
+	ResetToken string             `bson:"reset_token"`
+	Email      string             `bson:"email"`
+	CreatedAt  time.Time          `bson:"created_at"`
+}
+
 type MagicLinkTokenModel struct {
 	ID             primitive.ObjectID `bson:"_id"`
 	UserId         string             `bson:"user_id"`

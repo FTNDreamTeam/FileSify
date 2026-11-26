@@ -42,6 +42,7 @@ func main() {
 	verificationCollection := client.Database("authentication_db").Collection("verification_mail")
 	magicLinkCollection := client.Database("authentication_db").Collection("magic_link_tokens")
 	requestCollection := client.Database("request_db").Collection("requests")
+	forgottenPasswordCollection := client.Database("authentication_db").Collection("forgotten_password")
 
 	if err := server.EnsureTTLIndex(ctx, verificationCollection); err != nil {
 		log.Printf("Verification TTL index creation error: %v", err)
@@ -77,7 +78,16 @@ func main() {
 	storageClient := storagepb.NewStorageServiceClient(storageConn)
 
 	grpcServer := grpc.NewServer()
-	userServer := server.NewUserServer(userCollection, verificationCollection, magicLinkCollection, mailClient, twoFactorService, storageClient, requestCollection)
+	userServer := server.NewUserServer(
+		userCollection,
+		verificationCollection,
+		magicLinkCollection,
+		mailClient,
+		twoFactorService,
+		storageClient,
+		requestCollection,
+		forgottenPasswordCollection,
+	)
 	userpb.RegisterUserServiceServer(grpcServer, userServer)
 	reflection.Register(grpcServer)
 

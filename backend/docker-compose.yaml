@@ -148,7 +148,9 @@ services:
     networks:
       - user-network
     depends_on:
-      - cassandra
+      cassandra:
+        condition: service_healthy
+
 
   cassandra:
     image: cassandra:4.1

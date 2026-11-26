@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -9,6 +10,9 @@ import (
 	storagepb "gen/data-storage-service-gen"
 	userpb "gen/user-service-gen"
 	"io"
+	"net/http"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"google.golang.org/genproto/googleapis/type/date"
@@ -16,10 +20,12 @@ import (
 )
 
 var (
-	ErrUnauthorized   = errors.New("invalid or expired token")
-	ErrFileTooLarge   = errors.New("file exceeds the 100MB limit")
-	ErrQuotaExceeded  = errors.New("remaining quota is less than file size")
-	ErrUpstreamFailed = errors.New("downstream service error")
+	ErrUnauthorized    = errors.New("invalid or expired token")
+	ErrFileTooLarge    = errors.New("file exceeds the 100MB limit")
+	ErrQuotaExceeded   = errors.New("remaining quota is less than file size")
+	ErrUpstreamFailed  = errors.New("downstream service error")
+	ErrInvalidFileType = errors.New("file type not allowed (whitelist rejection)")
+	ErrCorruptedFile   = errors.New("file content does not match its extension")
 )
 
 const kb = 1_000
@@ -62,6 +68,56 @@ func (s *FileUploadService) Upload(context context.Context, input UploadInput) e
 		return ErrFileTooLarge
 	}
 
+	ext := strings.ToLower(filepath.Ext(input.Filename))
+	allowedExtensions := map[string]bool{
+		// Images
+		".jpg": true, ".jpeg": true, ".png": true, ".gif": true, ".webp": true, ".svg": true, ".bmp": true, ".tiff": true, ".ico": true,
+		// Documents
+		".pdf": true, ".txt": true, ".csv": true, ".md": true, ".json": true, ".xml": true, ".rtf": true,
+		".doc": true, ".docx": true, ".xls": true, ".xlsx": true, ".ppt": true, ".pptx": true, ".odt": true, ".ods": true,
+		// Archives
+		".zip": true, ".tar": true, ".gz": true, ".7z": true, ".rar": true,
+		// Audio
+		".mp3": true, ".wav": true, ".ogg": true, ".flac": true, ".m4a": true,
+		// Video
+		".mp4": true, ".mkv": true, ".webm": true, ".avi": true, ".mov": true,
+	}
+	if !allowedExtensions[ext] {
+		return ErrInvalidFileType
+	}
+
+	headerBuffer := make([]byte, 512)
+	n, err := input.FileContent.Read(headerBuffer)
+	if err != nil && err != io.EOF {
+		return fmt.Errorf("failed to read file header: %w", err)
+	}
+
+	detectedMime := http.DetectContentType(headerBuffer[:n])
+
+	allowedMimes := map[string]bool{
+		// Images
+		"image/jpeg": true, "image/png": true, "image/gif": true, "image/webp": true, "image/bmp": true, "image/tiff": true, "image/x-icon": true, "image/svg+xml": true,
+		// Documents
+		"application/pdf": true, "text/plain": true, "text/csv": true, "text/markdown": true, "application/json": true, "text/xml": true, "application/xml": true, "application/rtf": true,
+		"application/msword": true, "application/vnd.openxmlformats-officedocument.wordprocessingml.document": true,
+		"application/vnd.ms-excel": true, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": true,
+		"application/vnd.ms-powerpoint": true, "application/vnd.openxmlformats-officedocument.presentationml.presentation": true,
+		"application/vnd.oasis.opendocument.text": true, "application/vnd.oasis.opendocument.spreadsheet": true,
+		// Archives
+		"application/zip": true, "application/x-tar": true, "application/gzip": true, "application/x-7z-compressed": true, "application/vnd.rar": true, "application/x-rar-compressed": true,
+		// Audio
+		"audio/mpeg": true, "audio/wav": true, "audio/ogg": true, "audio/flac": true, "audio/x-m4a": true,
+		// Video
+		"video/mp4": true, "video/x-matroska": true, "video/webm": true, "video/x-msvideo": true, "video/quicktime": true,
+		// Fallback for unknown but safe binaries
+		"application/octet-stream": true,
+	}
+	if !allowedMimes[detectedMime] {
+		return ErrCorruptedFile
+	}
+
+	input.FileContent = io.MultiReader(bytes.NewReader(headerBuffer[:n]), input.FileContent)
+
 	hasEnoughQuota, err := s.checkQuota(context, authResp.UserId, input.FileSize)
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrUpstreamFailed, err)
@@ -79,7 +135,7 @@ func (s *FileUploadService) Upload(context context.Context, input UploadInput) e
 		Data: &storagepb.UploadFileRequest_Metadata{
 			Metadata: &storagepb.FileMetaData{
 				Name:          input.Filename,
-				MimeType:      input.MimeType,
+				MimeType:      detectedMime,
 				Path:          input.FolderPath,
 				UserId:        authResp.GetUserId(),
 				TimeCreatedAt: timestamppb.New(now),

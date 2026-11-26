@@ -148,13 +148,13 @@ services:
     networks:
       - user-network
     depends_on:
-      - cassandra
+      cassandra:
+        condition: service_healthy
+
 
   cassandra:
     image: cassandra:4.1
     container_name: filesify-cassandra
-    ports:
-      - "${CASSANDRA_PORT}:${CASSANDRA_PORT}"
     environment:
       CASSANDRA_CLUSTER_NAME: ${CASSANDRA_CLUSTER_NAME}
       CASSANDRA_DC: ${CASSANDRA_DC}

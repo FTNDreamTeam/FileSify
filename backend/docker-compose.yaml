@@ -155,8 +155,6 @@ services:
   cassandra:
     image: cassandra:4.1
     container_name: filesify-cassandra
-    ports:
-      - "${CASSANDRA_PORT}:${CASSANDRA_PORT}"
     environment:
       CASSANDRA_CLUSTER_NAME: ${CASSANDRA_CLUSTER_NAME}
       CASSANDRA_DC: ${CASSANDRA_DC}

@@ -94,25 +94,34 @@ func (s *FileUploadService) Upload(context context.Context, input UploadInput) e
 
 	detectedMime := http.DetectContentType(headerBuffer[:n])
 
-	allowedMimes := map[string]bool{
+	allowedMimes := []string{
 		// Images
-		"image/jpeg": true, "image/png": true, "image/gif": true, "image/webp": true, "image/bmp": true, "image/tiff": true, "image/x-icon": true, "image/svg+xml": true,
+		"image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp", "image/tiff", "image/x-icon", "image/svg+xml",
 		// Documents
-		"application/pdf": true, "text/plain": true, "text/csv": true, "text/markdown": true, "application/json": true, "text/xml": true, "application/xml": true, "application/rtf": true,
-		"application/msword": true, "application/vnd.openxmlformats-officedocument.wordprocessingml.document": true,
-		"application/vnd.ms-excel": true, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": true,
-		"application/vnd.ms-powerpoint": true, "application/vnd.openxmlformats-officedocument.presentationml.presentation": true,
-		"application/vnd.oasis.opendocument.text": true, "application/vnd.oasis.opendocument.spreadsheet": true,
+		"application/pdf", "text/plain", "text/csv", "text/markdown", "application/json", "text/xml", "application/xml", "application/rtf",
+		"application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+		"application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+		"application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+		"application/vnd.oasis.opendocument.text", "application/vnd.oasis.opendocument.spreadsheet",
 		// Archives
-		"application/zip": true, "application/x-tar": true, "application/gzip": true, "application/x-7z-compressed": true, "application/vnd.rar": true, "application/x-rar-compressed": true,
+		"application/zip", "application/x-tar", "application/gzip", "application/x-7z-compressed", "application/vnd.rar", "application/x-rar-compressed",
 		// Audio
-		"audio/mpeg": true, "audio/wav": true, "audio/ogg": true, "audio/flac": true, "audio/x-m4a": true,
+		"audio/mpeg", "audio/wav", "audio/ogg", "audio/flac", "audio/x-m4a",
 		// Video
-		"video/mp4": true, "video/x-matroska": true, "video/webm": true, "video/x-msvideo": true, "video/quicktime": true,
+		"video/mp4", "video/x-matroska", "video/webm", "video/x-msvideo", "video/quicktime",
 		// Fallback for unknown but safe binaries
-		"application/octet-stream": true,
+		"application/octet-stream",
 	}
-	if !allowedMimes[detectedMime] {
+
+	isAllowed := false
+	for _, allowed := range allowedMimes {
+		if strings.HasPrefix(detectedMime, allowed) {
+			isAllowed = true
+			break
+		}
+	}
+
+	if !isAllowed {
 		return ErrCorruptedFile
 	}
 
@@ -175,6 +184,9 @@ func (s *FileUploadService) Upload(context context.Context, input UploadInput) e
 		}
 	}
 
+	//test := hasher.Sum(nil)
+	//test[31]++
+	//checksum := hex.EncodeToString(test)
 	checksum := hex.EncodeToString(hasher.Sum(nil))
 	if err := stream.Send(&storagepb.UploadFileRequest{
 		Data: &storagepb.UploadFileRequest_Metadata{

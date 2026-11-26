@@ -75,6 +75,10 @@ func (h *FileUploadHandler) writeError(w http.ResponseWriter, err error) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	case errors.Is(err, service.ErrUpstreamFailed):
 		http.Error(w, err.Error(), http.StatusBadGateway)
+	case errors.Is(err, service.ErrInvalidFileType):
+		http.Error(w, err.Error(), http.StatusUnsupportedMediaType)
+	case errors.Is(err, service.ErrCorruptedFile):
+		http.Error(w, err.Error(), http.StatusBadRequest)
 	default:
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 	}

@@ -424,6 +424,19 @@ func (s *StorageServer) RenameFile(ctx context.Context, req *pb.RenameFileReques
 	dir := path.Dir(oldCleanPath)
 	newName := path.Base(req.GetNewName())
 
+	ext := strings.ToLower(path.Ext(newName))
+	allowedExtensions := map[string]bool{
+		".jpg": true, ".jpeg": true, ".png": true, ".gif": true, ".webp": true, ".svg": true, ".bmp": true, ".tiff": true, ".ico": true,
+		".pdf": true, ".txt": true, ".csv": true, ".md": true, ".json": true, ".xml": true, ".rtf": true,
+		".doc": true, ".docx": true, ".xls": true, ".xlsx": true, ".ppt": true, ".pptx": true, ".odt": true, ".ods": true,
+		".zip": true, ".tar": true, ".gz": true, ".7z": true, ".rar": true,
+		".mp3": true, ".wav": true, ".ogg": true, ".flac": true, ".m4a": true,
+		".mp4": true, ".mkv": true, ".webm": true, ".avi": true, ".mov": true,
+	}
+	if !allowedExtensions[ext] {
+		return nil, status.Error(codes.InvalidArgument, "file type not allowed")
+	}
+
 	newKey := userId + "/"
 	if dir != "." {
 		newKey += dir + "/"

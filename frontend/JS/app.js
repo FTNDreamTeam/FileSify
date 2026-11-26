@@ -1172,6 +1172,27 @@
                 fileInput.classList.remove('is-valid', 'is-invalid');
                 return;
             }
+
+            const allowedExtensions = [
+                'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'tiff', 'ico',
+                'pdf', 'txt', 'csv', 'md', 'json', 'xml', 'rtf',
+                'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods',
+                'zip', 'tar', 'gz', '7z', 'rar',
+                'mp3', 'wav', 'ogg', 'flac', 'm4a',
+                'mp4', 'mkv', 'webm', 'avi', 'mov'
+            ];
+            
+            const extension = file.name.split('.').pop().toLowerCase();
+            
+            if (!allowedExtensions.includes(extension)) {
+                fileInput.classList.add('is-invalid');
+                fileInput.classList.remove('is-valid');
+                fileInfo.classList.add('d-none');
+                showAlert(`Security Error: The file type ".${extension}" is not allowed.`, 'danger');
+                fileInput.value = ''; // Clear the input
+                return; // Stop here
+            }
+
             if (file.size > MAX_SIZE) {
                 fileInput.classList.add('is-invalid');
                 fileInput.classList.remove('is-valid');
@@ -1179,6 +1200,8 @@
                 showAlert(`File is too large (${formatSize(file.size)}). Maximum allowed size is ${formatSize(MAX_SIZE)}.`, 'danger');
                 return;
             }
+
+            // Valid file
             fileInput.classList.remove('is-invalid');
             fileInput.classList.add('is-valid');
             fileNameEl.textContent = file.name;
@@ -1533,6 +1556,20 @@
             if (!newName) { showError('Please enter a name.'); return; }
             if (newName === target.leafName) { dialog.close('cancel'); return; }
             if (newName.includes('/') || newName.includes('\\')) { showError('Name cannot contain slashes.'); return; }
+            
+            const allowedExtensions = [
+                'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'tiff', 'ico',
+                'pdf', 'txt', 'csv', 'md', 'json', 'xml', 'rtf',
+                'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods',
+                'zip', 'tar', 'gz', '7z', 'rar',
+                'mp3', 'wav', 'ogg', 'flac', 'm4a',
+                'mp4', 'mkv', 'webm', 'avi', 'mov'
+            ];
+            const extension = newName.split('.').pop().toLowerCase();
+            if (!allowedExtensions.includes(extension)) {
+                showError(`Security Error: Renaming to ".${extension}" is not allowed.`);
+                return;
+            }
             if (newName.length > 100) { showError('Name is too long (max 100 characters).'); return; }
 
             const token = localStorage.getItem('token');
